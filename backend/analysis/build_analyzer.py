@@ -53,6 +53,7 @@ def _infer_template(plan: BuildPlan, materials: dict[str, int], categories: dict
         "office_tower": _score(analysis_text, ["office", "curtain wall", "tower", "hotel", "办公", "玻璃幕墙"]),
         "stone_arch_bridge": _score(analysis_text, ["stone arch", "garden bridge", "canal bridge", "拱桥", "石桥"]),
         "suspension_bridge": _score(analysis_text, ["suspension", "cable", "highway bridge", "悬索桥", "斜拉桥"]),
+        "twisted_lattice_tower": _score(analysis_text, ["canton tower", "guangzhou tower", "xiaomanyao", "tv tower", "hyperboloid", "广州塔", "小蛮腰", "电视塔"]),
     }
 
     if categories.get("tower") and _has_octagonal_or_copper(materials):
@@ -64,6 +65,8 @@ def _infer_template(plan: BuildPlan, materials: dict[str, int], categories: dict
         keyword_scores["office_tower"] += 2
     if _ratio(materials, "glass") > 0.3 and ("void" in analysis_text or "gate" in analysis_text):
         keyword_scores["modern_glass_gate"] += 4
+    if "twisted_lattice_tower" in analysis_text:
+        keyword_scores["twisted_lattice_tower"] += 5
 
     best, score = max(keyword_scores.items(), key=lambda item: item[1])
     return best if score > 0 and best in templates else None
@@ -98,9 +101,14 @@ def _warnings(
         warnings.append("现代高层灯光比例偏低，建议给办公楼层、连桥、入口重复布置 sea_lantern 或 redstone_lamp。")
     if template == "pagoda_stack" and not component_counts.get("pagoda_tier"):
         warnings.append("疑似宝塔但没有使用 pagoda_tier，八角层级可能不稳定。")
+    if any(token in " ".join(_flatten_text(plan.analysis or {})).lower() for token in ("广州塔", "小蛮腰", "canton tower", "guangzhou tower")):
+        if template != "twisted_lattice_tower":
+            warnings.append("广州塔/小蛮腰应使用 twisted_lattice_tower 模板，当前模板可能会跑成宝塔或普通高楼。")
+        if sy / max(1, max(sx, sz)) < 2.5:
+            warnings.append("广州塔比例偏矮胖，高度应至少是最大宽度/深度的 2.5 倍。")
     if template == "modern_glass_gate" and "air" not in (plan.palette or {}) and ratios["glass"] < 0.25:
         warnings.append("门形地标需要清晰中央空洞和高玻璃比例；可用 air 清空中部，再加两侧办公层。")
-    if sy > 96 and len(plan.parts) < 40:
+    if sy > 96 and len(plan.parts) < 40 and not _has_part_type(plan, "twisted_lattice_tower"):
         warnings.append("大型建筑 parts 数偏少，容易变成粗体量；建议增加 facade/interior/lighting/detail 分层部件。")
     if max(sx, sz) / max(1, min(sx, sz)) > 4 and template not in {"suspension_bridge", "stone_arch_bridge"}:
         warnings.append("平面长宽比很极端，如果不是桥梁，可能需要检查比例尺。")
@@ -319,3 +327,7 @@ def _ratio(materials: dict[str, int], token: str) -> float:
 
 def _has_octagonal_or_copper(materials: dict[str, int]) -> bool:
     return any("copper" in block for block in materials)
+
+
+def _has_part_type(plan: BuildPlan, part_type: str) -> bool:
+    return any(getattr(part, "type", None) == part_type for part in plan.parts)

@@ -20,6 +20,7 @@ from backend.dsl.schema import (
     OctagonalTowerPart,
     SlabPart,
     StairPart,
+    TwistedLatticeTowerPart,
     VajraSpirePart,
     WindowGridPart,
     WindowPart,
@@ -485,6 +486,96 @@ def _facade_panel_ring(schem: Any, plan: BuildPlan, part: FacadePanelRingPart) -
                 _set(schem, (x, y2 + 2, cz), plaque)
 
 
+def _twisted_lattice_tower(schem: Any, plan: BuildPlan, part: TwistedLatticeTowerPart) -> None:
+    cx, y1, cz = part.center
+    lattice = plan.block_id(part.lattice)
+    ring = plan.block_id(part.ring) if part.ring else lattice
+    glass = plan.block_id(part.glass) if part.glass else None
+    core = plan.block_id(part.core) if part.core else None
+    light = plan.block_id(part.light) if part.light else None
+    body_top = y1 + part.body_height
+    twist = math.radians(part.twist_degrees)
+
+    levels = list(range(y1, body_top + 1, part.ring_interval))
+    if levels[-1] != body_top:
+        levels.append(body_top)
+
+    rings: list[list[tuple[int, int, int]]] = []
+    for y in levels:
+        t = (y - y1) / max(1, part.body_height)
+        rx = _twisted_radius(t, part.base_radius, part.waist_radius, part.top_radius, part.waist_y_ratio)
+        rz = max(2.0, rx * part.z_radius_scale)
+        angle_offset = twist * t
+        points = []
+        for index in range(part.struts):
+            angle = math.tau * index / part.struts + angle_offset
+            x = cx + round(math.cos(angle) * rx)
+            z = cz + round(math.sin(angle) * rz)
+            points.append((x, y, z))
+        rings.append(points)
+
+    for points in rings:
+        _polyline(schem, points + [points[0]], ring)
+        if glass:
+            for x, y, z in points[::2]:
+                _set(schem, (x, y, z), glass)
+        if light:
+            for x, y, z in points[::6]:
+                _set(schem, (x, y, z), light)
+
+    for lower, upper in zip(rings, rings[1:]):
+        for index in range(part.struts):
+            _line(schem, lower[index], upper[(index + 2) % part.struts], lattice)
+            _line(schem, lower[index], upper[(index - 2) % part.struts], lattice)
+
+    if core:
+        core_radius = max(1, part.waist_radius // 4)
+        for y in range(y1, body_top + 1):
+            radius = core_radius + (1 if y % max(1, part.ring_interval * 2) == 0 else 0)
+            for x in range(cx - radius, cx + radius + 1):
+                for z in range(cz - radius, cz + radius + 1):
+                    if (x - cx) * (x - cx) + (z - cz) * (z - cz) <= radius * radius:
+                        _set(schem, (x, y, z), core)
+
+    if part.antenna_height > 0:
+        for y in range(body_top + 1, body_top + part.antenna_height + 1):
+            _set(schem, (cx, y, cz), lattice)
+            if y % 5 == 0:
+                _set(schem, (cx + 1, y, cz), ring)
+                _set(schem, (cx - 1, y, cz), ring)
+                _set(schem, (cx, y, cz + 1), ring)
+                _set(schem, (cx, y, cz - 1), ring)
+            if light and y % 12 == 0:
+                _set(schem, (cx, y, cz), light)
+
+
+def _twisted_radius(t: float, base: int, waist: int, top: int, waist_t: float) -> float:
+    if t <= waist_t:
+        local = t / max(0.01, waist_t)
+        eased = local * local * (3 - 2 * local)
+        return base + (waist - base) * eased
+    local = (t - waist_t) / max(0.01, 1 - waist_t)
+    eased = local * local * (3 - 2 * local)
+    return waist + (top - waist) * eased
+
+
+def _polyline(schem: Any, points: list[tuple[int, int, int]], block: str) -> None:
+    for start, end in zip(points, points[1:]):
+        _line(schem, start, end, block)
+
+
+def _line(schem: Any, start: tuple[int, int, int], end: tuple[int, int, int], block: str) -> None:
+    x1, y1, z1 = start
+    x2, y2, z2 = end
+    steps = max(abs(x2 - x1), abs(y2 - y1), abs(z2 - z1), 1)
+    for step in range(steps + 1):
+        t = step / steps
+        x = round(x1 + (x2 - x1) * t)
+        y = round(y1 + (y2 - y1) * t)
+        z = round(z1 + (z2 - z1) * t)
+        _set(schem, (x, y, z), block)
+
+
 def _component(schem: Any, plan: BuildPlan, part: ComponentPart) -> None:
     component = get_component(part.name)
     parameters = dict(component.get("parameters", {}))
@@ -530,6 +621,8 @@ def _render_plan_parts(target: Any, plan: BuildPlan, parts: list[Any]) -> None:
             _mini_pagoda_ring(target, plan, part)
         elif isinstance(part, FacadePanelRingPart):
             _facade_panel_ring(target, plan, part)
+        elif isinstance(part, TwistedLatticeTowerPart):
+            _twisted_lattice_tower(target, plan, part)
         elif isinstance(part, ComponentPart):
             _component(target, plan, part)
         elif isinstance(part, BlocksPart):
@@ -555,6 +648,7 @@ def _component_part_model(data: dict[str, Any]) -> Any:
         "vajra_spire": VajraSpirePart,
         "mini_pagoda_ring": MiniPagodaRingPart,
         "facade_panel_ring": FacadePanelRingPart,
+        "twisted_lattice_tower": TwistedLatticeTowerPart,
         "component": ComponentPart,
         "blocks": BlocksPart,
     }

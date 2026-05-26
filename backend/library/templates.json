@@ -162,6 +162,30 @@
         "avoid stone arch massing"
       ],
       "scale_guidance": "Scale length by repeating segments; increase tower height with span."
+    },
+    "twisted_lattice_tower": {
+      "description": "Canton Tower / Xiaomanyao style hyperboloid observation tower with narrow waist, rotating lattice, observation decks, and antenna.",
+      "style": "modern_landmark",
+      "building_types": ["canton_tower", "tv_tower", "observation_tower", "hyperboloid_tower", "guangzhou_tower"],
+      "recommended_palettes": ["canton_tower", "industrial_steel", "modern_glass_office"],
+      "component_sequence": [],
+      "primitive_needs": [
+        "very tall height-to-width ratio",
+        "wide base tapering to a narrow waist and widening again near top",
+        "twisted diagonal lattice around the outside",
+        "thin central core",
+        "observation decks near upper section",
+        "slender antenna mast",
+        "red or white night lighting points"
+      ],
+      "avoid_components": ["pagoda_tier", "mini_pagoda_cluster", "stone_arch_bridge", "concrete_podium", "suspension_bridge_segment"],
+      "checks": [
+        "height should be at least 2.5x the max body width",
+        "waist radius should be much smaller than base radius",
+        "silhouette should be curved/twisted, not stacked tiers",
+        "do not add ancient eaves, pagoda roofs, or gold spires"
+      ],
+      "scale_guidance": "For Canton Tower-like builds, preserve height first. Use 180-260 blocks tall, 50-80 blocks wide, and make the waist around 45-60% of the height."
     }
   }
 }

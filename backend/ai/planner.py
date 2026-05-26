@@ -226,6 +226,7 @@ Primitive parts:
 - vajra_spire
 - mini_pagoda_ring
 - facade_panel_ring
+- twisted_lattice_tower
 
 Reusable component part:
 {{
@@ -248,9 +249,13 @@ Reusable component part:
 	  glass office and concrete podium components unless the prompt asks for fusion.
 	- For Jiangnan water-town scenes, prefer low houses, dark roofs, stone_arch_bridge,
 	  canal/path details; avoid tall modern towers.
-	- For modern glass office landmarks, prefer curtain wall, office floors,
-	  structural frame, central void/skybridge when applicable, and repeated lights.
-	- For bridges, choose stone_arch_bridge for historic arches and
+		- For modern glass office landmarks, prefer curtain wall, office floors,
+		  structural frame, central void/skybridge when applicable, and repeated lights.
+		- For Canton Tower / Guangzhou Tower / Xiaomanyao / TV observation towers,
+		  choose twisted_lattice_tower. Keep it very tall and slender, with a narrow
+		  waist, rotating diagonal lattice, observation decks, antenna mast, and no
+		  pagoda eaves.
+		- For bridges, choose stone_arch_bridge for historic arches and
 	  suspension_bridge_segment for cable/suspension bridges; do not mix them unless
 	  the prompt explicitly asks.
 	- If the target proportions differ from a named landmark, adapt the template and
@@ -348,6 +353,27 @@ Primitive part examples:
   ]
 }}
 
+10. twisted_lattice_tower - Canton Tower / Xiaomanyao style hyperboloid lattice tower
+{{
+  "type": "twisted_lattice_tower",
+  "center": [48, 4, 48],
+  "body_height": 184,
+  "antenna_height": 44,
+  "base_radius": 26,
+  "waist_radius": 10,
+  "top_radius": 18,
+  "waist_y_ratio": 0.56,
+  "z_radius_scale": 0.78,
+  "ring_interval": 7,
+  "struts": 28,
+  "twist_degrees": 140,
+  "lattice": "lattice",
+  "ring": "ring",
+  "glass": "glass",
+  "core": "core",
+  "light": "night_light"
+}}
+
 Rules:
 - Return no prose in the file, JSON only.
 - Keep the JSON compact. Do not include long narrative text in analysis; use short bullet-like strings.
@@ -403,8 +429,10 @@ Do not modify any other file. Return no prose outside that file.
 	or reusable component parts. First choose an architecture template from the
 	library by style/building type. Prefer components only when they match that
 	template's applicability; use primitive parts for custom transitions/details.
-	Do not force a modern glass office component into ancient buildings, or a pagoda
-	component into bridges/office towers, unless the user explicitly asks for fusion.
+		Do not force a modern glass office component into ancient buildings, or a pagoda
+		component into bridges/office towers, unless the user explicitly asks for fusion.
+		If the user asks for Guangzhou Tower, Canton Tower, 广州塔, or 小蛮腰,
+		select twisted_lattice_tower and do not select pagoda_stack.
 
 	Available material palettes, component blueprints, and architecture templates:
 	{json.dumps(library_context, ensure_ascii=False, indent=2)}
@@ -422,6 +450,8 @@ Component example:
 Keep size within [16..96, 10..96, 16..96] unless the user explicitly asks for a
 larger landmark. Prefer valid vanilla Java Edition block ids without the
 "minecraft:" prefix. Use palette keys in parts where possible.
+For Canton Tower / Guangzhou Tower / Xiaomanyao, use a much taller landmark size
+such as [72..96, 180..260, 72..96], with height at least 2.5x max(width, depth).
 
 	Important design rules:
 	- Treat the image analysis as reference material, not as a finished build.

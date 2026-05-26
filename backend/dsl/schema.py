@@ -149,6 +149,26 @@ class FacadePanelRingPart(BaseModel):
     plaque: str | None = None
 
 
+class TwistedLatticeTowerPart(BaseModel):
+    type: Literal["twisted_lattice_tower"]
+    center: Vec3
+    body_height: int = Field(ge=32, le=260)
+    antenna_height: int = Field(default=0, ge=0, le=96)
+    base_radius: int = Field(ge=6, le=48)
+    waist_radius: int = Field(ge=3, le=32)
+    top_radius: int = Field(ge=4, le=40)
+    waist_y_ratio: float = Field(default=0.56, ge=0.25, le=0.8)
+    z_radius_scale: float = Field(default=0.82, ge=0.35, le=1.0)
+    ring_interval: int = Field(default=8, ge=3, le=18)
+    struts: int = Field(default=24, ge=8, le=48)
+    twist_degrees: float = Field(default=130.0, ge=-360.0, le=360.0)
+    lattice: str
+    ring: str | None = None
+    glass: str | None = None
+    core: str | None = None
+    light: str | None = None
+
+
 class ComponentPart(BaseModel):
     type: Literal["component"]
     name: str = Field(pattern=r"^[a-zA-Z0-9_-]+$")
@@ -183,6 +203,7 @@ BuildPart = (
     | VajraSpirePart
     | MiniPagodaRingPart
     | FacadePanelRingPart
+    | TwistedLatticeTowerPart
     | ComponentPart
     | BlocksPart
 )

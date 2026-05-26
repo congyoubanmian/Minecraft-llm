@@ -125,6 +125,20 @@
         "warning": "yellow_concrete",
         "light": "redstone_lamp"
       }
+    },
+    "canton_tower": {
+      "description": "Silver lattice, transparent observation decks, red night lights, suitable for Canton Tower style hyperboloid TV towers.",
+      "blocks": {
+        "lattice": "iron_block",
+        "ring": "light_gray_concrete",
+        "glass": "light_blue_stained_glass",
+        "core": "white_concrete",
+        "observation": "cyan_stained_glass",
+        "antenna": "iron_bars",
+        "night_light": "redstone_lamp",
+        "podium": "smooth_quartz",
+        "plaza": "smooth_stone"
+      }
     }
   }
 }
