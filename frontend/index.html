@@ -264,6 +264,10 @@
               <dd>{{ analysisReport.design_spec?.module_count || 0 }}</dd>
             </div>
             <div>
+              <dt>Stitch</dt>
+              <dd>{{ analysisReport.design_spec?.stitch_ready ? "ready" : "check" }}</dd>
+            </div>
+            <div>
               <dt>Glass</dt>
               <dd>{{ ratioText(analysisReport.material_ratios?.glass) }}</dd>
             </div>

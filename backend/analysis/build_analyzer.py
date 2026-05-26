@@ -16,14 +16,15 @@ def analyze_build(plan: BuildPlan, blocks: BlockList) -> dict[str, Any]:
     categories = _component_categories(component_counts)
     template = _infer_template(plan, materials, categories)
     ratios = _material_ratios(materials, total)
-    warnings = _warnings(plan, materials, ratios, component_counts, template)
+    module_report = _module_report(plan)
+    warnings = _warnings(plan, materials, ratios, component_counts, template, module_report)
 
     return {
         "template_guess": template,
         "size": list(plan.size),
         "aspect": _aspect(plan.size),
         "part_count": len(plan.parts),
-        "design_spec": _design_spec_summary(plan.analysis or {}),
+        "design_spec": module_report,
         "component_counts": dict(component_counts),
         "component_categories": categories,
         "material_ratios": ratios,
@@ -86,6 +87,7 @@ def _warnings(
     ratios: dict[str, float],
     component_counts: Counter[str],
     template: str | None,
+    module_report: dict[str, Any],
 ) -> list[str]:
     warnings: list[str] = []
     sx, sy, sz = plan.size
@@ -104,30 +106,179 @@ def _warnings(
         warnings.append("平面长宽比很极端，如果不是桥梁，可能需要检查比例尺。")
     if not component_counts and len(plan.parts) >= 80:
         warnings.append("当前主要依赖 primitive parts，可考虑抽出重复窗格、楼层、屋檐或桥段组件复用。")
-    design_spec = (plan.analysis or {}).get("design_spec") if isinstance(plan.analysis, dict) else None
-    if not isinstance(design_spec, dict) or not design_spec.get("modules"):
+    if not module_report.get("present") or not module_report.get("module_count"):
         warnings.append("缺少设计规约模块列表，复杂建筑建议先定义 grid、modules、bbox、interfaces，再转 Minecraft parts。")
+    warnings.extend(module_report.get("warnings", []))
     return warnings
 
 
-def _design_spec_summary(analysis: dict[str, Any]) -> dict[str, Any]:
+def _module_report(plan: BuildPlan) -> dict[str, Any]:
+    analysis = plan.analysis or {}
     design_spec = analysis.get("design_spec") if isinstance(analysis, dict) else None
     if not isinstance(design_spec, dict):
-        return {"present": False, "module_count": 0, "interface_count": 0}
+        return {
+            "present": False,
+            "module_count": 0,
+            "interface_count": 0,
+            "modules": [],
+            "warnings": [],
+            "stitch_ready": False,
+        }
+
     modules = design_spec.get("modules") if isinstance(design_spec.get("modules"), list) else []
     interfaces = design_spec.get("interfaces") if isinstance(design_spec.get("interfaces"), list) else []
+    module_items = [_normalize_module(module, index) for index, module in enumerate(modules) if isinstance(module, dict)]
+    module_names = [module["name"] for module in module_items]
+    warnings = _module_warnings(plan.size, module_items, interfaces)
     missing_bbox = [
-        module.get("name", f"module_{index}")
-        for index, module in enumerate(modules)
-        if isinstance(module, dict) and not module.get("bbox")
+        module["name"]
+        for module in module_items
+        if module["bbox"] is None
     ]
+
     return {
         "present": True,
         "building_type": design_spec.get("building_type"),
-        "module_count": len(modules),
+        "module_count": len(module_items),
         "interface_count": len(interfaces),
         "missing_bbox": missing_bbox,
+        "duplicate_names": _duplicates(module_names),
+        "modules": module_items,
+        "stage_order": _stage_order(module_items),
+        "coverage": _module_coverage(plan.size, module_items),
+        "warnings": warnings,
+        "stitch_ready": bool(module_items) and not missing_bbox and not warnings,
     }
+
+
+def _normalize_module(module: dict[str, Any], index: int) -> dict[str, Any]:
+    name = str(module.get("name") or f"module_{index}")
+    role = str(module.get("role") or "unknown")
+    bbox = _parse_bbox(module.get("bbox"))
+    return {
+        "name": name,
+        "role": role,
+        "bbox": bbox,
+        "materials": module.get("materials", []),
+        "interfaces": module.get("interfaces", {}),
+        "volume": _bbox_volume(bbox) if bbox else 0,
+    }
+
+
+def _parse_bbox(value: Any) -> list[list[int]] | None:
+    if not isinstance(value, list) or len(value) != 2:
+        return None
+    first, second = value
+    if not (
+        isinstance(first, list)
+        and isinstance(second, list)
+        and len(first) == 3
+        and len(second) == 3
+        and all(isinstance(item, int) for item in first + second)
+    ):
+        return None
+    x1, y1, z1 = first
+    x2, y2, z2 = second
+    return [[min(x1, x2), min(y1, y2), min(z1, z2)], [max(x1, x2), max(y1, y2), max(z1, z2)]]
+
+
+def _module_warnings(size: tuple[int, int, int], modules: list[dict[str, Any]], interfaces: list[Any]) -> list[str]:
+    warnings: list[str] = []
+    names = {module["name"] for module in modules}
+    duplicate_names = _duplicates([module["name"] for module in modules])
+    if duplicate_names:
+        warnings.append(f"模块名称重复：{', '.join(duplicate_names)}。分部生成时模块名必须稳定唯一。")
+
+    for module in modules:
+        bbox = module["bbox"]
+        if bbox is None:
+            warnings.append(f"模块 {module['name']} 缺少有效 bbox。")
+            continue
+        if _bbox_outside(size, bbox):
+            warnings.append(f"模块 {module['name']} 的 bbox 超出 BuildPlan size。")
+        if module["role"] == "void" and _bbox_volume(bbox) == 0:
+            warnings.append(f"void 模块 {module['name']} 体积为 0，无法稳定清空空间。")
+
+    structural = [module for module in modules if module["bbox"] and module["role"] not in {"void", "detail", "lighting", "landscape"}]
+    if len(structural) >= 2 and not _has_touching_pair(structural) and not interfaces:
+        warnings.append("结构模块之间没有接触/接口声明，分部生成后可能断开。")
+
+    stage_order = _stage_order(modules)
+    if "void" in stage_order:
+        void_index = stage_order.index("void")
+        for later_role in ("facade", "interior", "lighting", "detail"):
+            if later_role in stage_order and stage_order.index(later_role) < void_index:
+                warnings.append("void/air 清空阶段应早于 facade/interior/lighting/detail，避免清掉后续细节。")
+                break
+
+    for index, raw in enumerate(interfaces):
+        if not isinstance(raw, dict):
+            warnings.append(f"接口 #{index + 1} 不是对象，无法校验。")
+            continue
+        a = raw.get("module_a") or raw.get("a")
+        b = raw.get("module_b") or raw.get("b")
+        if a and a not in names:
+            warnings.append(f"接口 #{index + 1} 引用了不存在的模块 {a}。")
+        if b and b not in names:
+            warnings.append(f"接口 #{index + 1} 引用了不存在的模块 {b}。")
+    return warnings
+
+
+def _module_coverage(size: tuple[int, int, int], modules: list[dict[str, Any]]) -> dict[str, float]:
+    sx, sy, sz = size
+    plan_volume = max(1, sx * sy * sz)
+    total = sum(module["volume"] for module in modules if module["bbox"])
+    void = sum(module["volume"] for module in modules if module["bbox"] and module["role"] == "void")
+    return {
+        "module_volume_to_plan": round(total / plan_volume, 4),
+        "void_volume_to_plan": round(void / plan_volume, 4),
+    }
+
+
+def _stage_order(modules: list[dict[str, Any]]) -> list[str]:
+    order: list[str] = []
+    for module in modules:
+        role = module.get("role", "unknown")
+        if role not in order:
+            order.append(role)
+    return order
+
+
+def _duplicates(values: list[str]) -> list[str]:
+    counts = Counter(values)
+    return sorted(value for value, count in counts.items() if count > 1)
+
+
+def _bbox_volume(bbox: list[list[int]]) -> int:
+    (x1, y1, z1), (x2, y2, z2) = bbox
+    return max(0, x2 - x1 + 1) * max(0, y2 - y1 + 1) * max(0, z2 - z1 + 1)
+
+
+def _bbox_outside(size: tuple[int, int, int], bbox: list[list[int]]) -> bool:
+    (x1, y1, z1), (x2, y2, z2) = bbox
+    sx, sy, sz = size
+    return x1 < 0 or y1 < 0 or z1 < 0 or x2 >= sx or y2 >= sy or z2 >= sz
+
+
+def _has_touching_pair(modules: list[dict[str, Any]]) -> bool:
+    for left_index, left in enumerate(modules):
+        for right in modules[left_index + 1:]:
+            if _bboxes_touch_or_overlap(left["bbox"], right["bbox"]):
+                return True
+    return False
+
+
+def _bboxes_touch_or_overlap(a: list[list[int]], b: list[list[int]]) -> bool:
+    (ax1, ay1, az1), (ax2, ay2, az2) = a
+    (bx1, by1, bz1), (bx2, by2, bz2) = b
+    return (
+        ax1 <= bx2 + 1
+        and ax2 + 1 >= bx1
+        and ay1 <= by2 + 1
+        and ay2 + 1 >= by1
+        and az1 <= bz2 + 1
+        and az2 + 1 >= bz1
+    )
 
 
 def _aspect(size: tuple[int, int, int]) -> dict[str, float]:

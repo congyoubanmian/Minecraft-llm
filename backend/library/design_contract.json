@@ -32,6 +32,14 @@
         "bottom": "optional foundation/floor connection"
       }
     },
+    "interface_schema": {
+      "module_a": "first module name",
+      "face_a": "north|south|east|west|top|bottom",
+      "module_b": "second module name",
+      "face_b": "north|south|east|west|top|bottom",
+      "kind": "touch|overlap_one_block|support|opening|bridge_connection",
+      "note": "short explanation of the required cut-face alignment"
+    },
     "split_generation_rules": [
       "Split only by modules with explicit bboxes and shared interface faces.",
       "All module bboxes must be in the same local coordinate system.",

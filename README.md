@@ -410,6 +410,35 @@ material_schedule   材料表
 quality_checks      生成后要检查的要点
 ```
 
+模块示例：
+
+```json
+{
+  "name": "skybridge",
+  "role": "structure",
+  "bbox": [[40, 120, 18], [104, 150, 78]],
+  "materials": ["frame", "glass", "floor"],
+  "interfaces": {
+    "west": "left_tower.east",
+    "east": "right_tower.west",
+    "bottom": "walkable corridor floor"
+  }
+}
+```
+
+接口示例：
+
+```json
+{
+  "module_a": "left_tower",
+  "face_a": "east",
+  "module_b": "skybridge",
+  "face_b": "west",
+  "kind": "overlap_one_block",
+  "note": "连桥和左塔在接口面重叠一格，避免分部生成后断开"
+}
+```
+
 如果单次 LLM 输出太大，后续可以按模块分部调用：
 
 ```text
@@ -426,6 +455,18 @@ quality_checks      生成后要检查的要点
 
 关键是所有模块必须使用同一个本地坐标系，并且每个模块都有明确 bbox 和 interface。这样切口长度、楼层高度、桥梁接口、屋顶边界才能对齐，不会出现拼接错位。
 
+当前后端已经会对这些模块做第一版诊断：
+
+```text
+模块 bbox 是否有效
+模块 bbox 是否越过 BuildPlan size
+模块名称是否重复
+接口是否引用了不存在的模块
+结构模块之间是否没有接触或接口声明
+void/air 清空阶段是否排在 facade/interior/lighting/detail 之前
+是否具备 stitch_ready
+```
+
 ## 生成诊断
 
 每次生成时后端会额外输出：
@@ -440,6 +481,7 @@ project_xxx.analysis.json
 模板猜测
 parts 数量
 design_spec 模块数量
+stitch_ready 拼接是否基本可靠
 玻璃比例
 灯光比例
 组件类别

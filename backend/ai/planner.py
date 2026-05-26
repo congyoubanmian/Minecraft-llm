@@ -180,6 +180,16 @@ The JSON must match this shape:
 	          "interfaces": {{"top": "expected connection"}}
 	        }}
 	      ],
+	      "interfaces": [
+	        {{
+	          "module_a": "left_tower",
+	          "face_a": "top",
+	          "module_b": "skybridge",
+	          "face_b": "bottom",
+	          "kind": "support",
+	          "note": "shared support face or one-block overlap"
+	        }}
+	      ],
 	      "material_schedule": ["role=block with reason"],
 	      "quality_checks": ["checks to verify recognizability"]
 	    }},
@@ -362,6 +372,9 @@ Rules:
 	  can understand why the design used or avoided specific components.
 	- Include analysis.design_spec with module bboxes and interfaces before parts.
 	  Treat this as the construction drawing: parts must follow those dimensions.
+	- For every important module connection, include a design_spec.interfaces entry
+	  using module_a, face_a, module_b, face_b, kind, and note. Interface module
+	  names must exactly match design_spec.modules names.
 	- The output must pass the existing Pydantic BuildPlan schema in backend/dsl/schema.py.
 
 Vision summary:
@@ -421,6 +434,9 @@ larger landmark. Prefer valid vanilla Java Edition block ids without the
 	- For complex or large projects, split conceptually by modules but keep one
 	  final BuildPlan JSON. Every module must share the same coordinates and exact
 	  interface faces so future split-LLM generation can be stitched safely.
+	- For every important module connection, include a design_spec.interfaces entry
+	  using module_a, face_a, module_b, face_b, kind, and note. Interface module
+	  names must exactly match design_spec.modules names.
 	- If the previous plan used a too-specific component family, switch templates and
 	  explain that in analysis.changes.
 	- Use enough explicit parts for recognizable massing, facade, roof, entrances,
