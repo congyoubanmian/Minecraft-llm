@@ -110,6 +110,7 @@ Minecraft-llm/
 ├── scripts/
 │   ├── generate_tianning_octagonal_v3.py
 │   └── ...                            # 示例建筑生成脚本
+├── docs/experiences/                  # 每次建造和调试的经验记录
 ├── server/                            # Paper 服务端数据，默认不提交
 ├── docker-compose.yml
 └── README.md

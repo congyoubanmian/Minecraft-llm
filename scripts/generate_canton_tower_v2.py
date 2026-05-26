@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -30,6 +31,64 @@ def box(parts: list[dict], a: tuple[int, int, int], b: tuple[int, int, int], blo
 
 def blocks(parts: list[dict], points: list[tuple[int, int, int, str]]) -> None:
     parts.append({"type": "blocks", "blocks": [{"pos": [x, y, z], "block": block} for x, y, z, block in points]})
+
+
+def _twisted_radius(t: float, base: int, waist: int, top: int, waist_t: float) -> float:
+    if t <= waist_t:
+        local = t / max(0.01, waist_t)
+        eased = local * local * (3 - 2 * local)
+        return base + (waist - base) * eased
+    local = (t - waist_t) / max(0.01, 1 - waist_t)
+    eased = local * local * (3 - 2 * local)
+    return waist + (top - waist) * eased
+
+
+def add_twisted_shell_skin(
+    parts: list[dict],
+    *,
+    center: tuple[int, int, int],
+    body_y1: int,
+    body_height: int,
+    y1: int,
+    y2: int,
+    base_radius: int,
+    waist_radius: int,
+    top_radius: int,
+    waist_y_ratio: float,
+    z_radius_scale: float,
+    twist_degrees: float,
+    struts: int,
+) -> None:
+    cx, _, cz = center
+    twist = math.radians(twist_degrees)
+    for y in range(y1, y2 + 1, 3):
+        t = (y - body_y1) / max(1, body_height)
+        t = max(0.0, min(1.0, t))
+        rx = _twisted_radius(t, base_radius, waist_radius, top_radius, waist_y_ratio)
+        rz = max(2.0, rx * z_radius_scale)
+        angle_offset = twist * t
+        layer_struts = max(24, struts + (10 if y >= y1 + 140 else 0))
+        for index in range(layer_struts):
+            angle = math.tau * index / layer_struts + angle_offset
+            x = cx + round(math.cos(angle) * rx)
+            z = cz + round(math.sin(angle) * rz)
+            if y % 12 in (0, 1, 2):
+                block = "screen_light"
+            else:
+                mod = (index + y) % 17
+                if mod == 0:
+                    block = "media_blue"
+                elif mod == 1:
+                    block = "media_purple"
+                elif mod == 2:
+                    block = "media_green"
+                elif mod == 3:
+                    block = "media_red"
+                else:
+                    block = "screen_light"
+            box(parts, (x, y, z), (x, y, z), block)
+            if y >= y1 + 128 and index % 4 == 0:
+                box(parts, (x, y + 1, z), (x, y + 1, z), "screen_light")
 
 
 def build_plan() -> BuildPlan:
@@ -68,6 +127,36 @@ def build_plan() -> BuildPlan:
     box(parts, (30, 328, 30), (66, 338, 66), "observation", hollow=True)
     box(parts, (32, 339, 32), (64, 346, 64), "media_purple", hollow=True)
     box(parts, (35, 356, 35), (61, 364, 61), "ring", hollow=True)
+    add_twisted_shell_skin(
+        parts,
+        center=(48, 8, 48),
+        body_y1=8,
+        body_height=360,
+        y1=24,
+        y2=360,
+        base_radius=32,
+        waist_radius=10,
+        top_radius=22,
+        waist_y_ratio=0.56,
+        z_radius_scale=0.78,
+        twist_degrees=170,
+        struts=36,
+    )
+    add_twisted_shell_skin(
+        parts,
+        center=(48, 8, 48),
+        body_y1=8,
+        body_height=360,
+        y1=364,
+        y2=456,
+        base_radius=22,
+        waist_radius=16,
+        top_radius=11,
+        waist_y_ratio=0.56,
+        z_radius_scale=0.76,
+        twist_degrees=170,
+        struts=30,
+    )
 
     # Dense LED nodes and media bands. Canton Tower reads as a self-lit screen at night.
     points: list[tuple[int, int, int, str]] = []
@@ -105,7 +194,8 @@ def build_plan() -> BuildPlan:
             "glass": "light_blue_stained_glass",
             "core": "white_concrete",
             "observation": "cyan_stained_glass",
-            "night_light": "redstone_lamp",
+            "night_light": "sea_lantern",
+            "screen_light": "sea_lantern",
             "media_blue": "blue_stained_glass",
             "media_purple": "purple_stained_glass",
             "media_green": "lime_stained_glass",
@@ -185,20 +275,22 @@ def build_plan() -> BuildPlan:
                     "lattice=iron_block for silver structural mesh",
                     "ring=light_gray_concrete for horizontal deck bands",
                     "glass/light_blue_stained_glass for observation skin",
-                    "night_light=redstone_lamp for red lattice nodes",
-                    "blue/purple/lime/red stained glass for large LED screen color bands",
+                    "night_light=sea_lantern for visible luminous nodes",
+                    "screen_light=sea_lantern for the visible LED skin of the entire tower",
+                    "blue/purple/lime/red stained glass for sparse screen accents",
+                    "screen skin follows the tower curvature instead of a rectangular box",
                 ],
                 "quality_checks": [
                     "height_to_width > 2.5",
                     "waist radius much smaller than base radius",
                     "twisted diagonal lattice visible",
-                    "night facade has dense LED nodes and colored media bands",
+                    "night facade is almost entirely a glowing LED skin with sparse color accents",
                     "no pagoda eaves or ancient spire",
                 ],
             },
             "massing": ["slender hyperboloid", "narrow waist", "upper observation decks", "antenna mast"],
-            "facade": ["rotating silver lattice", "cyan glass decks", "red night light points", "colored LED media bands"],
-            "changes": ["superheight version for Bedrock-safe y<=511 world", "adds dense night lighting and screen-like colored LED bands"],
+            "facade": ["rotating silver lattice", "cyan glass decks", "glowing sea-lantern nodes", "full LED screen skin"],
+            "changes": ["superheight version for Bedrock-safe y<=511 world", "switches night lights from non-powered redstone lamps to sea lanterns", "turns the entire tower shell into a visible LED skin"],
         },
         "parts": parts,
     }
