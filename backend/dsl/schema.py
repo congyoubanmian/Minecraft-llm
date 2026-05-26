@@ -149,6 +149,15 @@ class FacadePanelRingPart(BaseModel):
     plaque: str | None = None
 
 
+class ComponentPart(BaseModel):
+    type: Literal["component"]
+    name: str = Field(pattern=r"^[a-zA-Z0-9_-]+$")
+    at: Vec3 = (0, 0, 0)
+    scale: float = Field(default=1.0, ge=0.25, le=8.0)
+    parameters: dict[str, int | float | str | bool] = Field(default_factory=dict)
+    materials: dict[str, str] = Field(default_factory=dict)
+
+
 class BlockPlacement(BaseModel):
     pos: Vec3
     block: str
@@ -174,6 +183,7 @@ BuildPart = (
     | VajraSpirePart
     | MiniPagodaRingPart
     | FacadePanelRingPart
+    | ComponentPart
     | BlocksPart
 )
 

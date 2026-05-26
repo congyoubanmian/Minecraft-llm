@@ -16,6 +16,7 @@ from backend.ai import analyze_image, plan_build
 from backend.ai.planner import plan_from_conversation
 from backend.config import ROOT_DIR, settings
 from backend.dsl.schema import BuildPlan
+from backend.library import load_components, load_materials
 from backend.minecraft import FaweController
 from backend.minecraft.rcon import MinecraftRcon, RconConfig
 from backend.schematic.generator import generate_outputs
@@ -60,6 +61,14 @@ def startup() -> None:
 @app.get("/api/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/api/library")
+def get_library() -> dict[str, Any]:
+    return {
+        "materials": load_materials().get("palettes", {}),
+        "components": load_components().get("components", {}),
+    }
 
 
 @app.post("/api/builds")

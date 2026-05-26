@@ -7,6 +7,7 @@ from pathlib import Path
 from backend.ai.vision import VisionSummary
 from backend.config import ROOT_DIR, settings
 from backend.dsl.schema import BuildPlan
+from backend.library import get_library_context
 
 
 def plan_build(summary: VisionSummary, name: str, image_path: Path | None = None) -> BuildPlan:
@@ -118,6 +119,7 @@ def _codex_plan(summary: VisionSummary, name: str, image_path: Path | None) -> B
 
 
 def _build_codex_prompt(summary: VisionSummary, name: str, output_path: Path) -> str:
+    library_context = get_library_context()
     return f"""
 You are generating a high-detail Minecraft building DSL file for an automated schematic generator.
 
@@ -164,7 +166,43 @@ The JSON must match this shape:
   "parts": []
 }}
 
-Allowed part types:
+Allowed part types include primitive parts and reusable library components:
+
+Primitive parts:
+- box
+- roof_gable
+- window_grid
+- window
+- door
+- stairs
+- slab
+- cylinder
+- blocks
+- octagonal_tower
+- octagonal_roof
+- octagonal_eave
+- vajra_spire
+- mini_pagoda_ring
+- facade_panel_ring
+
+Reusable component part:
+{{
+  "type": "component",
+  "name": "pagoda_tier",
+  "at": [0, 0, 0],
+  "scale": 1.0,
+  "parameters": {{"radius": 18, "height": 8}},
+  "materials": {{"body": "smooth_quartz", "roof": "oxidized_cut_copper"}}
+}}
+
+Use components when the target contains reusable structures such as pagoda tiers,
+bridges, suspension bridge segments, concrete podiums, or small pagoda clusters.
+Components can be stacked, shifted, scaled, and material-overridden.
+
+Available material palettes and component blueprints:
+{json.dumps(library_context, ensure_ascii=False, indent=2)}
+
+Primitive part examples:
 
 1. box
 {{
@@ -269,6 +307,8 @@ Rules:
 - If the picture shows only one facade, still give the building shallow side/back volume so it is usable in Minecraft.
 - Prefer valid Java Edition block ids, without the "minecraft:" prefix.
 - Use palette keys in parts where possible.
+- Prefer component parts for repeated architectural systems, then add primitive
+  parts for custom details.
 - The output must pass the existing Pydantic BuildPlan schema in backend/dsl/schema.py.
 
 Vision summary:
@@ -284,6 +324,7 @@ def _build_conversation_prompt(
     messages: list[dict[str, str]],
     current_plan: dict | None,
 ) -> str:
+    library_context = get_library_context()
     return f"""
 You are modifying a Minecraft building plan through a multi-turn design chat.
 
@@ -292,17 +333,22 @@ Write exactly one JSON file at:
 
 Do not modify any other file. Return no prose outside that file.
 
-The JSON must validate against backend/dsl/schema.py and use the same part types
-as the existing image-to-DSL planner:
-- box
-- roof_gable
-- window_grid
-- window
-- door
-- stairs
-- slab
-- cylinder
-- blocks
+The JSON must validate against backend/dsl/schema.py. You may use primitive parts
+or reusable component parts. Prefer components for repeated systems and use
+primitive parts for custom transitions/details.
+
+Available material palettes and component blueprints:
+{json.dumps(library_context, ensure_ascii=False, indent=2)}
+
+Component example:
+{{
+  "type": "component",
+  "name": "stone_arch_bridge",
+  "at": [0, 0, 0],
+  "scale": 1.25,
+  "parameters": {{}},
+  "materials": {{"stone": "deepslate_bricks", "deck": "smooth_stone"}}
+}}
 
 Keep size within [16..96, 10..96, 16..96] unless the user explicitly asks for a
 larger landmark. Prefer valid vanilla Java Edition block ids without the

@@ -1,0 +1,69 @@
+{
+  "palettes": {
+    "tianning_pagoda": {
+      "description": "White jade body, oxidized copper eaves, gold spire, suitable for Chinese pagodas.",
+      "blocks": {
+        "body": "smooth_quartz",
+        "body_alt": "quartz_bricks",
+        "roof": "oxidized_cut_copper",
+        "roof_dark": "exposed_cut_copper",
+        "trim": "cut_copper",
+        "base": "stone_bricks",
+        "stone": "polished_andesite",
+        "gold": "gold_block",
+        "glass": "cyan_stained_glass_pane",
+        "light": "lantern"
+      }
+    },
+    "jiangnan_wood": {
+      "description": "White plaster, dark timber, grey tile roof, suitable for Jiangnan alleys and old houses.",
+      "blocks": {
+        "wall": "white_concrete",
+        "beam": "dark_oak_log",
+        "frame": "dark_oak_planks",
+        "roof": "deepslate_tile_stairs",
+        "roof_fill": "deepslate_tiles",
+        "base": "stone_bricks",
+        "floor": "spruce_planks",
+        "window": "glass_pane",
+        "lantern": "redstone_lamp"
+      }
+    },
+    "modern_concrete": {
+      "description": "Cast-in-place concrete, glass curtain walls, exposed structure, suitable for bridges and civic buildings.",
+      "blocks": {
+        "concrete": "light_gray_concrete",
+        "concrete_dark": "gray_concrete",
+        "rebar": "iron_bars",
+        "glass": "light_blue_stained_glass",
+        "road": "black_concrete",
+        "lane": "white_concrete",
+        "accent": "polished_andesite",
+        "light": "sea_lantern"
+      }
+    },
+    "stone_arch_bridge": {
+      "description": "Grey stone arch bridge palette.",
+      "blocks": {
+        "stone": "stone_bricks",
+        "trim": "polished_andesite",
+        "deck": "smooth_stone",
+        "rail": "stone_brick_wall",
+        "water": "water",
+        "light": "lantern"
+      }
+    },
+    "suspension_bridge": {
+      "description": "Steel and concrete suspension bridge palette.",
+      "blocks": {
+        "tower": "light_gray_concrete",
+        "deck": "smooth_stone",
+        "road": "black_concrete",
+        "cable": "iron_bars",
+        "hanger": "chain",
+        "rail": "iron_bars",
+        "light": "sea_lantern"
+      }
+    }
+  }
+}

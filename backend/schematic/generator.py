@@ -9,6 +9,7 @@ from backend.dsl.schema import (
     BlocksPart,
     BuildPlan,
     BoxPart,
+    ComponentPart,
     CylinderPart,
     DoorPart,
     GableRoofPart,
@@ -23,6 +24,7 @@ from backend.dsl.schema import (
     WindowGridPart,
     WindowPart,
 )
+from backend.library import get_component
 
 
 def generate_outputs(plan: BuildPlan, schematic_dir: Path, preview_dir: Path, max_preview_blocks: int = 120_000) -> tuple[Path, Path, Path]:
@@ -66,39 +68,7 @@ def render_plan_to_blocks(plan: BuildPlan) -> BlockList:
 
 
 def _render_plan(target: Any, plan: BuildPlan) -> None:
-    for part in plan.parts:
-        if isinstance(part, BoxPart):
-            _box(target, plan, part)
-        elif isinstance(part, GableRoofPart):
-            _gable_roof(target, plan, part)
-        elif isinstance(part, WindowGridPart):
-            _window_grid(target, plan, part)
-        elif isinstance(part, WindowPart):
-            _window(target, plan, part)
-        elif isinstance(part, DoorPart):
-            _door(target, plan, part)
-        elif isinstance(part, StairPart):
-            _stairs(target, plan, part)
-        elif isinstance(part, SlabPart):
-            _slab(target, plan, part)
-        elif isinstance(part, CylinderPart):
-            _cylinder(target, plan, part)
-        elif isinstance(part, OctagonalTowerPart):
-            _octagonal_tower(target, plan, part)
-        elif isinstance(part, OctagonalRoofPart):
-            _octagonal_roof(target, plan, part)
-        elif isinstance(part, OctagonalEavePart):
-            _octagonal_eave(target, plan, part)
-        elif isinstance(part, VajraSpirePart):
-            _vajra_spire(target, plan, part)
-        elif isinstance(part, MiniPagodaRingPart):
-            _mini_pagoda_ring(target, plan, part)
-        elif isinstance(part, FacadePanelRingPart):
-            _facade_panel_ring(target, plan, part)
-        elif isinstance(part, BlocksPart):
-            _blocks(target, plan, part)
-        else:
-            raise ValueError(f"unsupported build part: {part}")
+    _render_plan_parts(target, plan, list(plan.parts))
 
 
 def _set(target: Any, pos: tuple[int, int, int], block: str) -> None:
@@ -507,6 +477,106 @@ def _facade_panel_ring(schem: Any, plan: BuildPlan, part: FacadePanelRingPart) -
             _fill(schem, plan, (x, y1 - 1, cz + half + 1), (x, y2 + 1, cz + half + 1), frame)
             if plaque:
                 _set(schem, (x, y2 + 2, cz), plaque)
+
+
+def _component(schem: Any, plan: BuildPlan, part: ComponentPart) -> None:
+    component = get_component(part.name)
+    parameters = dict(component.get("parameters", {}))
+    parameters.update(part.parameters)
+    materials = dict(component.get("default_materials", {}))
+    materials.update(part.materials)
+    scale = part.scale
+    ax, ay, az = part.at
+
+    for raw_part in component.get("parts", []):
+        expanded = _expand_component_value(raw_part, parameters, materials, scale, (ax, ay, az))
+        nested = _component_part_model(expanded)
+        _render_plan_parts(schem, plan, [nested])
+
+
+def _render_plan_parts(target: Any, plan: BuildPlan, parts: list[Any]) -> None:
+    for part in parts:
+        if isinstance(part, BoxPart):
+            _box(target, plan, part)
+        elif isinstance(part, GableRoofPart):
+            _gable_roof(target, plan, part)
+        elif isinstance(part, WindowGridPart):
+            _window_grid(target, plan, part)
+        elif isinstance(part, WindowPart):
+            _window(target, plan, part)
+        elif isinstance(part, DoorPart):
+            _door(target, plan, part)
+        elif isinstance(part, StairPart):
+            _stairs(target, plan, part)
+        elif isinstance(part, SlabPart):
+            _slab(target, plan, part)
+        elif isinstance(part, CylinderPart):
+            _cylinder(target, plan, part)
+        elif isinstance(part, OctagonalTowerPart):
+            _octagonal_tower(target, plan, part)
+        elif isinstance(part, OctagonalRoofPart):
+            _octagonal_roof(target, plan, part)
+        elif isinstance(part, OctagonalEavePart):
+            _octagonal_eave(target, plan, part)
+        elif isinstance(part, VajraSpirePart):
+            _vajra_spire(target, plan, part)
+        elif isinstance(part, MiniPagodaRingPart):
+            _mini_pagoda_ring(target, plan, part)
+        elif isinstance(part, FacadePanelRingPart):
+            _facade_panel_ring(target, plan, part)
+        elif isinstance(part, ComponentPart):
+            _component(target, plan, part)
+        elif isinstance(part, BlocksPart):
+            _blocks(target, plan, part)
+        else:
+            raise ValueError(f"unsupported component part: {part}")
+
+
+def _component_part_model(data: dict[str, Any]) -> Any:
+    part_type = data.get("type")
+    models = {
+        "box": BoxPart,
+        "roof_gable": GableRoofPart,
+        "window_grid": WindowGridPart,
+        "window": WindowPart,
+        "door": DoorPart,
+        "stairs": StairPart,
+        "slab": SlabPart,
+        "cylinder": CylinderPart,
+        "octagonal_tower": OctagonalTowerPart,
+        "octagonal_roof": OctagonalRoofPart,
+        "octagonal_eave": OctagonalEavePart,
+        "vajra_spire": VajraSpirePart,
+        "mini_pagoda_ring": MiniPagodaRingPart,
+        "facade_panel_ring": FacadePanelRingPart,
+        "component": ComponentPart,
+        "blocks": BlocksPart,
+    }
+    if part_type not in models:
+        raise ValueError(f"unsupported component part type: {part_type}")
+    return models[part_type].model_validate(data)
+
+
+def _expand_component_value(value: Any, parameters: dict[str, Any], materials: dict[str, str], scale: float, offset: tuple[int, int, int]) -> Any:
+    if isinstance(value, str):
+        if value.startswith("$"):
+            key = value[1:]
+            return parameters.get(key, value)
+        return materials.get(value, value)
+    if isinstance(value, list):
+        expanded = [_expand_component_value(item, parameters, materials, scale, offset) for item in value]
+        if len(expanded) == 3 and all(isinstance(item, (int, float)) for item in expanded):
+            return _scale_pos(expanded, scale, offset)
+        return expanded
+    if isinstance(value, dict):
+        return {key: _expand_component_value(item, parameters, materials, scale, offset) for key, item in value.items()}
+    if isinstance(value, (int, float)) and scale != 1.0:
+        return max(1, round(value * scale))
+    return value
+
+
+def _scale_pos(pos: list[int | float], scale: float, offset: tuple[int, int, int]) -> list[int]:
+    return [round(pos[0] * scale) + offset[0], round(pos[1] * scale) + offset[1], round(pos[2] * scale) + offset[2]]
 
 
 def _small_spire(

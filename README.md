@@ -220,6 +220,7 @@ POST /api/projects/{project_id}/placement
 GET  /api/projects/{project_id}/preview
 GET  /api/projects/{project_id}/materials
 GET  /api/projects/{project_id}/schematic
+GET  /api/library
 ```
 
 旧版单任务接口仍保留：
@@ -269,6 +270,7 @@ octagonal_eave
 vajra_spire
 mini_pagoda_ring
 facade_panel_ring
+component
 ```
 
 为了生成更像宝塔的建筑，项目新增了几个偏建筑语义的部件：
@@ -279,6 +281,74 @@ octagonal_eave       八角飞檐，带外挑和翘角
 facade_panel_ring    八面重复窗格/匾额
 mini_pagoda_ring     塔基周围小白塔
 vajra_spire          金刚宝座式金色塔刹
+```
+
+## 材料库和组件库
+
+项目现在支持数据驱动的材料库和组件库：
+
+```text
+backend/library/materials.json
+backend/library/components.json
+```
+
+材料库用于描述一组建筑风格常用方块，例如：
+
+```text
+tianning_pagoda      白玉塔身、青铜飞檐、金色塔刹
+jiangnan_wood        江南白墙、深色木构、灰瓦
+modern_concrete      现浇混凝土、玻璃、外露结构
+stone_arch_bridge    石拱桥
+suspension_bridge    悬索桥
+```
+
+组件库用于把常见结构拆成可复用的小组件。LLM 可以引用这些组件，放大、缩小、平移、改参数、换材料，再叠加成完整建筑。
+
+当前组件示例：
+
+```text
+pagoda_tier                 单层八角宝塔组件
+mini_pagoda_cluster         塔基小白塔环绕
+stone_arch_bridge           石拱桥
+concrete_podium             现浇混凝土基座/裙房
+suspension_bridge_segment   悬索桥片段
+```
+
+DSL 中使用组件：
+
+```json
+{
+  "type": "component",
+  "name": "pagoda_tier",
+  "at": [0, 24, 0],
+  "scale": 1.25,
+  "parameters": {
+    "radius": 18,
+    "height": 8,
+    "eave_overhang": 6
+  },
+  "materials": {
+    "body": "smooth_quartz",
+    "roof": "oxidized_cut_copper",
+    "trim": "cut_copper"
+  }
+}
+```
+
+这意味着以后可以让 LLM 组合：
+
+```text
+3 个 pagoda_tier 叠成塔身
+1 个 mini_pagoda_cluster 做塔基
+1 个 stone_arch_bridge 做入口桥
+1 个 concrete_podium 做现代混凝土平台
+若干 box/window/slab 做自定义细节
+```
+
+验证组件库：
+
+```bash
+.venv/bin/python scripts/test_component_library.py
 ```
 
 ## Schematic 粘贴流程
@@ -436,6 +506,7 @@ McSTools/
 
 - 接入真正的视觉模型，例如 GPT-4o / Qwen-VL。
 - 实现 `.litematic` / `.schem` 导入到 `BlockList`。
+- 继续扩充组件库，例如廊桥、拱券、斗拱、悬索桥塔、混凝土框架、幕墙单元。
 - 预览支持分层、材料过滤、LOD 和点击查看方块。
 - 增加任务队列，支持多个大项目并行排队。
 - 增加材质包映射，让建筑能针对不同材质包优化。

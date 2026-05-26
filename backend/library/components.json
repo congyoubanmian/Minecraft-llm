@@ -1,0 +1,280 @@
+{
+  "components": {
+    "pagoda_tier": {
+      "description": "A reusable octagonal pagoda tier: hollow body, eight facade panels, overhanging eave, corner ribs.",
+      "size": [64, 14, 64],
+      "parameters": {
+        "radius": 18,
+        "height": 8,
+        "eave_overhang": 6
+      },
+      "default_materials": {
+        "body": "smooth_quartz",
+        "body_alt": "quartz_bricks",
+        "roof": "oxidized_cut_copper",
+        "roof_dark": "exposed_cut_copper",
+        "trim": "cut_copper",
+        "glass": "cyan_stained_glass_pane",
+        "gold": "gold_block",
+        "light": "lantern"
+      },
+      "parts": [
+        {
+          "type": "octagonal_tower",
+          "center": [32, 0, 32],
+          "radius": "$radius",
+          "height": "$height",
+          "block": "body",
+          "hollow": true,
+          "thickness": 2,
+          "floor_block": "body",
+          "floor_interval": "$height",
+          "trim_block": "trim"
+        },
+        {
+          "type": "facade_panel_ring",
+          "center": [32, 0, 32],
+          "radius": "$radius",
+          "y": 3,
+          "height": 3,
+          "width": 4,
+          "glass": "glass",
+          "frame": "trim",
+          "plaque": "gold"
+        },
+        {
+          "type": "octagonal_eave",
+          "center": [32, "$height", 32],
+          "radius": "$radius",
+          "overhang": "$eave_overhang",
+          "thickness": 3,
+          "block": "roof",
+          "underside": "roof_dark",
+          "corner_block": "gold",
+          "lantern": "light"
+        }
+      ]
+    },
+    "mini_pagoda_cluster": {
+      "description": "A ring of small pagodas around a plaza or tower base.",
+      "size": [96, 16, 96],
+      "parameters": {
+        "ring_radius": 36,
+        "count": 16,
+        "pagoda_radius": 2,
+        "height": 9
+      },
+      "default_materials": {
+        "body": "smooth_quartz",
+        "roof": "cut_copper",
+        "gold": "gold_block"
+      },
+      "parts": [
+        {
+          "type": "mini_pagoda_ring",
+          "center": [48, 0, 48],
+          "ring_radius": "$ring_radius",
+          "count": "$count",
+          "pagoda_radius": "$pagoda_radius",
+          "height": "$height",
+          "block": "body",
+          "roof": "roof",
+          "accent": "gold"
+        }
+      ]
+    },
+    "stone_arch_bridge": {
+      "description": "A simple grey stone arch bridge with deck and side rails.",
+      "size": [48, 18, 14],
+      "parameters": {
+        "span": 40,
+        "width": 10,
+        "arch_height": 10
+      },
+      "default_materials": {
+        "stone": "stone_bricks",
+        "trim": "polished_andesite",
+        "deck": "smooth_stone",
+        "rail": "stone_brick_wall",
+        "light": "lantern"
+      },
+      "parts": [
+        {
+          "type": "box",
+          "from": [4, 10, 2],
+          "to": [44, 11, 12],
+          "block": "deck"
+        },
+        {
+          "type": "box",
+          "from": [4, 12, 1],
+          "to": [44, 13, 1],
+          "block": "rail"
+        },
+        {
+          "type": "box",
+          "from": [4, 12, 13],
+          "to": [44, 13, 13],
+          "block": "rail"
+        },
+        {
+          "type": "box",
+          "from": [4, 0, 2],
+          "to": [7, 10, 12],
+          "block": "stone"
+        },
+        {
+          "type": "box",
+          "from": [41, 0, 2],
+          "to": [44, 10, 12],
+          "block": "stone"
+        },
+        {
+          "type": "blocks",
+          "blocks": [
+            {"pos": [12, 8, 2], "block": "trim"},
+            {"pos": [16, 6, 2], "block": "trim"},
+            {"pos": [20, 5, 2], "block": "trim"},
+            {"pos": [24, 4, 2], "block": "trim"},
+            {"pos": [28, 5, 2], "block": "trim"},
+            {"pos": [32, 6, 2], "block": "trim"},
+            {"pos": [36, 8, 2], "block": "trim"},
+            {"pos": [12, 8, 12], "block": "trim"},
+            {"pos": [16, 6, 12], "block": "trim"},
+            {"pos": [20, 5, 12], "block": "trim"},
+            {"pos": [24, 4, 12], "block": "trim"},
+            {"pos": [28, 5, 12], "block": "trim"},
+            {"pos": [32, 6, 12], "block": "trim"},
+            {"pos": [36, 8, 12], "block": "trim"}
+          ]
+        }
+      ]
+    },
+    "concrete_podium": {
+      "description": "Cast-in-place concrete podium with exposed frame and glass infill.",
+      "size": [48, 20, 32],
+      "parameters": {
+        "floors": 2,
+        "floor_height": 7
+      },
+      "default_materials": {
+        "concrete": "light_gray_concrete",
+        "concrete_dark": "gray_concrete",
+        "glass": "light_blue_stained_glass",
+        "accent": "polished_andesite"
+      },
+      "parts": [
+        {
+          "type": "box",
+          "from": [0, 0, 0],
+          "to": [47, 1, 31],
+          "block": "concrete_dark"
+        },
+        {
+          "type": "box",
+          "from": [2, 2, 2],
+          "to": [45, 15, 29],
+          "block": "concrete",
+          "hollow": true
+        },
+        {
+          "type": "box",
+          "from": [4, 4, 1],
+          "to": [43, 12, 1],
+          "block": "glass"
+        },
+        {
+          "type": "box",
+          "from": [2, 8, 2],
+          "to": [45, 8, 29],
+          "block": "concrete_dark"
+        },
+        {
+          "type": "box",
+          "from": [0, 16, 0],
+          "to": [47, 17, 31],
+          "block": "accent"
+        }
+      ]
+    },
+    "suspension_bridge_segment": {
+      "description": "Bridge segment with road deck, two towers, cable line, and hangers.",
+      "size": [96, 36, 18],
+      "parameters": {
+        "length": 96,
+        "tower_height": 30
+      },
+      "default_materials": {
+        "tower": "light_gray_concrete",
+        "deck": "smooth_stone",
+        "road": "black_concrete",
+        "cable": "iron_bars",
+        "hanger": "chain",
+        "rail": "iron_bars",
+        "light": "sea_lantern"
+      },
+      "parts": [
+        {
+          "type": "box",
+          "from": [0, 8, 4],
+          "to": [95, 9, 13],
+          "block": "deck"
+        },
+        {
+          "type": "box",
+          "from": [0, 10, 6],
+          "to": [95, 10, 11],
+          "block": "road"
+        },
+        {
+          "type": "box",
+          "from": [16, 8, 3],
+          "to": [19, 34, 5],
+          "block": "tower"
+        },
+        {
+          "type": "box",
+          "from": [16, 8, 12],
+          "to": [19, 34, 14],
+          "block": "tower"
+        },
+        {
+          "type": "box",
+          "from": [76, 8, 3],
+          "to": [79, 34, 5],
+          "block": "tower"
+        },
+        {
+          "type": "box",
+          "from": [76, 8, 12],
+          "to": [79, 34, 14],
+          "block": "tower"
+        },
+        {
+          "type": "box",
+          "from": [0, 24, 4],
+          "to": [95, 24, 4],
+          "block": "cable"
+        },
+        {
+          "type": "box",
+          "from": [0, 24, 13],
+          "to": [95, 24, 13],
+          "block": "cable"
+        },
+        {
+          "type": "box",
+          "from": [0, 11, 3],
+          "to": [95, 12, 3],
+          "block": "rail"
+        },
+        {
+          "type": "box",
+          "from": [0, 11, 14],
+          "to": [95, 12, 14],
+          "block": "rail"
+        }
+      ]
+    }
+  }
+}
