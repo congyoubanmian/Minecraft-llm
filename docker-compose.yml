@@ -1,0 +1,78 @@
+services:
+  minecraft:
+    image: itzg/minecraft-server:java21
+    container_name: mc-ai-paper
+    environment:
+      EULA: "TRUE"
+      TYPE: "PAPER"
+      VERSION: "1.21.4"
+      MEMORY: "2G"
+      ONLINE_MODE: "FALSE"
+      ENABLE_RCON: "TRUE"
+      RCON_PORT: "25575"
+      RCON_PASSWORD: "minecraft-ai-builder"
+      OPS: "BuilderBot"
+      MODRINTH_PROJECTS: "fastasyncworldedit"
+      SKIP_DOWNLOAD_DEFAULTS: "TRUE"
+      JVM_XX_OPTS: "-Djava.net.preferIPv4Stack=true"
+    ports:
+      - "25565:25565"
+      - "25575:25575"
+      - "19132:19132/udp"
+    volumes:
+      - ./server:/data
+    restart: unless-stopped
+
+  bot:
+    build:
+      context: ./bot
+    container_name: mc-ai-bot
+    environment:
+      MC_HOST: "minecraft"
+      MC_PORT: "25565"
+      BOT_USERNAME: "BuilderBot"
+      BOT_HTTP_PORT: "3001"
+    ports:
+      - "3001:3001"
+    depends_on:
+      - minecraft
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: mc-ai-backend
+    environment:
+      UPLOAD_DIR: "/app/backend/uploads"
+      SCHEMATIC_DIR: "/app/server/plugins/FastAsyncWorldEdit/schematics"
+      RCON_HOST: "minecraft"
+      RCON_PORT: "25575"
+      RCON_PASSWORD: "minecraft-ai-builder"
+      BOT_URL: "http://bot:3001"
+      PLANNER_MODE: "codex"
+      GENERATED_PLAN_DIR: "/app/backend/generated_plans"
+      CODEX_COMMAND: "/usr/bin/codex"
+      CODEX_HOME: "/root/.codex"
+      PASTE_X: "0"
+      PASTE_Y: "80"
+      PASTE_Z: "0"
+      PASTE_ENABLED: "true"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/uploads:/app/backend/uploads
+      - ./backend/generated_plans:/app/backend/generated_plans
+      - ./server:/app/server
+      - /usr/bin/codex:/usr/bin/codex:ro
+      - /usr/lib/node_modules/@openai/codex:/usr/lib/node_modules/@openai/codex:ro
+      - /root/.codex:/root/.codex
+    depends_on:
+      - minecraft
+      - bot
+    restart: unless-stopped
+
+networks:
+  default:
+    driver_opts:
+      com.docker.network.driver.mtu: "1450"

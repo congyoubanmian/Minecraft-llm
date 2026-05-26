@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Minecraft AI Builder</title>
+    <link rel="stylesheet" href="/assets/style.css" />
+  </head>
+  <body>
+    <main id="app" class="app">
+      <section class="topbar">
+        <div class="title-row">
+          <div>
+            <h1>Minecraft AI Builder</h1>
+            <p>{{ route === "list" ? "管理历史项目，打开预览，或创建新的 Minecraft 建筑。" : "用图片和多轮文字生成 schematic，先预览，再粘贴到 Paper 服务器。" }}</p>
+          </div>
+          <div class="top-actions">
+            <button v-if="route !== 'list'" type="button" class="secondary-button" @click="goHome">项目列表</button>
+            <button v-if="route === 'list'" type="button" @click="newProject">创建新项目</button>
+            <span class="status-pill" :data-status="health">{{ health }}</span>
+          </div>
+        </div>
+      </section>
+
+      <section v-if="route === 'list'" class="project-list panel">
+        <div class="list-toolbar">
+          <div>
+            <h2>项目列表</h2>
+            <p>{{ projects.length }} 个项目</p>
+          </div>
+          <button type="button" class="secondary-button" @click="loadProjects">刷新</button>
+        </div>
+
+        <div v-if="projectListLoading" class="empty-list">正在加载项目</div>
+        <div v-else-if="!projects.length" class="empty-list">暂无项目，先创建一个。</div>
+        <div v-else class="project-grid">
+          <article
+            v-for="item in projects"
+            :key="item.id"
+            class="project-card"
+            :data-status="item.status"
+            @click="openProject(item.id)"
+          >
+            <div class="project-card-header">
+              <div>
+                <h2>{{ item.name || item.id }}</h2>
+                <p>{{ item.last_message || "无文字描述" }}</p>
+              </div>
+              <span class="project-status">{{ item.status || "-" }}</span>
+            </div>
+            <dl class="project-card-facts">
+              <div>
+                <dt>ID</dt>
+                <dd>{{ item.id }}</dd>
+              </div>
+              <div>
+                <dt>Preview</dt>
+                <dd>{{ item.preview?.preview_count || 0 }} / {{ item.preview?.block_count || 0 }}</dd>
+              </div>
+              <div>
+                <dt>Size</dt>
+                <dd>{{ projectSizeText(item) }}</dd>
+              </div>
+              <div>
+                <dt>Updated</dt>
+                <dd>{{ formatTime(item.updated_at || item.created_at) }}</dd>
+              </div>
+            </dl>
+          </article>
+        </div>
+      </section>
+
+      <section v-if="route === 'project'" class="workbench">
+        <aside class="panel chat-panel">
+          <form class="upload" @submit.prevent="createProject">
+            <label class="dropzone">
+              <input type="file" accept="image/*" @change="onFileChange" />
+              <span v-if="!imagePreviewUrl">选择建筑图片</span>
+              <img v-if="imagePreviewUrl" :src="imagePreviewUrl" alt="上传预览" />
+            </label>
+
+            <textarea
+              v-model="initialPrompt"
+              rows="4"
+              placeholder="描述你想要的建筑，例如：参考图片生成一座更高、更细节丰富的常州古建筑，屋檐分层明显，入口加牌楼。"
+            ></textarea>
+
+            <button type="submit" :disabled="!file && !initialPrompt.trim() || submitting">
+              {{ submitting ? "生成中" : "创建项目" }}
+            </button>
+          </form>
+
+          <div class="chat-log" ref="chatLog">
+            <div
+              v-for="(message, index) in messages"
+              :key="index"
+              class="message"
+              :data-role="message.role"
+            >
+              <span>{{ message.role === "user" ? "你" : "AI" }}</span>
+              <p>{{ message.content }}</p>
+            </div>
+          </div>
+
+          <form class="chat-form" @submit.prevent="sendMessage(false)">
+            <textarea
+              v-model="chatInput"
+              rows="3"
+              :disabled="!project || busy"
+              placeholder="继续修改：比如屋顶再高一点、加灯笼、塔身细一点、不要自动粘贴。"
+            ></textarea>
+            <div class="button-row">
+              <button type="submit" :disabled="!canChat">生成预览</button>
+              <button type="button" :disabled="!canChat" @click="sendMessage(true)">生成并粘贴</button>
+            </div>
+          </form>
+        </aside>
+
+        <section class="preview-panel">
+          <div class="preview-toolbar">
+            <div>
+              <h2>3D 预览</h2>
+              <p>{{ previewMeta }}</p>
+            </div>
+            <button type="button" :disabled="!preview" @click="resetCamera">重置视角</button>
+          </div>
+          <div ref="viewport" class="viewport">
+            <div v-if="!preview" class="empty-preview">等待生成 preview.json</div>
+          </div>
+        </section>
+
+        <aside class="panel detail-panel">
+          <h2>项目状态</h2>
+          <dl class="facts">
+            <div>
+              <dt>Project</dt>
+              <dd>{{ project?.id || "-" }}</dd>
+            </div>
+            <div>
+              <dt>Status</dt>
+              <dd>{{ project?.status || "-" }}</dd>
+            </div>
+            <div>
+              <dt>Schematic</dt>
+              <dd>
+                <a v-if="project?.schematic_path" :href="`/api/projects/${project.id}/schematic`">下载 .schem</a>
+                <span v-else>-</span>
+              </dd>
+            </div>
+            <div>
+              <dt>Preview</dt>
+              <dd>{{ preview?.preview_count || 0 }} / {{ preview?.block_count || 0 }}</dd>
+            </div>
+            <div>
+              <dt>Paste</dt>
+              <dd>{{ placementText("paste") }}</dd>
+            </div>
+            <div>
+              <dt>Spawn</dt>
+              <dd>{{ placementText("spawn") }}</dd>
+            </div>
+            <div v-if="project?.error">
+              <dt>Error</dt>
+              <dd class="error">{{ project.error }}</dd>
+            </div>
+          </dl>
+
+          <form class="placement-form" @submit.prevent="savePlacement">
+            <h2>坐标安排</h2>
+            <div class="coord-grid">
+              <label>
+                <span>粘贴 X</span>
+                <input type="number" v-model.number="placementForm.x" :disabled="!project?.plan || busy" />
+              </label>
+              <label>
+                <span>粘贴 Y</span>
+                <input type="number" v-model.number="placementForm.y" :disabled="!project?.plan || busy" />
+              </label>
+              <label>
+                <span>粘贴 Z</span>
+                <input type="number" v-model.number="placementForm.z" :disabled="!project?.plan || busy" />
+              </label>
+              <label>
+                <span>出生 X</span>
+                <input type="number" v-model.number="placementForm.spawn_x" :disabled="!project?.plan || busy" />
+              </label>
+              <label>
+                <span>出生 Y</span>
+                <input type="number" v-model.number="placementForm.spawn_y" :disabled="!project?.plan || busy" />
+              </label>
+              <label>
+                <span>出生 Z</span>
+                <input type="number" v-model.number="placementForm.spawn_z" :disabled="!project?.plan || busy" />
+              </label>
+            </div>
+            <button type="submit" :disabled="!project?.plan || busy">保存坐标</button>
+          </form>
+
+          <div class="actions">
+            <button type="button" :disabled="!project?.schematic_path || busy" @click="pasteProject">
+              粘贴到 Minecraft
+            </button>
+          </div>
+
+          <h2>图片分析</h2>
+          <pre>{{ formatJson(project?.analysis || {}) }}</pre>
+
+          <h2>RCON 返回</h2>
+          <pre>{{ formatJson(project?.rcon || []) }}</pre>
+        </aside>
+      </section>
+
+      <section v-if="route === 'project'" class="panel code-panel">
+        <h2>当前 DSL</h2>
+        <pre>{{ formatJson(project?.plan || {}) }}</pre>
+      </section>
+    </main>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://unpkg.com/three@0.132.2/build/three.min.js"></script>
+    <script src="/assets/app.js"></script>
+  </body>
+</html>

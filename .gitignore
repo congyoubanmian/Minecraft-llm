@@ -1,0 +1,15 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+node_modules/
+.DS_Store
+downloads/
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/generated_plans/*
+!backend/generated_plans/.gitkeep
+backend/projects/
+server/*
+!server/.gitkeep
+McSTools/
