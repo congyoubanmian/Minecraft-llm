@@ -152,8 +152,8 @@ class FacadePanelRingPart(BaseModel):
 class TwistedLatticeTowerPart(BaseModel):
     type: Literal["twisted_lattice_tower"]
     center: Vec3
-    body_height: int = Field(ge=32, le=260)
-    antenna_height: int = Field(default=0, ge=0, le=96)
+    body_height: int = Field(ge=32, le=480)
+    antenna_height: int = Field(default=0, ge=0, le=160)
     base_radius: int = Field(ge=6, le=48)
     waist_radius: int = Field(ge=3, le=32)
     top_radius: int = Field(ge=4, le=40)

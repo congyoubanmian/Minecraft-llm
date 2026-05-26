@@ -16,7 +16,7 @@ from backend.main import _allocate_placement
 from backend.schematic.generator import generate_outputs, render_plan_to_blocks
 
 
-PROJECT_ID = "canton_tower_v2"
+PROJECT_ID = "canton_tower_superheight_v1"
 NAME = f"project_{PROJECT_ID}"
 
 
@@ -36,24 +36,24 @@ def build_plan() -> BuildPlan:
     parts: list[dict] = []
 
     # Low plaza and podium. The tower itself is deliberately slender and tall.
-    box(parts, (0, 0, 0), (87, 1, 87), "plaza")
-    box(parts, (22, 2, 22), (65, 5, 65), "podium", hollow=True)
-    box(parts, (30, 6, 30), (57, 10, 57), "observation", hollow=True)
+    box(parts, (0, 0, 0), (95, 1, 95), "plaza")
+    box(parts, (22, 2, 22), (73, 6, 73), "podium", hollow=True)
+    box(parts, (30, 7, 30), (65, 13, 65), "observation", hollow=True)
 
     parts.append(
         {
             "type": "twisted_lattice_tower",
-            "center": [44, 6, 44],
-            "body_height": 192,
-            "antenna_height": 48,
-            "base_radius": 28,
-            "waist_radius": 9,
-            "top_radius": 18,
+            "center": [48, 8, 48],
+            "body_height": 360,
+            "antenna_height": 88,
+            "base_radius": 32,
+            "waist_radius": 10,
+            "top_radius": 22,
             "waist_y_ratio": 0.56,
             "z_radius_scale": 0.78,
-            "ring_interval": 7,
-            "struts": 32,
-            "twist_degrees": 150,
+            "ring_interval": 8,
+            "struts": 36,
+            "twist_degrees": 170,
             "lattice": "lattice",
             "ring": "ring",
             "glass": "glass",
@@ -63,33 +63,41 @@ def build_plan() -> BuildPlan:
     )
 
     # Observation decks and top cap emphasize the real tower's upper functional zone.
-    box(parts, (27, 145, 27), (61, 151, 61), "observation", hollow=True)
-    box(parts, (29, 152, 29), (59, 156, 59), "ring", hollow=True)
-    box(parts, (32, 178, 32), (56, 184, 56), "observation", hollow=True)
-    box(parts, (34, 185, 34), (54, 188, 54), "ring", hollow=True)
+    box(parts, (25, 272, 25), (71, 282, 71), "observation", hollow=True)
+    box(parts, (27, 283, 27), (69, 290, 69), "media_blue", hollow=True)
+    box(parts, (30, 328, 30), (66, 338, 66), "observation", hollow=True)
+    box(parts, (32, 339, 32), (64, 346, 64), "media_purple", hollow=True)
+    box(parts, (35, 356, 35), (61, 364, 61), "ring", hollow=True)
 
-    # Thin red night lights on plaza axes and around observation decks.
+    # Dense LED nodes and media bands. Canton Tower reads as a self-lit screen at night.
     points: list[tuple[int, int, int, str]] = []
-    for y in range(18, 196, 14):
+    for y in range(24, 360, 12):
         points.extend(
             [
-                (44, y, 18, "night_light"),
-                (44, y, 70, "night_light"),
-                (18, y, 44, "night_light"),
-                (70, y, 44, "night_light"),
+                (48, y, 17, "night_light"),
+                (48, y, 79, "night_light"),
+                (17, y, 48, "night_light"),
+                (79, y, 48, "night_light"),
             ]
         )
-    for x in range(18, 71, 8):
+    for y in range(64, 352, 24):
+        for x in range(30, 67, 6):
+            points.append((x, y, 22, "media_blue"))
+            points.append((x, y + 2, 74, "media_purple"))
+        for z in range(30, 67, 6):
+            points.append((22, y + 4, z, "media_green"))
+            points.append((74, y + 6, z, "media_red"))
+    for x in range(18, 79, 6):
         points.append((x, 2, 12, "night_light"))
-        points.append((x, 2, 76, "night_light"))
-    for z in range(18, 71, 8):
+        points.append((x, 2, 84, "night_light"))
+    for z in range(18, 79, 6):
         points.append((12, 2, z, "night_light"))
-        points.append((76, 2, z, "night_light"))
+        points.append((84, 2, z, "night_light"))
     blocks(parts, points)
 
     plan = {
         "name": NAME,
-        "size": [88, 248, 88],
+        "size": [96, 464, 96],
         "origin": [0, 64, 0],
         "palette": {
             "lattice": "iron_block",
@@ -98,6 +106,10 @@ def build_plan() -> BuildPlan:
             "core": "white_concrete",
             "observation": "cyan_stained_glass",
             "night_light": "redstone_lamp",
+            "media_blue": "blue_stained_glass",
+            "media_purple": "purple_stained_glass",
+            "media_green": "lime_stained_glass",
+            "media_red": "red_stained_glass",
             "podium": "smooth_quartz",
             "plaza": "smooth_stone",
         },
@@ -110,38 +122,45 @@ def build_plan() -> BuildPlan:
             ],
             "design_spec": {
                 "building_type": "guangzhou_tower",
-                "scale_intent": "88w x 248h x 88d; height is 2.82x width/depth to avoid the previous short and fat result.",
+                "scale_intent": "96w x 464h x 96d in the superheight world; paste y=40 reaches top y=503, below Bedrock-safe top y=511.",
                 "grid": [
-                    "center at [44, y, 44]",
-                    "body height 192 blocks from y=6 to y=198",
-                    "antenna extends 48 blocks above body",
-                    "base radius 28, waist radius 9 at 56% height, top radius 18",
-                    "32 rotating lattice struts, ring every 7 blocks",
+                    "center at [48, y, 48]",
+                    "body height 360 blocks from y=8 to y=368",
+                    "antenna extends 88 blocks above body",
+                    "base radius 32, waist radius 10 at 56% height, top radius 22",
+                    "36 rotating lattice struts, ring every 8 blocks",
+                    "LED nodes every 12 blocks and media bands every 24 blocks",
                 ],
                 "modules": [
                     {
                         "name": "plaza_podium",
                         "role": "foundation",
-                        "bbox": [[0, 0, 0], [87, 10, 87]],
+                        "bbox": [[0, 0, 0], [95, 13, 95]],
                         "materials": ["plaza", "podium", "observation"],
                     },
                     {
                         "name": "hyperboloid_lattice_body",
                         "role": "structure",
-                        "bbox": [[16, 6, 22], [72, 198, 66]],
+                        "bbox": [[16, 8, 23], [80, 368, 73]],
                         "materials": ["lattice", "ring", "glass", "core", "night_light"],
                     },
                     {
                         "name": "observation_decks",
                         "role": "facade",
-                        "bbox": [[27, 145, 27], [61, 188, 61]],
-                        "materials": ["observation", "ring"],
+                        "bbox": [[25, 272, 25], [71, 364, 71]],
+                        "materials": ["observation", "ring", "media_blue", "media_purple"],
                     },
                     {
                         "name": "antenna_mast",
                         "role": "detail",
-                        "bbox": [[43, 199, 43], [45, 246, 45]],
+                        "bbox": [[47, 369, 47], [49, 456, 49]],
                         "materials": ["lattice", "ring", "night_light"],
+                    },
+                    {
+                        "name": "led_media_skin",
+                        "role": "lighting",
+                        "bbox": [[12, 24, 12], [84, 360, 84]],
+                        "materials": ["night_light", "media_blue", "media_purple", "media_green", "media_red"],
                     },
                 ],
                 "interfaces": [
@@ -166,18 +185,20 @@ def build_plan() -> BuildPlan:
                     "lattice=iron_block for silver structural mesh",
                     "ring=light_gray_concrete for horizontal deck bands",
                     "glass/light_blue_stained_glass for observation skin",
-                    "night_light=redstone_lamp for red night points",
+                    "night_light=redstone_lamp for red lattice nodes",
+                    "blue/purple/lime/red stained glass for large LED screen color bands",
                 ],
                 "quality_checks": [
                     "height_to_width > 2.5",
                     "waist radius much smaller than base radius",
                     "twisted diagonal lattice visible",
+                    "night facade has dense LED nodes and colored media bands",
                     "no pagoda eaves or ancient spire",
                 ],
             },
             "massing": ["slender hyperboloid", "narrow waist", "upper observation decks", "antenna mast"],
-            "facade": ["rotating silver lattice", "cyan glass decks", "red night light points"],
-            "changes": ["replaces previous short pagoda-like 96x96x96 plan"],
+            "facade": ["rotating silver lattice", "cyan glass decks", "red night light points", "colored LED media bands"],
+            "changes": ["superheight version for Bedrock-safe y<=511 world", "adds dense night lighting and screen-like colored LED bands"],
         },
         "parts": parts,
     }
@@ -203,6 +224,19 @@ def main() -> None:
     analysis_report_path = project_dir / f"{NAME}.analysis.json"
     analysis_report_path.write_text(json.dumps(analysis_report, ensure_ascii=False, indent=2), encoding="utf-8")
     placement = _allocate_placement(PROJECT_ID, plan)
+    placement = {
+        **placement,
+        "paste": {"x": 3400, "y": 40, "z": 900},
+        "spawn": {"x": 3448, "y": 120, "z": 850},
+        "bounds": {
+            "min_x": 3400,
+            "min_y": 40,
+            "min_z": 900,
+            "max_x": 3495,
+            "max_y": 503,
+            "max_z": 995,
+        },
+    }
     state = {
         "id": PROJECT_ID,
         "status": "done",
@@ -213,10 +247,10 @@ def main() -> None:
         "messages": [
             {
                 "role": "user",
-                "content": "广州塔/小蛮腰重做：要高很多，不要矮胖；保留细腰、旋转格构、观景层和天线。",
+                "content": "广州塔/小蛮腰超高版：在 superheight 世界里做 460 格左右，夜景要有大量灯光设备和屏幕灯带。",
                 "created_at": now(),
             },
-            {"role": "assistant", "content": "已生成广州塔 V2：高瘦双曲面格构塔。", "created_at": now()},
+            {"role": "assistant", "content": "已生成广州塔超高版：高瘦双曲面格构塔，带密集夜景灯光和媒体屏带。", "created_at": now()},
         ],
         "plan": plan.model_dump(by_alias=True),
         "plan_path": str(project_dir / "plan.json"),
