@@ -115,7 +115,8 @@ p {
 }
 
 .upload,
-.chat-form {
+.chat-form,
+.library-panel {
   display: grid;
   gap: 10px;
 }
@@ -205,6 +206,80 @@ button:disabled {
 
 .button-row button {
   flex: 1;
+}
+
+.library-panel {
+  border-top: 1px solid #d8dfda;
+  padding-top: 12px;
+}
+
+.library-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.library-header h2 {
+  margin-bottom: 0;
+}
+
+.text-button {
+  min-height: 30px;
+  padding: 0 9px;
+  background: #eef2f0;
+  color: #405047;
+  font-size: 12px;
+}
+
+.library-list {
+  max-height: 250px;
+  overflow: auto;
+  display: grid;
+  gap: 8px;
+  padding-right: 2px;
+}
+
+.library-list.compact {
+  max-height: 190px;
+}
+
+.library-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: start;
+  border: 1px solid #d8dfda;
+  border-radius: 8px;
+  padding: 9px;
+  background: #fbfcfb;
+}
+
+.library-item strong {
+  display: block;
+  color: #17211d;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.library-item p {
+  margin-top: 3px;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.library-item span {
+  display: inline-block;
+  margin-top: 5px;
+  color: #66736d;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.library-item button {
+  min-height: 32px;
+  padding: 0 10px;
+  font-size: 12px;
 }
 
 .project-list {

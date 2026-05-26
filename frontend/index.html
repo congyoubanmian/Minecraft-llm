@@ -114,6 +114,36 @@
               <button type="button" :disabled="!canChat" @click="sendMessage(true)">生成并粘贴</button>
             </div>
           </form>
+
+          <section class="library-panel">
+            <div class="library-header">
+              <h2>组件库</h2>
+              <button type="button" class="text-button" @click="loadLibrary">刷新</button>
+            </div>
+            <div class="library-list">
+              <article v-for="[name, component] in componentEntries" :key="name" class="library-item">
+                <div>
+                  <strong>{{ name }}</strong>
+                  <p>{{ component.description }}</p>
+                  <span>{{ component.size?.join(" x ") || "-" }}</span>
+                </div>
+                <button type="button" @click="insertComponentPrompt(name, component)">插入</button>
+              </article>
+            </div>
+
+            <div class="library-header">
+              <h2>材料库</h2>
+            </div>
+            <div class="library-list compact">
+              <article v-for="[name, material] in materialEntries" :key="name" class="library-item">
+                <div>
+                  <strong>{{ name }}</strong>
+                  <p>{{ material.description }}</p>
+                </div>
+                <button type="button" @click="insertMaterialPrompt(name, material)">插入</button>
+              </article>
+            </div>
+          </section>
         </aside>
 
         <section class="preview-panel">

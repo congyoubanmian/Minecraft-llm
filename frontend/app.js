@@ -7,6 +7,10 @@ createApp({
       route: "list",
       projects: [],
       projectListLoading: false,
+      library: {
+        materials: {},
+        components: {},
+      },
       file: null,
       imagePreviewUrl: "",
       initialPrompt: "",
@@ -49,6 +53,12 @@ createApp({
     messages() {
       return this.project?.messages || [];
     },
+    materialEntries() {
+      return Object.entries(this.library.materials || {});
+    },
+    componentEntries() {
+      return Object.entries(this.library.components || {});
+    },
     previewMeta() {
       if (!this.preview) return "暂无预览";
       const size = this.preview.size?.join(" x ") || "-";
@@ -59,6 +69,7 @@ createApp({
   },
   mounted() {
     this.checkHealth();
+    this.loadLibrary();
     window.addEventListener("hashchange", this.syncRoute);
     this.syncRoute();
   },
@@ -74,6 +85,16 @@ createApp({
         this.health = response.ok ? "online" : "offline";
       } catch {
         this.health = "offline";
+      }
+    },
+    async loadLibrary() {
+      try {
+        const response = await fetch(`/api/library?ts=${Date.now()}`);
+        if (!response.ok) throw new Error(await response.text());
+        this.library = await response.json();
+      } catch (error) {
+        console.error(error);
+        this.library = { materials: {}, components: {} };
       }
     },
     syncRoute() {
@@ -134,6 +155,28 @@ createApp({
       } finally {
         this.projectListLoading = false;
       }
+    },
+    insertMaterialPrompt(name, material) {
+      const blocks = Object.entries(material.blocks || {})
+        .map(([role, block]) => `${role}=${block}`)
+        .join(", ");
+      this.insertPromptText(`使用材料预设 ${name}：${material.description || ""}。方块映射：${blocks}。`);
+    },
+    insertComponentPrompt(name, component) {
+      const params = Object.entries(component.parameters || {})
+        .map(([key, value]) => `${key}=${value}`)
+        .join(", ");
+      const materials = Object.entries(component.default_materials || {})
+        .map(([role, block]) => `${role}=${block}`)
+        .join(", ");
+      this.insertPromptText(
+        `使用组件 ${name}：${component.description || ""}。可调整参数：${params || "无"}。默认材料：${materials || "无"}。请按当前建筑比例放大/缩小并叠加到设计中。`,
+      );
+    },
+    insertPromptText(text) {
+      const target = this.project ? "chatInput" : "initialPrompt";
+      const current = this[target].trim();
+      this[target] = current ? `${current}\n${text}` : text;
     },
     onFileChange(event) {
       const [file] = event.target.files;
