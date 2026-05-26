@@ -4,8 +4,6 @@ import json
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
-
 import mcschematic
 
 
@@ -75,7 +73,11 @@ class BlockList:
         )
 
     def material_counts(self, base_only: bool = True) -> dict[str, int]:
-        counts = Counter(_base_block(block) if base_only else block for block in self._blocks.values())
+        counts = Counter(
+            _base_block(block) if base_only else block
+            for block in self._blocks.values()
+            if not _is_air(block)
+        )
         return dict(sorted(counts.items(), key=lambda item: (-item[1], item[0])))
 
     def write_schematic(self, output_dir: Path, name: str) -> Path:
@@ -109,7 +111,7 @@ class BlockList:
         palette: dict[str, str],
         max_blocks: int = 120_000,
     ) -> dict:
-        blocks = [(pos, _base_block(block)) for pos, block in self.items_sorted()]
+        blocks = [(pos, _base_block(block)) for pos, block in self.items_sorted() if not _is_air(block)]
         full_count = len(blocks)
         sampled = False
         if full_count > max_blocks:
@@ -134,7 +136,7 @@ class BlockList:
         output_dir.mkdir(parents=True, exist_ok=True)
         payload = {
             "name": name,
-            "block_count": len(self),
+            "block_count": sum(1 for block in self._blocks.values() if not _is_air(block)),
             "bounds": self.bounds().model_dump() if self.bounds() else None,
             "materials": self.material_counts(),
         }
@@ -162,3 +164,7 @@ def _normalize_block(block: str) -> str:
 def _base_block(block: str) -> str:
     base = block.split("[", 1)[0]
     return base.removeprefix("minecraft:")
+
+
+def _is_air(block: str) -> bool:
+    return _base_block(block) == "air"
