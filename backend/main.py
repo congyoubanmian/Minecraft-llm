@@ -14,12 +14,13 @@ from pydantic import BaseModel
 
 from backend.ai import analyze_image, plan_build
 from backend.ai.planner import plan_from_conversation
+from backend.analysis import analyze_build
 from backend.config import ROOT_DIR, settings
 from backend.dsl.schema import BuildPlan
-from backend.library import load_components, load_materials
+from backend.library import load_components, load_design_contract, load_materials, load_templates
 from backend.minecraft import FaweController
 from backend.minecraft.rcon import MinecraftRcon, RconConfig
-from backend.schematic.generator import generate_outputs
+from backend.schematic.generator import generate_outputs, render_plan_to_blocks
 
 
 app = FastAPI(title="Minecraft AI Builder")
@@ -68,6 +69,8 @@ def get_library() -> dict[str, Any]:
     return {
         "materials": load_materials().get("palettes", {}),
         "components": load_components().get("components", {}),
+        "templates": load_templates().get("templates", {}),
+        "design_contract": load_design_contract().get("design_contract", {}),
     }
 
 
@@ -91,6 +94,7 @@ async def create_build(background_tasks: BackgroundTasks, image: UploadFile = Fi
         "schematic_path": None,
         "preview_path": None,
         "materials_path": None,
+        "analysis_report_path": None,
         "placement": None,
         "plan_path": None,
         "plan": None,
@@ -158,6 +162,7 @@ async def create_project(
         "schematic_path": None,
         "preview_path": None,
         "materials_path": None,
+        "analysis_report_path": None,
         "placement": None,
         "rcon": [],
         "error": None,
@@ -205,6 +210,7 @@ def list_projects() -> dict[str, Any]:
                 "has_preview": bool(state.get("preview_path")),
                 "has_schematic": bool(state.get("schematic_path")),
                 "placement": state.get("placement"),
+                "analysis_report": state.get("analysis_report"),
                 "preview": preview,
                 "last_message": _last_user_message(state.get("messages", [])),
                 "error": state.get("error"),
@@ -317,6 +323,14 @@ def get_project_materials(project_id: str) -> FileResponse:
     return FileResponse(state["materials_path"], media_type="application/json")
 
 
+@app.get("/api/projects/{project_id}/analysis-report")
+def get_project_analysis_report(project_id: str) -> FileResponse:
+    state = _load_project(project_id)
+    if not state.get("analysis_report_path"):
+        raise HTTPException(status_code=404, detail="analysis report not found")
+    return FileResponse(state["analysis_report_path"], media_type="application/json")
+
+
 def _run_build_task(task_id: str, image_path: Path) -> None:
     task = tasks[task_id]
     try:
@@ -329,10 +343,12 @@ def _run_build_task(task_id: str, image_path: Path) -> None:
         task["plan_path"] = str(settings.generated_plan_dir / f"build_{task_id}.json")
 
         task["status"] = "generating_schematic"
-        schematic_path, preview_path, material_path = _write_outputs(plan, settings.schematic_dir)
+        schematic_path, preview_path, material_path, analysis_report_path, analysis_report = _write_outputs(plan, settings.schematic_dir)
         task["schematic_path"] = str(schematic_path)
         task["preview_path"] = str(preview_path)
         task["materials_path"] = str(material_path)
+        task["analysis_report_path"] = str(analysis_report_path)
+        task["analysis_report"] = analysis_report
 
         if settings.paste_enabled:
             task["status"] = "pasting"
@@ -387,10 +403,12 @@ def _run_project_generation(project_id: str) -> None:
         state["updated_at"] = _now()
         _save_project(project_id, state)
 
-        schematic_path, preview_path, material_path = _write_outputs(plan, settings.schematic_dir, project_path)
+        schematic_path, preview_path, material_path, analysis_report_path, analysis_report = _write_outputs(plan, settings.schematic_dir, project_path)
         state["schematic_path"] = str(schematic_path)
         state["preview_path"] = str(preview_path)
         state["materials_path"] = str(material_path)
+        state["analysis_report_path"] = str(analysis_report_path)
+        state["analysis_report"] = analysis_report
 
         if state.pop("paste_requested", False):
             state["status"] = "pasting"
@@ -426,8 +444,16 @@ def _run_project_generation(project_id: str) -> None:
         _save_project(project_id, state)
 
 
-def _write_outputs(plan: BuildPlan, schematic_dir: Path, preview_dir: Path | None = None) -> tuple[Path, Path, Path]:
-    return generate_outputs(plan, schematic_dir, preview_dir or schematic_dir)
+def _write_outputs(plan: BuildPlan, schematic_dir: Path, preview_dir: Path | None = None) -> tuple[Path, Path, Path, Path, dict[str, Any]]:
+    output_dir = preview_dir or schematic_dir
+    blocks = render_plan_to_blocks(plan)
+    schematic_path, preview_path, material_path = generate_outputs(plan, schematic_dir, output_dir, blocks=blocks)
+    analysis_report = analyze_build(plan, blocks)
+    analysis_report_path = output_dir / f"{plan.name}.analysis.json"
+    import json
+
+    analysis_report_path.write_text(json.dumps(analysis_report, ensure_ascii=False, indent=2), encoding="utf-8")
+    return schematic_path, preview_path, material_path, analysis_report_path, analysis_report
 
 
 def _ensure_project_placement(project_id: str, state: dict[str, Any]) -> dict[str, Any]:

@@ -1,0 +1,167 @@
+{
+  "templates": {
+    "pagoda_stack": {
+      "description": "Tiered Chinese pagoda or temple tower assembled from repeated octagonal tiers, eaves, spire, and plaza details.",
+      "style": "ancient_chinese",
+      "building_types": ["pagoda", "temple_tower", "scenic_landmark"],
+      "recommended_palettes": ["tianning_pagoda", "ancient_temple"],
+      "component_sequence": [
+        {"component": "pagoda_tier", "stage": "mass", "repeat": "stack vertically with decreasing radius"},
+        {"component": "mini_pagoda_cluster", "stage": "landscape", "repeat": "optional ring around base"}
+      ],
+      "primitive_needs": [
+        "wide stone base and stairs",
+        "octagonal body on every tier",
+        "overhanging eaves on every floor",
+        "central spire and corner ornaments",
+        "warm lantern details"
+      ],
+      "avoid_components": ["concrete_podium", "suspension_bridge_segment"],
+      "checks": [
+        "main body should remain octagonal, not square",
+        "roof/eave blocks should appear on every tier",
+        "glass ratio should stay low or only appear as small windows"
+      ],
+      "scale_guidance": "For landmark pagodas, increase height by adding tiers first, then widen the base. Do not stretch one tier vertically into a plain tower."
+    },
+    "temple_hall": {
+      "description": "Traditional Chinese or Jiangnan hall with platform, columns, timber frame, raised roof, ridge ornaments, and courtyard.",
+      "style": "ancient_chinese",
+      "building_types": ["temple", "gatehouse", "old_hall", "courtyard"],
+      "recommended_palettes": ["ancient_temple", "jiangnan_wood", "water_town"],
+      "component_sequence": [],
+      "primitive_needs": [
+        "stone platform",
+        "red or dark timber columns",
+        "deep eave roof using stairs/slabs",
+        "front steps and central entrance",
+        "symmetric bay rhythm"
+      ],
+      "avoid_components": ["concrete_podium", "suspension_bridge_segment"],
+      "checks": [
+        "roof should dominate the silhouette",
+        "columns should read clearly on the front facade",
+        "avoid large curtain-wall glass"
+      ],
+      "scale_guidance": "Scale width by increasing bays. Scale depth by adding side halls or courtyard walls."
+    },
+    "jiangnan_water_town": {
+      "description": "White-wall black-tile canal-side buildings with stone paths, small bridges, wood windows, and compact massing.",
+      "style": "jiangnan",
+      "building_types": ["water_town", "canal_street", "historic_street"],
+      "recommended_palettes": ["water_town", "jiangnan_wood", "stone_arch_bridge"],
+      "component_sequence": [
+        {"component": "stone_arch_bridge", "stage": "structure", "repeat": "place across canal or entry path"}
+      ],
+      "primitive_needs": [
+        "low two-to-three-floor houses",
+        "narrow gable roofs",
+        "stone canal edges",
+        "wood-framed windows",
+        "small lanterns"
+      ],
+      "avoid_components": ["concrete_podium", "suspension_bridge_segment", "pagoda_tier"],
+      "checks": [
+        "building height should stay modest",
+        "roofs should be dark and pitched",
+        "bridge should be stone arch, not cable bridge"
+      ],
+      "scale_guidance": "Grow as a street/canal ensemble, not as one tall tower."
+    },
+    "modern_glass_gate": {
+      "description": "Large modern landmark with two towers, high void, skybridge, curtain wall, offices, and internal lighting.",
+      "style": "modern",
+      "building_types": ["landmark_gate", "office_tower", "cctv_like_tower", "suzhou_gate"],
+      "recommended_palettes": ["modern_glass_office", "modern_concrete"],
+      "component_sequence": [
+        {"component": "concrete_podium", "stage": "mass", "repeat": "optional podium or base"}
+      ],
+      "primitive_needs": [
+        "two leg towers with office floors",
+        "large central void",
+        "curved or tapered outside massing",
+        "skybridge with walkable center corridor",
+        "glass facade and quartz/concrete frame",
+        "floor partitions and ceiling lights"
+      ],
+      "avoid_components": ["pagoda_tier", "mini_pagoda_cluster", "stone_arch_bridge"],
+      "checks": [
+        "central void must remain clear",
+        "left/right legs need usable office floors",
+        "glass ratio should be high",
+        "lighting should be repeated on office floors"
+      ],
+      "scale_guidance": "Use actual height/width/depth proportions. If the target is not a gate-shaped landmark, use office_tower instead."
+    },
+    "office_tower": {
+      "description": "Generic modern office tower with curtain wall, structural core, repeated floors, lobby, services, and lights.",
+      "style": "modern",
+      "building_types": ["office_tower", "hotel", "commercial_tower"],
+      "recommended_palettes": ["modern_glass_office", "modern_concrete"],
+      "component_sequence": [
+        {"component": "concrete_podium", "stage": "mass", "repeat": "optional podium under tower"}
+      ],
+      "primitive_needs": [
+        "clear vertical floor rhythm",
+        "curtain wall panels",
+        "structural core",
+        "lobby entrance",
+        "repeated office partitions and lights"
+      ],
+      "avoid_components": ["pagoda_tier", "stone_arch_bridge", "suspension_bridge_segment"],
+      "checks": [
+        "facade should show repeated floors",
+        "interior floors should not be hollow empty shells",
+        "avoid ancient roof components unless prompt asks for fusion style"
+      ],
+      "scale_guidance": "Scale height by floor count and keep each floor readable."
+    },
+    "stone_arch_bridge": {
+      "description": "Historic stone arch bridge with masonry abutments, arched side profile, deck, rails, lamps, and optional water.",
+      "style": "historic",
+      "building_types": ["stone_bridge", "garden_bridge", "canal_bridge"],
+      "recommended_palettes": ["stone_arch_bridge", "water_town"],
+      "component_sequence": [
+        {"component": "stone_arch_bridge", "stage": "structure", "repeat": "scale for span and width"}
+      ],
+      "primitive_needs": [
+        "arched side profile",
+        "solid abutments",
+        "walkable deck",
+        "side rails",
+        "stone or moss detail"
+      ],
+      "avoid_components": ["concrete_podium", "pagoda_tier", "suspension_bridge_segment"],
+      "checks": [
+        "arch void must be visible",
+        "deck should be walkable",
+        "keep material mostly stone"
+      ],
+      "scale_guidance": "Scale by span and arch height. For very long bridges, repeat arches rather than stretching one arch."
+    },
+    "suspension_bridge": {
+      "description": "Modern suspension or cable bridge with towers, deck, cables, hangers, rails, road markings, and lights.",
+      "style": "modern_infrastructure",
+      "building_types": ["suspension_bridge", "cable_bridge", "highway_bridge"],
+      "recommended_palettes": ["suspension_bridge", "industrial_steel"],
+      "component_sequence": [
+        {"component": "suspension_bridge_segment", "stage": "structure", "repeat": "repeat or scale along bridge length"}
+      ],
+      "primitive_needs": [
+        "tall pylons",
+        "continuous deck",
+        "main cables",
+        "vertical hangers",
+        "road surface and rails",
+        "navigation or street lights"
+      ],
+      "avoid_components": ["pagoda_tier", "mini_pagoda_cluster", "stone_arch_bridge"],
+      "checks": [
+        "cable line should be above the deck",
+        "hangers should connect cable to deck rhythmically",
+        "avoid stone arch massing"
+      ],
+      "scale_guidance": "Scale length by repeating segments; increase tower height with span."
+    }
+  }
+}

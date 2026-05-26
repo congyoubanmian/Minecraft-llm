@@ -1,0 +1,51 @@
+{
+  "design_contract": {
+    "description": "Two-stage architecture workflow: design first, then translate the approved design into Minecraft BuildPlan parts.",
+    "coordinate_system": {
+      "origin": "Use [0, 64, 0] in BuildPlan. Local x=width, y=height, z=depth.",
+      "bounds": "Every module owns an inclusive local bounding box [from] -> [to].",
+      "grid": "Choose a structural grid before parts: bay width, floor height, roof/eave offsets, and symmetry axis.",
+      "units": "Minecraft blocks are the final construction units. Use block counts as the dimension source of truth."
+    },
+    "design_spec_fields": {
+      "building_type": "pagoda, temple_hall, water_town, office_tower, landmark_gate, stone_bridge, suspension_bridge, custom",
+      "selected_template": "template key from templates.json or custom",
+      "scale_intent": "target height/width/depth and why",
+      "grid": "bay widths, floor heights, tier heights, bridge spans, or other repeat units",
+      "modules": "ordered modules with name, bounding_box, role, materials, and interface faces",
+      "interfaces": "connection faces between modules, e.g. tower_left.top == skybridge.left_support",
+      "material_schedule": "role-to-block choices with reasons",
+      "minecraft_translation": "how real design elements become box/window/stairs/slab/component parts",
+      "quality_checks": "checks to run after generation, such as octagonal footprint, clear void, walkable bridge deck, repeated lighting"
+    },
+    "module_schema": {
+      "name": "short stable module id",
+      "role": "foundation|mass|structure|void|facade|roof|interior|lighting|detail|landscape",
+      "bbox": [[0, 0, 0], [10, 10, 10]],
+      "materials": ["palette keys or minecraft block ids"],
+      "interfaces": {
+        "north": "optional expected neighbor or open facade",
+        "south": "optional expected neighbor or open facade",
+        "east": "optional expected neighbor or open facade",
+        "west": "optional expected neighbor or open facade",
+        "top": "optional roof/floor/bridge connection",
+        "bottom": "optional foundation/floor connection"
+      }
+    },
+    "split_generation_rules": [
+      "Split only by modules with explicit bboxes and shared interface faces.",
+      "All module bboxes must be in the same local coordinate system.",
+      "Adjacent modules should either overlap by one structural block or meet exactly on a named interface face.",
+      "Void/air clearing modules must run before facade/interior/detail modules that occupy the same area.",
+      "Keep floors, facade grids, and bridges aligned to the same floor_height or bay_width.",
+      "For repeated modules, define one component or pattern and place it with parameter changes instead of writing unrelated copies."
+    ],
+    "stage_order": ["foundation", "mass", "void", "structure", "facade", "roof", "interior", "lighting", "detail", "landscape"],
+    "when_to_split_llm_calls": [
+      "Large landmarks over roughly 120k visible blocks.",
+      "Buildings with distinct structural systems, such as twin towers plus skybridge plus podium.",
+      "Scenes with independent ancient buildings, bridges, streets, and landscape pieces.",
+      "Any build where one prompt cannot reliably preserve dimensions, interfaces, and material schedule."
+    ]
+  }
+}

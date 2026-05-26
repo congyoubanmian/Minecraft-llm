@@ -64,6 +64,67 @@
         "rail": "iron_bars",
         "light": "sea_lantern"
       }
+    },
+    "modern_glass_office": {
+      "description": "Transparent curtain wall, quartz structural ribs, lit office floors, suitable for modern landmark towers.",
+      "blocks": {
+        "core": "smooth_quartz",
+        "frame": "light_gray_concrete",
+        "frame_dark": "gray_concrete",
+        "glass": "white_stained_glass",
+        "glass_alt": "cyan_stained_glass",
+        "pane": "light_gray_stained_glass_pane",
+        "floor": "smooth_quartz_slab",
+        "partition": "white_concrete",
+        "ceiling_light": "sea_lantern",
+        "accent": "polished_andesite"
+      }
+    },
+    "ancient_temple": {
+      "description": "Chinese temple hall palette with red columns, white/wood walls, dark tiled roof, and gold accents.",
+      "blocks": {
+        "foundation": "stone_bricks",
+        "platform": "smooth_stone",
+        "column": "red_terracotta",
+        "beam": "dark_oak_log",
+        "wall": "white_concrete",
+        "frame": "dark_oak_planks",
+        "roof": "deepslate_tile_stairs",
+        "roof_fill": "deepslate_tiles",
+        "ridge": "gilded_blackstone",
+        "door": "dark_oak_door",
+        "window": "glass_pane",
+        "light": "lantern"
+      }
+    },
+    "water_town": {
+      "description": "Jiangnan canal-town palette for white walls, black tiled roofs, timber frames, stone paving, and water edges.",
+      "blocks": {
+        "wall": "white_concrete",
+        "beam": "dark_oak_planks",
+        "roof": "deepslate_tile_stairs",
+        "roof_fill": "deepslate_tiles",
+        "stone": "stone_bricks",
+        "path": "mossy_stone_bricks",
+        "wood": "spruce_planks",
+        "window": "glass_pane",
+        "water": "water",
+        "light": "lantern"
+      }
+    },
+    "industrial_steel": {
+      "description": "Steel-frame palette for factories, trusses, towers, hangars, and bridge structures.",
+      "blocks": {
+        "frame": "iron_block",
+        "dark_frame": "deepslate_tiles",
+        "panel": "light_gray_concrete",
+        "glass": "gray_stained_glass",
+        "truss": "iron_bars",
+        "floor": "smooth_stone",
+        "roof": "gray_concrete",
+        "warning": "yellow_concrete",
+        "light": "redstone_lamp"
+      }
     }
   }
 }

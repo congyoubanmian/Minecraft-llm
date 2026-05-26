@@ -128,10 +128,20 @@ Write exactly one JSON file at:
 
 Do not modify any other file.
 
-Use the attached image as the primary source. The vision summary is only a rough hint.
-First reason about the building from multiple dimensions, then encode that reasoning in
-the JSON "analysis" field. The final schematic should be recognizable from the most
-visible facade, not just a generic house.
+	Use the attached image as the primary source. The vision summary is only a rough hint.
+	First reason about the building from multiple dimensions, then encode that reasoning in
+	the JSON "analysis" field. The final schematic should be recognizable from the most
+	visible facade, not just a generic house.
+
+	Work like an architect before you work like a Minecraft builder:
+	1. Create a concise design specification in analysis.design_spec.
+	2. Define the selected template, scale intent, structural grid, modules, module
+	   bounding boxes, interface faces, material schedule, and quality checks.
+	3. Translate that design specification into BuildPlan parts.
+	For large or complex buildings, think in modules such as foundation, core mass,
+	voids, facade, roof, interior, lighting, and details. All modules must share the
+	same local coordinate system so split generation can later be joined without
+	cut-face mismatches.
 
 The JSON must match this shape:
 {{
@@ -153,10 +163,27 @@ The JSON must match this shape:
     "door": "dark_oak_door",
     "stair": "stone_brick_stairs",
     "slab": "stone_brick_slab"
-  }},
-  "analysis": {{
-    "viewpoint": "front/three-quarter/side/etc",
-    "massing": ["major volumes and proportions"],
+	  }},
+	  "analysis": {{
+	    "viewpoint": "front/three-quarter/side/etc",
+	    "selected_template": "template key or custom",
+	    "component_strategy": ["why each component is suitable or avoided"],
+	    "design_spec": {{
+	      "building_type": "template building type",
+	      "scale_intent": "target block dimensions and proportions",
+	      "grid": ["bay width, floor height, tier height, span, symmetry axis"],
+	      "modules": [
+	        {{
+	          "name": "module id",
+	          "role": "foundation/mass/facade/roof/interior/etc",
+	          "bbox": [[0, 0, 0], [10, 10, 10]],
+	          "interfaces": {{"top": "expected connection"}}
+	        }}
+	      ],
+	      "material_schedule": ["role=block with reason"],
+	      "quality_checks": ["checks to verify recognizability"]
+	    }},
+	    "massing": ["major volumes and proportions"],
     "facade": ["symmetry, bays, floors, entrances, balconies"],
     "roof": ["shape, pitch, ridges, dormers, parapets"],
     "materials": ["dominant blocks and accent materials"],
@@ -166,7 +193,12 @@ The JSON must match this shape:
   "parts": []
 }}
 
-Allowed part types include primitive parts and reusable library components:
+	Allowed part types include primitive parts and reusable library components.
+	Before writing parts, choose the closest library template by style/building type.
+	Use that template's recommended palettes, component sequence, avoid_components,
+	checks, and scale_guidance as hard planning guidance. Do not reuse a component
+	only because it worked in a previous project: ancient buildings, bridges, modern
+	office towers, and gate-shaped landmarks need different component families.
 
 Primitive parts:
 - box
@@ -195,12 +227,27 @@ Reusable component part:
   "materials": {{"body": "smooth_quartz", "roof": "oxidized_cut_copper"}}
 }}
 
-Use components when the target contains reusable structures such as pagoda tiers,
-bridges, suspension bridge segments, concrete podiums, or small pagoda clusters.
-Components can be stacked, shifted, scaled, and material-overridden.
+	Use components when the target contains matching reusable structures such as
+	pagoda tiers, bridge segments, concrete podiums, small pagoda clusters, or other
+	systems listed by the selected template. Components can be stacked, shifted,
+	scaled, and material-overridden.
 
-Available material palettes and component blueprints:
-{json.dumps(library_context, ensure_ascii=False, indent=2)}
+	Component selection rules:
+	- For pagodas/temples/ancient Chinese landmarks, prefer pagoda_tier,
+	  mini_pagoda_cluster, octagonal_* primitives, timber/stone/roof detail; avoid
+	  glass office and concrete podium components unless the prompt asks for fusion.
+	- For Jiangnan water-town scenes, prefer low houses, dark roofs, stone_arch_bridge,
+	  canal/path details; avoid tall modern towers.
+	- For modern glass office landmarks, prefer curtain wall, office floors,
+	  structural frame, central void/skybridge when applicable, and repeated lights.
+	- For bridges, choose stone_arch_bridge for historic arches and
+	  suspension_bridge_segment for cable/suspension bridges; do not mix them unless
+	  the prompt explicitly asks.
+	- If the target proportions differ from a named landmark, adapt the template and
+	  component parameters instead of forcing a fixed shape.
+
+	Available material palettes, component blueprints, and architecture templates:
+	{json.dumps(library_context, ensure_ascii=False, indent=2)}
 
 Primitive part examples:
 
@@ -306,10 +353,16 @@ Rules:
 - Do not make a flat rectangular box unless the image is actually flat and rectangular.
 - If the picture shows only one facade, still give the building shallow side/back volume so it is usable in Minecraft.
 - Prefer valid Java Edition block ids, without the "minecraft:" prefix.
-- Use palette keys in parts where possible.
-- Prefer component parts for repeated architectural systems, then add primitive
-  parts for custom details.
-- The output must pass the existing Pydantic BuildPlan schema in backend/dsl/schema.py.
+	- Use palette keys in parts where possible.
+	- Prefer component parts for repeated architectural systems, then add primitive
+	  parts for custom details.
+	- If a component is not suitable for the selected style, do not use it. Build the
+	  needed form from primitives or another better component.
+	- Include "selected_template" and "component_strategy" in analysis so later turns
+	  can understand why the design used or avoided specific components.
+	- Include analysis.design_spec with module bboxes and interfaces before parts.
+	  Treat this as the construction drawing: parts must follow those dimensions.
+	- The output must pass the existing Pydantic BuildPlan schema in backend/dsl/schema.py.
 
 Vision summary:
 {json.dumps(dict(summary), ensure_ascii=False, indent=2)}
@@ -333,12 +386,15 @@ Write exactly one JSON file at:
 
 Do not modify any other file. Return no prose outside that file.
 
-The JSON must validate against backend/dsl/schema.py. You may use primitive parts
-or reusable component parts. Prefer components for repeated systems and use
-primitive parts for custom transitions/details.
+	The JSON must validate against backend/dsl/schema.py. You may use primitive parts
+	or reusable component parts. First choose an architecture template from the
+	library by style/building type. Prefer components only when they match that
+	template's applicability; use primitive parts for custom transitions/details.
+	Do not force a modern glass office component into ancient buildings, or a pagoda
+	component into bridges/office towers, unless the user explicitly asks for fusion.
 
-Available material palettes and component blueprints:
-{json.dumps(library_context, ensure_ascii=False, indent=2)}
+	Available material palettes, component blueprints, and architecture templates:
+	{json.dumps(library_context, ensure_ascii=False, indent=2)}
 
 Component example:
 {{
@@ -354,12 +410,20 @@ Keep size within [16..96, 10..96, 16..96] unless the user explicitly asks for a
 larger landmark. Prefer valid vanilla Java Edition block ids without the
 "minecraft:" prefix. Use palette keys in parts where possible.
 
-Important design rules:
-- Treat the image analysis as reference material, not as a finished build.
-- Treat the latest user message as the strongest instruction.
-- Preserve useful details from the current plan unless the user asks to replace them.
-- Output a coherent, buildable Minecraft structure, not a raw coordinate dump.
-- Use enough explicit parts for recognizable massing, facade, roof, entrances,
+	Important design rules:
+	- Treat the image analysis as reference material, not as a finished build.
+	- Treat the latest user message as the strongest instruction.
+	- Preserve useful details from the current plan unless the user asks to replace them.
+	- Output a coherent, buildable Minecraft structure, not a raw coordinate dump.
+	- Work in two stages inside analysis: first update analysis.design_spec with
+	  building_type, grid, modules, bboxes, interfaces, material_schedule, and
+	  quality_checks; then generate parts from that design spec.
+	- For complex or large projects, split conceptually by modules but keep one
+	  final BuildPlan JSON. Every module must share the same coordinates and exact
+	  interface faces so future split-LLM generation can be stitched safely.
+	- If the previous plan used a too-specific component family, switch templates and
+	  explain that in analysis.changes.
+	- Use enough explicit parts for recognizable massing, facade, roof, entrances,
   windows, trim, columns, steps, and ornaments.
 - Do not use more than 4096 entries in any single "blocks" part.
 - Include/update "analysis" with short structured notes about what changed.
@@ -369,10 +433,21 @@ Required output shape:
   "name": "{name}",
   "size": [x, y, z],
   "origin": [0, 64, 0],
-  "palette": {{}},
-  "analysis": {{
-    "source": "image/text/current_plan",
-    "intent": [],
+	  "palette": {{}},
+	  "analysis": {{
+	    "source": "image/text/current_plan",
+	    "selected_template": "template key or custom",
+	    "component_strategy": [],
+	    "design_spec": {{
+	      "building_type": "template building type",
+	      "scale_intent": "target block dimensions and proportions",
+	      "grid": [],
+	      "modules": [],
+	      "interfaces": [],
+	      "material_schedule": [],
+	      "quality_checks": []
+	    }},
+	    "intent": [],
     "massing": [],
     "facade": [],
     "roof": [],

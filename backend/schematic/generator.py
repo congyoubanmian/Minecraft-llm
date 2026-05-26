@@ -27,8 +27,14 @@ from backend.dsl.schema import (
 from backend.library import get_component
 
 
-def generate_outputs(plan: BuildPlan, schematic_dir: Path, preview_dir: Path, max_preview_blocks: int = 120_000) -> tuple[Path, Path, Path]:
-    blocks = render_plan_to_blocks(plan)
+def generate_outputs(
+    plan: BuildPlan,
+    schematic_dir: Path,
+    preview_dir: Path,
+    max_preview_blocks: int = 120_000,
+    blocks: BlockList | None = None,
+) -> tuple[Path, Path, Path]:
+    blocks = blocks or render_plan_to_blocks(plan)
     schematic_path = blocks.write_schematic(schematic_dir, plan.name)
     preview_path = blocks.write_preview(
         output_dir=preview_dir,

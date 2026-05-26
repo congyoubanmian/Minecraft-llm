@@ -26,10 +26,13 @@
 3. **网页先预览，再粘贴进游戏**  
    用户可以在浏览器里看到体量、材料、方块数和坐标，再决定是否粘贴。
 
-4. **多轮对话持续修改同一个项目**  
+4. **先做建筑设计规约，再生成 Minecraft 施工代码**
+   复杂建筑不再只靠“看图识别后直接堆方块”。Planner 会先在 `analysis.design_spec` 里确定建筑类型、比例、轴网、模块 bounding box、接口面、材料表和质量检查，再把这份设计规约翻译成 DSL parts。
+
+5. **多轮对话持续修改同一个项目**
    每个项目都有自己的 `state.json`、`plan.json`、`preview.json` 和对话记录，后续可以继续要求“更高一点”“飞檐更明显”“换材质”“不要覆盖旧建筑”。
 
-5. **坐标自动分配，避免多个建筑互相覆盖**  
+6. **坐标自动分配，避免多个建筑互相覆盖**
    后端会根据已有项目 bounds 分配新的粘贴位置，并把出生点放在建筑外侧。
 
 核心中间层是：
@@ -198,6 +201,7 @@ PLANNER_MODE=static
 下载 .schem
 查看 DSL
 查看图片分析
+查看生成诊断
 查看 RCON 返回
 修改粘贴坐标
 修改出生坐标
@@ -219,6 +223,7 @@ POST /api/projects/{project_id}/paste
 POST /api/projects/{project_id}/placement
 GET  /api/projects/{project_id}/preview
 GET  /api/projects/{project_id}/materials
+GET  /api/projects/{project_id}/analysis-report
 GET  /api/projects/{project_id}/schematic
 GET  /api/library
 ```
@@ -246,6 +251,21 @@ LLM 最终生成的是一个 JSON DSL：
     "roof": "oxidized_cut_copper"
   },
   "analysis": {
+    "selected_template": "pagoda_stack",
+    "design_spec": {
+      "building_type": "pagoda",
+      "scale_intent": "96 x 202 x 96 landmark tower",
+      "grid": ["13 tiers", "tier_height=12", "octagonal symmetry"],
+      "modules": [
+        {
+          "name": "main_tower",
+          "role": "mass",
+          "bbox": [[12, 12, 12], [84, 176, 84]]
+        }
+      ],
+      "material_schedule": ["body=smooth_quartz", "roof=oxidized_cut_copper"],
+      "quality_checks": ["八角轮廓清晰", "每层都有飞檐"]
+    },
     "intent": ["简短结构化设计说明"]
   },
   "parts": []
@@ -285,11 +305,13 @@ vajra_spire          金刚宝座式金色塔刹
 
 ## 材料库和组件库
 
-项目现在支持数据驱动的材料库和组件库：
+项目现在支持数据驱动的材料库、组件库、模板库和设计规约：
 
 ```text
 backend/library/materials.json
 backend/library/components.json
+backend/library/templates.json
+backend/library/design_contract.json
 ```
 
 材料库用于描述一组建筑风格常用方块，例如：
@@ -300,9 +322,25 @@ jiangnan_wood        江南白墙、深色木构、灰瓦
 modern_concrete      现浇混凝土、玻璃、外露结构
 stone_arch_bridge    石拱桥
 suspension_bridge    悬索桥
+modern_glass_office  现代玻璃办公楼
+ancient_temple       中式寺庙/殿堂
+water_town           江南水乡
+industrial_steel     工业钢结构
 ```
 
-组件库用于把常见结构拆成可复用的小组件。LLM 可以引用这些组件，放大、缩小、平移、改参数、换材料，再叠加成完整建筑。
+模板库用于先选建筑范式，避免把某次成功的组件乱套到不适合的建筑上。例如：
+
+```text
+pagoda_stack          宝塔/寺庙塔
+temple_hall           中式殿堂/牌楼
+jiangnan_water_town   江南水乡街区
+modern_glass_gate     现代门形地标/大裤衩类建筑
+office_tower          普通现代办公楼
+stone_arch_bridge     石拱桥
+suspension_bridge     悬索桥/斜拉桥
+```
+
+组件库用于把常见结构拆成可复用的小组件。每个组件现在带有 category、styles、building_types、stages、scale_range、parameter_ranges、applicability 和 avoid_when。LLM 可以引用这些组件，放大、缩小、平移、改参数、换材料，再叠加成完整建筑。
 
 当前组件示例：
 
@@ -344,6 +382,71 @@ DSL 中使用组件：
 1 个 concrete_podium 做现代混凝土平台
 若干 box/window/slab 做自定义细节
 ```
+
+## 设计规约工作流
+
+更合理的生成链路应该接近现实建筑流程：
+
+```text
+图片/文字
+  -> 识别建筑类型、风格、比例、关键轮廓
+  -> 选择模板
+  -> 生成 design_spec
+  -> 检查尺寸、轴网、模块接口、材料表
+  -> 翻译成 BuildPlan parts
+  -> 渲染 preview / materials / analysis_report / schem
+```
+
+`design_spec` 是中间的“设计图/施工图”：
+
+```text
+building_type       建筑类型
+selected_template   模板
+scale_intent        目标比例和尺寸
+grid                轴网、层高、开间、跨度
+modules             地基、主体、空洞、立面、屋顶、室内、灯光等模块
+interfaces          模块之间的接口面
+material_schedule   材料表
+quality_checks      生成后要检查的要点
+```
+
+如果单次 LLM 输出太大，后续可以按模块分部调用：
+
+```text
+先生成全局 design_spec
+  -> 地基模块
+  -> 主体模块
+  -> void/air 清空模块
+  -> 立面模块
+  -> 屋顶模块
+  -> 室内模块
+  -> 灯光和细节模块
+  -> 合并 BlockList
+```
+
+关键是所有模块必须使用同一个本地坐标系，并且每个模块都有明确 bbox 和 interface。这样切口长度、楼层高度、桥梁接口、屋顶边界才能对齐，不会出现拼接错位。
+
+## 生成诊断
+
+每次生成时后端会额外输出：
+
+```text
+project_xxx.analysis.json
+```
+
+网页右侧会显示摘要，包括：
+
+```text
+模板猜测
+parts 数量
+design_spec 模块数量
+玻璃比例
+灯光比例
+组件类别
+警告列表
+```
+
+例如古建玻璃比例过高、现代高层灯光太少、宝塔没有使用八角层组件、大型建筑缺少模块化设计规约，都会在诊断里提示。
 
 验证组件库：
 

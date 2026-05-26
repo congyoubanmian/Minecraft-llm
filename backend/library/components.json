@@ -2,6 +2,18 @@
   "components": {
     "pagoda_tier": {
       "description": "A reusable octagonal pagoda tier: hollow body, eight facade panels, overhanging eave, corner ribs.",
+      "category": "tower",
+      "styles": ["ancient_chinese", "jiangnan", "landmark"],
+      "building_types": ["pagoda", "temple", "scenic_landmark"],
+      "stages": ["mass", "facade", "roof", "detail"],
+      "scale_range": [0.5, 3.5],
+      "parameter_ranges": {
+        "radius": [8, 42],
+        "height": [5, 18],
+        "eave_overhang": [3, 10]
+      },
+      "applicability": "Use for stacked Chinese pagodas, temple towers, octagonal scenic towers, and tiered landmark roofs.",
+      "avoid_when": "Do not use for rectangular office towers, flat glass podiums, or bridge decks unless it is a decorative tower.",
       "size": [64, 14, 64],
       "parameters": {
         "radius": 18,
@@ -57,6 +69,19 @@
     },
     "mini_pagoda_cluster": {
       "description": "A ring of small pagodas around a plaza or tower base.",
+      "category": "landscape",
+      "styles": ["ancient_chinese", "jiangnan", "landmark"],
+      "building_types": ["pagoda", "temple", "plaza", "scenic_landmark"],
+      "stages": ["detail", "landscape"],
+      "scale_range": [0.5, 2.5],
+      "parameter_ranges": {
+        "ring_radius": [18, 72],
+        "count": [8, 32],
+        "pagoda_radius": [1, 5],
+        "height": [5, 18]
+      },
+      "applicability": "Use around large ancient landmarks to add scale cues, plaza rhythm, and repeated roof silhouettes.",
+      "avoid_when": "Avoid inside dense modern high-rise massing unless the prompt asks for a theme park or decorative plaza.",
       "size": [96, 16, 96],
       "parameters": {
         "ring_radius": 36,
@@ -85,6 +110,18 @@
     },
     "stone_arch_bridge": {
       "description": "A simple grey stone arch bridge with deck and side rails.",
+      "category": "bridge",
+      "styles": ["ancient_chinese", "jiangnan", "historic", "stone"],
+      "building_types": ["stone_bridge", "water_town_bridge", "garden_bridge"],
+      "stages": ["mass", "structure", "detail"],
+      "scale_range": [0.75, 3.0],
+      "parameter_ranges": {
+        "span": [20, 96],
+        "width": [6, 18],
+        "arch_height": [5, 24]
+      },
+      "applicability": "Use for Jiangnan water-town bridges, garden bridges, canal crossings, and historic stone arches.",
+      "avoid_when": "Avoid for long-span modern traffic bridges, suspension bridges, and rectangular building entrances.",
       "size": [48, 18, 14],
       "parameters": {
         "span": 40,
@@ -152,6 +189,17 @@
     },
     "concrete_podium": {
       "description": "Cast-in-place concrete podium with exposed frame and glass infill.",
+      "category": "podium",
+      "styles": ["modern", "civic", "brutalist", "office"],
+      "building_types": ["office_tower", "museum", "station", "commercial_podium"],
+      "stages": ["mass", "structure", "facade"],
+      "scale_range": [0.75, 3.5],
+      "parameter_ranges": {
+        "floors": [1, 6],
+        "floor_height": [4, 10]
+      },
+      "applicability": "Use as a modern base volume, concrete frame, station concourse, or large civic podium.",
+      "avoid_when": "Avoid for ancient wooden temples, pagoda tiers, and masonry arch bridges.",
       "size": [48, 20, 32],
       "parameters": {
         "floors": 2,
@@ -199,6 +247,17 @@
     },
     "suspension_bridge_segment": {
       "description": "Bridge segment with road deck, two towers, cable line, and hangers.",
+      "category": "bridge",
+      "styles": ["modern", "industrial", "infrastructure"],
+      "building_types": ["suspension_bridge", "cable_bridge", "highway_bridge"],
+      "stages": ["mass", "structure", "detail", "lighting"],
+      "scale_range": [0.75, 4.0],
+      "parameter_ranges": {
+        "length": [48, 240],
+        "tower_height": [18, 96]
+      },
+      "applicability": "Use for long modern bridge spans with towers, cables, road decks, and repeated hanger rhythm.",
+      "avoid_when": "Avoid for old stone arches, pagodas, temples, and small pedestrian garden bridges.",
       "size": [96, 36, 18],
       "parameters": {
         "length": 96,

@@ -10,6 +10,7 @@ createApp({
       library: {
         materials: {},
         components: {},
+        templates: {},
       },
       file: null,
       imagePreviewUrl: "",
@@ -59,6 +60,12 @@ createApp({
     componentEntries() {
       return Object.entries(this.library.components || {});
     },
+    templateEntries() {
+      return Object.entries(this.library.templates || {});
+    },
+    analysisReport() {
+      return this.project?.analysis_report || null;
+    },
     previewMeta() {
       if (!this.preview) return "暂无预览";
       const size = this.preview.size?.join(" x ") || "-";
@@ -94,7 +101,7 @@ createApp({
         this.library = await response.json();
       } catch (error) {
         console.error(error);
-        this.library = { materials: {}, components: {} };
+        this.library = { materials: {}, components: {}, templates: {} };
       }
     },
     syncRoute() {
@@ -170,7 +177,14 @@ createApp({
         .map(([role, block]) => `${role}=${block}`)
         .join(", ");
       this.insertPromptText(
-        `使用组件 ${name}：${component.description || ""}。可调整参数：${params || "无"}。默认材料：${materials || "无"}。请按当前建筑比例放大/缩小并叠加到设计中。`,
+        `使用组件 ${name}：${component.description || ""}。适用：${component.applicability || "按组件说明判断"}。避免：${component.avoid_when || "无"}。可调整参数：${params || "无"}。默认材料：${materials || "无"}。请按当前建筑比例放大/缩小并叠加到设计中。`,
+      );
+    },
+    insertTemplatePrompt(name, template) {
+      const palettes = (template.recommended_palettes || []).join(", ") || "按模板选择";
+      const checks = (template.checks || []).join("；") || "保持模板特征";
+      this.insertPromptText(
+        `使用建筑模板 ${name}：${template.description || ""}。推荐材料：${palettes}。生成时检查：${checks}。如果当前目标不适合该模板，请说明并改选更合适模板。`,
       );
     },
     insertPromptText(text) {
@@ -323,6 +337,10 @@ createApp({
     projectSizeText(item) {
       if (item.preview?.size) return item.preview.size.join(" x ");
       return this.placementSize(item);
+    },
+    ratioText(value) {
+      if (typeof value !== "number") return "-";
+      return `${Math.round(value * 1000) / 10}%`;
     },
     formatTime(value) {
       if (!value) return "-";

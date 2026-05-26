@@ -233,7 +233,7 @@ button:disabled {
 }
 
 .library-list {
-  max-height: 250px;
+  max-height: 210px;
   overflow: auto;
   display: grid;
   gap: 8px;
@@ -453,10 +453,18 @@ button:disabled {
   margin: 0;
 }
 
+.compact-facts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .facts div {
   display: grid;
   grid-template-columns: 92px 1fr;
   gap: 10px;
+}
+
+.compact-facts div {
+  min-width: 0;
 }
 
 dt {
@@ -529,6 +537,14 @@ pre {
 
 .error {
   color: #b12b1c;
+}
+
+.warning-list {
+  margin: 0 0 14px;
+  padding-left: 18px;
+  color: #8a4d11;
+  font-size: 13px;
+  line-height: 1.45;
 }
 
 @media (max-width: 1180px) {

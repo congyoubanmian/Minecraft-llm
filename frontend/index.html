@@ -117,15 +117,29 @@
 
           <section class="library-panel">
             <div class="library-header">
-              <h2>组件库</h2>
+              <h2>模板库</h2>
               <button type="button" class="text-button" @click="loadLibrary">刷新</button>
+            </div>
+            <div class="library-list">
+              <article v-for="[name, template] in templateEntries" :key="name" class="library-item">
+                <div>
+                  <strong>{{ name }}</strong>
+                  <p>{{ template.description }}</p>
+                  <span>{{ template.style || "-" }} · {{ (template.building_types || []).slice(0, 3).join(", ") }}</span>
+                </div>
+                <button type="button" @click="insertTemplatePrompt(name, template)">插入</button>
+              </article>
+            </div>
+
+            <div class="library-header">
+              <h2>组件库</h2>
             </div>
             <div class="library-list">
               <article v-for="[name, component] in componentEntries" :key="name" class="library-item">
                 <div>
                   <strong>{{ name }}</strong>
                   <p>{{ component.description }}</p>
-                  <span>{{ component.size?.join(" x ") || "-" }}</span>
+                  <span>{{ component.category || "-" }} · {{ component.size?.join(" x ") || "-" }}</span>
                 </div>
                 <button type="button" @click="insertComponentPrompt(name, component)">插入</button>
               </article>
@@ -234,6 +248,34 @@
 
           <h2>图片分析</h2>
           <pre>{{ formatJson(project?.analysis || {}) }}</pre>
+
+          <h2>生成诊断</h2>
+          <dl v-if="analysisReport" class="facts compact-facts">
+            <div>
+              <dt>Template</dt>
+              <dd>{{ analysisReport.template_guess || "-" }}</dd>
+            </div>
+            <div>
+              <dt>Parts</dt>
+              <dd>{{ analysisReport.part_count || 0 }}</dd>
+            </div>
+            <div>
+              <dt>Modules</dt>
+              <dd>{{ analysisReport.design_spec?.module_count || 0 }}</dd>
+            </div>
+            <div>
+              <dt>Glass</dt>
+              <dd>{{ ratioText(analysisReport.material_ratios?.glass) }}</dd>
+            </div>
+            <div>
+              <dt>Light</dt>
+              <dd>{{ ratioText(analysisReport.material_ratios?.light) }}</dd>
+            </div>
+          </dl>
+          <ul v-if="analysisReport?.warnings?.length" class="warning-list">
+            <li v-for="warning in analysisReport.warnings" :key="warning">{{ warning }}</li>
+          </ul>
+          <pre v-else>{{ formatJson(analysisReport || {}) }}</pre>
 
           <h2>RCON 返回</h2>
           <pre>{{ formatJson(project?.rcon || []) }}</pre>
