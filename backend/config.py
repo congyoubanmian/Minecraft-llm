@@ -39,5 +39,11 @@ class Settings(BaseSettings):
     codex_model: str | None = None
     codex_timeout_seconds: int = 420
 
+    cors_origins: str = "http://localhost:8000,http://localhost:5173,http://localhost:3000"
+
+    rate_limit_per_minute: int = 10
+
+    api_key: str = ""
+
 
 settings = Settings()

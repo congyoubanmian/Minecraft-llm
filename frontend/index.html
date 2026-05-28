@@ -15,6 +15,14 @@
             <p>{{ route === "list" ? "管理历史项目，打开预览，或创建新的 Minecraft 建筑。" : "用图片和多轮文字生成 schematic，先预览，再粘贴到 Paper 服务器。" }}</p>
           </div>
           <div class="top-actions">
+            <input
+              type="password"
+              class="api-key-input"
+              v-model="apiKey"
+              @change="saveApiKey"
+              placeholder="API Key (可选)"
+              title="设置 API Key（留空则不启用认证）"
+            />
             <button v-if="route !== 'list'" type="button" class="secondary-button" @click="goHome">项目列表</button>
             <button v-if="route === 'list'" type="button" @click="newProject">创建新项目</button>
             <span class="status-pill" :data-status="health">{{ health }}</span>
@@ -46,7 +54,10 @@
                 <h2>{{ item.name || item.id }}</h2>
                 <p>{{ item.last_message || "无文字描述" }}</p>
               </div>
-              <span class="project-status">{{ item.status || "-" }}</span>
+              <div class="project-card-actions">
+                <span class="project-status">{{ item.status || "-" }}</span>
+                <button type="button" class="delete-button" @click.stop="deleteProject(item.id)" title="删除项目">&times;</button>
+              </div>
             </div>
             <dl class="project-card-facts">
               <div>
@@ -244,6 +255,9 @@
             <button type="button" :disabled="!project?.schematic_path || busy" @click="pasteProject">
               粘贴到 Minecraft
             </button>
+            <button type="button" class="secondary-button" v-if="busy" @click="cancelGeneration">
+              取消生成
+            </button>
           </div>
 
           <h2>图片分析</h2>
@@ -294,6 +308,8 @@
 
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <script src="https://unpkg.com/three@0.132.2/build/three.min.js"></script>
+    <script src="/assets/helpers.js"></script>
+    <script src="/assets/preview.js"></script>
     <script src="/assets/app.js"></script>
   </body>
 </html>

@@ -16,3 +16,4 @@
 ## 当前条目
 
 - [2026-05-26 广州塔超高版经验](2026-05-26-canton-tower-superheight.md)
+- [2026-05-28 世界重置与 LED 性能经验](2026-05-28-world-reset-and-led-performance.md)

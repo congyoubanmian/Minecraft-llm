@@ -99,6 +99,20 @@ p {
   color: #9e2f1f;
 }
 
+.api-key-input {
+  width: 140px;
+  padding: 5px 10px;
+  border: 1px solid #d8dfda;
+  border-radius: 6px;
+  font-size: 12px;
+  background: #f6f8f7;
+  color: #17211d;
+}
+
+.api-key-input::placeholder {
+  color: #9aa5a0;
+}
+
 .workbench {
   display: grid;
   grid-template-columns: minmax(280px, 360px) minmax(420px, 1fr) minmax(300px, 390px);
@@ -345,6 +359,33 @@ button:disabled {
   color: #43514b;
   font-size: 12px;
   font-weight: 800;
+}
+
+.project-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.delete-button {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border: 1px solid #d8dfda;
+  border-radius: 50%;
+  background: #fff;
+  color: #8b3a2f;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-button:hover {
+  background: #ffe4df;
+  border-color: #f5a8a0;
 }
 
 .project-card[data-status="done"] .project-status {

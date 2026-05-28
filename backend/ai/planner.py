@@ -37,49 +37,24 @@ def plan_from_conversation(
         current_plan=current_plan,
     )
 
-    command = [
-        settings.codex_command,
-        "--dangerously-bypass-approvals-and-sandbox",
-        "exec",
-        "--skip-git-repo-check",
-        "-C",
-        str(ROOT_DIR),
-    ]
-    if settings.codex_model:
-        command.extend(["--model", settings.codex_model])
-    if image_path:
-        command.extend(["--image", str(image_path)])
-    command.append("-")
-
-    completed = subprocess.run(
-        command,
-        cwd=ROOT_DIR,
-        input=prompt,
-        text=True,
-        capture_output=True,
-        timeout=settings.codex_timeout_seconds,
-        check=False,
-    )
-    if completed.returncode != 0:
-        raise RuntimeError(
-            "Codex conversation planner failed "
-            f"(exit={completed.returncode}): stdout={completed.stdout[-2000:]!r} "
-            f"stderr={completed.stderr[-2000:]!r}"
-        )
-
-    if not output_path.exists():
-        raise FileNotFoundError(f"Codex did not create DSL file: {output_path}")
-
-    data = json.loads(output_path.read_text(encoding="utf-8"))
-    data["name"] = name
-    return BuildPlan.model_validate(data)
+    return _run_codex(prompt, name, output_path, image_path, error_label="Codex conversation planner failed")
 
 
 def _codex_plan(summary: VisionSummary, name: str, image_path: Path | None) -> BuildPlan:
     settings.generated_plan_dir.mkdir(parents=True, exist_ok=True)
     output_path = settings.generated_plan_dir / f"{name}.json"
     prompt = _build_codex_prompt(summary, name, output_path)
+    return _run_codex(prompt, name, output_path, image_path, error_label="Codex planner failed")
 
+
+def _run_codex(
+    prompt: str,
+    name: str,
+    output_path: Path,
+    image_path: Path | None = None,
+    *,
+    error_label: str = "Codex planner failed",
+) -> BuildPlan:
     command = [
         settings.codex_command,
         "--dangerously-bypass-approvals-and-sandbox",
@@ -105,7 +80,7 @@ def _codex_plan(summary: VisionSummary, name: str, image_path: Path | None) -> B
     )
     if completed.returncode != 0:
         raise RuntimeError(
-            "Codex planner failed "
+            f"{error_label} "
             f"(exit={completed.returncode}): stdout={completed.stdout[-2000:]!r} "
             f"stderr={completed.stderr[-2000:]!r}"
         )

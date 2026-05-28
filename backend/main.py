@@ -1,14 +1,20 @@
 from __future__ import annotations
 
+import asyncio
+import json
 import shutil
+import time
 import uuid
+from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, UploadFile
+from contextlib import asynccontextmanager
+
+from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, HTTPException, Request, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -23,18 +29,95 @@ from backend.minecraft.rcon import MinecraftRcon, RconConfig
 from backend.schematic.generator import generate_outputs, render_plan_to_blocks
 
 
-app = FastAPI(title="Minecraft AI Builder")
+@asynccontextmanager
+async def _lifespan(_app: FastAPI):
+    settings.upload_dir.mkdir(parents=True, exist_ok=True)
+    settings.schematic_dir.mkdir(parents=True, exist_ok=True)
+    settings.generated_plan_dir.mkdir(parents=True, exist_ok=True)
+    settings.project_dir.mkdir(parents=True, exist_ok=True)
+    yield
+
+
+app = FastAPI(title="Minecraft AI Builder", lifespan=_lifespan)
+
+_cors_origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+_rate_limit_store: dict[str, list[float]] = defaultdict(list)
+_rate_limit_last_sweep: float = 0.0
+
+
+@app.middleware("http")
+async def rate_limit_middleware(request: Any, call_next: Any) -> Any:
+    global _rate_limit_last_sweep
+    if request.url.path.startswith("/api/") and request.method == "POST":
+        now = time.monotonic()
+        cutoff = now - 60.0
+        if now - _rate_limit_last_sweep > 60.0:
+            _rate_limit_last_sweep = now
+            stale = [k for k, v in _rate_limit_store.items() if not v or v[-1] < cutoff]
+            for k in stale:
+                del _rate_limit_store[k]
+        client_ip = request.client.host if request.client else "unknown"
+        key = f"{client_ip}:{request.url.path}"
+        window = _rate_limit_store[key]
+        window[:] = [t for t in window if t > cutoff]
+        if len(window) >= settings.rate_limit_per_minute:
+            return JSONResponse(status_code=429, content={"detail": "too many requests, please try again later"})
+        window.append(now)
+    return await call_next(request)
+
+
+BUSY_STATUSES = frozenset({"queued", "analyzing", "planning", "generating_schematic", "pasting"})
+TERMINAL_STATUSES = frozenset({"done", "failed", "cancelled"})
+
+
+def _require_api_key(request: Request) -> None:
+    if not settings.api_key:
+        return
+    auth = request.headers.get("Authorization", "")
+    token = auth.removeprefix("Bearer ").strip()
+    if token != settings.api_key:
+        raise HTTPException(status_code=401, detail="invalid or missing API key")
+
+
 TaskState = dict[str, Any]
 tasks: dict[str, TaskState] = {}
+
+
+class _WSManager:
+    def __init__(self) -> None:
+        self._connections: dict[str, list[WebSocket]] = {}
+
+    def connect(self, project_id: str, ws: WebSocket) -> None:
+        self._connections.setdefault(project_id, []).append(ws)
+
+    def disconnect(self, project_id: str, ws: WebSocket) -> None:
+        conns = self._connections.get(project_id, [])
+        if ws in conns:
+            conns.remove(ws)
+        if not conns:
+            self._connections.pop(project_id, None)
+
+    async def broadcast(self, project_id: str, data: dict[str, Any]) -> None:
+        dead: list[WebSocket] = []
+        for ws in self._connections.get(project_id, []):
+            try:
+                await ws.send_json(data)
+            except Exception:
+                dead.append(ws)
+        for ws in dead:
+            self.disconnect(project_id, ws)
+
+
+_ws_manager = _WSManager()
 
 
 class ChatRequest(BaseModel):
@@ -49,14 +132,6 @@ class PlacementRequest(BaseModel):
     spawn_x: int | None = None
     spawn_y: int | None = None
     spawn_z: int | None = None
-
-
-@app.on_event("startup")
-def startup() -> None:
-    settings.upload_dir.mkdir(parents=True, exist_ok=True)
-    settings.schematic_dir.mkdir(parents=True, exist_ok=True)
-    settings.generated_plan_dir.mkdir(parents=True, exist_ok=True)
-    settings.project_dir.mkdir(parents=True, exist_ok=True)
 
 
 @app.get("/api/health")
@@ -74,7 +149,22 @@ def get_library() -> dict[str, Any]:
     }
 
 
-@app.post("/api/builds")
+@app.websocket("/ws/projects/{project_id}")
+async def ws_project_status(websocket: WebSocket, project_id: str) -> None:
+    await websocket.accept()
+    _ws_manager.connect(project_id, websocket)
+    try:
+        state = _load_project(project_id)
+        await websocket.send_json({"type": "state", **state})
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        pass
+    finally:
+        _ws_manager.disconnect(project_id, websocket)
+
+
+@app.post("/api/builds", dependencies=[Depends(_require_api_key)])
 async def create_build(background_tasks: BackgroundTasks, image: UploadFile = File(...)) -> dict[str, str]:
     if not image.content_type or not image.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="only image uploads are supported")
@@ -130,7 +220,7 @@ def get_build_preview(task_id: str) -> FileResponse:
     return FileResponse(task["preview_path"], media_type="application/json")
 
 
-@app.post("/api/projects")
+@app.post("/api/projects", dependencies=[Depends(_require_api_key)])
 async def create_project(
     background_tasks: BackgroundTasks,
     image: UploadFile | None = File(default=None),
@@ -183,8 +273,6 @@ def list_projects() -> dict[str, Any]:
         preview = None
         if state.get("preview_path"):
             try:
-                import json
-
                 preview_path = Path(state["preview_path"])
                 if preview_path.exists():
                     preview_data = json.loads(preview_path.read_text(encoding="utf-8"))
@@ -226,10 +314,10 @@ def get_project(project_id: str) -> dict[str, Any]:
     return _load_project(project_id)
 
 
-@app.post("/api/projects/{project_id}/chat")
+@app.post("/api/projects/{project_id}/chat", dependencies=[Depends(_require_api_key)])
 def chat_project(project_id: str, request: ChatRequest, background_tasks: BackgroundTasks) -> dict[str, str]:
     state = _load_project(project_id)
-    if state["status"] in {"analyzing", "planning", "generating_schematic", "pasting"}:
+    if state["status"] in BUSY_STATUSES:
         raise HTTPException(status_code=409, detail="project is already generating")
     message = request.message.strip()
     if not message:
@@ -246,7 +334,7 @@ def chat_project(project_id: str, request: ChatRequest, background_tasks: Backgr
     return {"project_id": project_id}
 
 
-@app.post("/api/projects/{project_id}/paste")
+@app.post("/api/projects/{project_id}/paste", dependencies=[Depends(_require_api_key)])
 def paste_project(project_id: str) -> dict[str, Any]:
     state = _load_project(project_id)
     schematic_path = state.get("schematic_path")
@@ -269,7 +357,20 @@ def paste_project(project_id: str) -> dict[str, Any]:
     return {"project_id": project_id, "rcon": state["rcon"]}
 
 
-@app.post("/api/projects/{project_id}/placement")
+@app.post("/api/projects/{project_id}/cancel", dependencies=[Depends(_require_api_key)])
+def cancel_project(project_id: str) -> dict[str, str]:
+    state = _load_project(project_id)
+    if state["status"] not in BUSY_STATUSES:
+        raise HTTPException(status_code=409, detail="project is not in a cancellable state")
+    state["status"] = "cancelled"
+    state["error"] = "cancelled by user"
+    state["updated_at"] = _now()
+    state["completed_at"] = _now()
+    _save_project(project_id, state)
+    return {"project_id": project_id, "status": "cancelled"}
+
+
+@app.post("/api/projects/{project_id}/placement", dependencies=[Depends(_require_api_key)])
 def update_project_placement(project_id: str, request: PlacementRequest) -> dict[str, Any]:
     state = _load_project(project_id)
     plan = state.get("plan")
@@ -297,6 +398,22 @@ def update_project_placement(project_id: str, request: PlacementRequest) -> dict
     state["updated_at"] = _now()
     _save_project(project_id, state)
     return {"project_id": project_id, "placement": placement}
+
+
+@app.delete("/api/projects/{project_id}", dependencies=[Depends(_require_api_key)])
+def delete_project(project_id: str) -> dict[str, Any]:
+    project_path = _project_path(project_id)
+    state_path = project_path / "state.json"
+    if not state_path.exists():
+        raise HTTPException(status_code=404, detail="project not found")
+
+    state = _load_project(project_id)
+    if state.get("status") in BUSY_STATUSES:
+        raise HTTPException(status_code=409, detail="cannot delete project while generating")
+
+    shutil.rmtree(project_path, ignore_errors=True)
+    _invalidate_project_cache()
+    return {"project_id": project_id, "deleted": True}
 
 
 @app.get("/api/projects/{project_id}/schematic")
@@ -376,11 +493,15 @@ def _run_project_generation(project_id: str) -> None:
     try:
         image_path = Path(state["image_path"]) if state.get("image_path") else None
         if image_path and not state.get("analysis"):
+            if _check_cancelled(project_id):
+                return
             state["status"] = "analyzing"
             state["updated_at"] = _now()
             _save_project(project_id, state)
             state["analysis"] = dict(analyze_image(image_path))
 
+        if _check_cancelled(project_id):
+            return
         state["status"] = "planning"
         state["updated_at"] = _now()
         _save_project(project_id, state)
@@ -399,6 +520,8 @@ def _run_project_generation(project_id: str) -> None:
         plan_path.write_text(plan.model_dump_json(by_alias=True, indent=2), encoding="utf-8")
         state["plan_path"] = str(plan_path)
 
+        if _check_cancelled(project_id):
+            return
         state["status"] = "generating_schematic"
         state["updated_at"] = _now()
         _save_project(project_id, state)
@@ -444,14 +567,19 @@ def _run_project_generation(project_id: str) -> None:
         _save_project(project_id, state)
 
 
+def _check_cancelled(project_id: str) -> bool:
+    try:
+        return _load_project(project_id).get("status") == "cancelled"
+    except HTTPException:
+        return True
+
+
 def _write_outputs(plan: BuildPlan, schematic_dir: Path, preview_dir: Path | None = None) -> tuple[Path, Path, Path, Path, dict[str, Any]]:
     output_dir = preview_dir or schematic_dir
     blocks = render_plan_to_blocks(plan)
     schematic_path, preview_path, material_path = generate_outputs(plan, schematic_dir, output_dir, blocks=blocks)
     analysis_report = analyze_build(plan, blocks)
     analysis_report_path = output_dir / f"{plan.name}.analysis.json"
-    import json
-
     analysis_report_path.write_text(json.dumps(analysis_report, ensure_ascii=False, indent=2), encoding="utf-8")
     return schematic_path, preview_path, material_path, analysis_report_path, analysis_report
 
@@ -559,17 +687,30 @@ def _bounds_overlap(a: dict[str, int], b: dict[str, int]) -> bool:
     )
 
 
-def _iter_project_states() -> list[dict[str, Any]]:
-    states = []
-    if not settings.project_dir.exists():
-        return states
-    for state_path in settings.project_dir.glob("*/state.json"):
-        try:
-            import json
+_project_states_cache: list[dict[str, Any]] = []
+_project_states_cache_ts: float = 0.0
+_PROJECT_STATES_TTL = 2.0
 
-            states.append(json.loads(state_path.read_text(encoding="utf-8")))
-        except Exception:
-            continue
+
+def _invalidate_project_cache() -> None:
+    global _project_states_cache, _project_states_cache_ts
+    _project_states_cache = []
+    _project_states_cache_ts = 0.0
+
+
+def _iter_project_states() -> list[dict[str, Any]]:
+    global _project_states_cache, _project_states_cache_ts
+    if _project_states_cache and time.monotonic() - _project_states_cache_ts < _PROJECT_STATES_TTL:
+        return _project_states_cache
+    states: list[dict[str, Any]] = []
+    if settings.project_dir.exists():
+        for state_path in settings.project_dir.glob("*/state.json"):
+            try:
+                states.append(json.loads(state_path.read_text(encoding="utf-8")))
+            except Exception:
+                continue
+    _project_states_cache = states
+    _project_states_cache_ts = time.monotonic()
     return states
 
 
@@ -607,18 +748,26 @@ def _load_project(project_id: str) -> dict[str, Any]:
     state_path = _project_path(project_id) / "state.json"
     if not state_path.exists():
         raise HTTPException(status_code=404, detail="project not found")
-    import json
-
     return json.loads(state_path.read_text(encoding="utf-8"))
 
 
 def _save_project(project_id: str, state: dict[str, Any]) -> None:
-    import json
-
     project_path = _project_path(project_id)
     project_path.mkdir(parents=True, exist_ok=True)
     state_path = project_path / "state.json"
     state_path.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+    _invalidate_project_cache()
+    _ws_notify(project_id, state)
+
+
+def _ws_notify(project_id: str, state: dict[str, Any]) -> None:
+    if not _ws_manager._connections.get(project_id):
+        return
+    try:
+        loop = asyncio.get_running_loop()
+        loop.create_task(_ws_manager.broadcast(project_id, {"type": "state", **state}))
+    except RuntimeError:
+        pass
 
 
 def _now() -> str:

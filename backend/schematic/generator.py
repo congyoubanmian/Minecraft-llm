@@ -593,42 +593,10 @@ def _component(schem: Any, plan: BuildPlan, part: ComponentPart) -> None:
 
 def _render_plan_parts(target: Any, plan: BuildPlan, parts: list[Any]) -> None:
     for part in parts:
-        if isinstance(part, BoxPart):
-            _box(target, plan, part)
-        elif isinstance(part, GableRoofPart):
-            _gable_roof(target, plan, part)
-        elif isinstance(part, WindowGridPart):
-            _window_grid(target, plan, part)
-        elif isinstance(part, WindowPart):
-            _window(target, plan, part)
-        elif isinstance(part, DoorPart):
-            _door(target, plan, part)
-        elif isinstance(part, StairPart):
-            _stairs(target, plan, part)
-        elif isinstance(part, SlabPart):
-            _slab(target, plan, part)
-        elif isinstance(part, CylinderPart):
-            _cylinder(target, plan, part)
-        elif isinstance(part, OctagonalTowerPart):
-            _octagonal_tower(target, plan, part)
-        elif isinstance(part, OctagonalRoofPart):
-            _octagonal_roof(target, plan, part)
-        elif isinstance(part, OctagonalEavePart):
-            _octagonal_eave(target, plan, part)
-        elif isinstance(part, VajraSpirePart):
-            _vajra_spire(target, plan, part)
-        elif isinstance(part, MiniPagodaRingPart):
-            _mini_pagoda_ring(target, plan, part)
-        elif isinstance(part, FacadePanelRingPart):
-            _facade_panel_ring(target, plan, part)
-        elif isinstance(part, TwistedLatticeTowerPart):
-            _twisted_lattice_tower(target, plan, part)
-        elif isinstance(part, ComponentPart):
-            _component(target, plan, part)
-        elif isinstance(part, BlocksPart):
-            _blocks(target, plan, part)
-        else:
+        renderer = _PART_RENDERERS.get(type(part))
+        if renderer is None:
             raise ValueError(f"unsupported component part: {part}")
+        renderer(target, plan, part)
 
 
 def _component_part_model(data: dict[str, Any]) -> Any:
@@ -750,3 +718,24 @@ def _octagonal_points(radius: int) -> list[tuple[int, int]]:
 def _blocks(schem: Any, plan: BuildPlan, part: BlocksPart) -> None:
     for placement in part.blocks:
         _set(schem, placement.pos, plan.block_id(placement.block))
+
+
+_PART_RENDERERS: dict[type, Any] = {
+    BoxPart: _box,
+    GableRoofPart: _gable_roof,
+    WindowGridPart: _window_grid,
+    WindowPart: _window,
+    DoorPart: _door,
+    StairPart: _stairs,
+    SlabPart: _slab,
+    CylinderPart: _cylinder,
+    OctagonalTowerPart: _octagonal_tower,
+    OctagonalRoofPart: _octagonal_roof,
+    OctagonalEavePart: _octagonal_eave,
+    VajraSpirePart: _vajra_spire,
+    MiniPagodaRingPart: _mini_pagoda_ring,
+    FacadePanelRingPart: _facade_panel_ring,
+    TwistedLatticeTowerPart: _twisted_lattice_tower,
+    ComponentPart: _component,
+    BlocksPart: _blocks,
+}
