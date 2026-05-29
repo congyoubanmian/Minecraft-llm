@@ -469,6 +469,19 @@
                 <li v-for="item in (designBlueprint.quality_checks || []).slice(0, 6)" :key="item">{{ item }}</li>
               </ul>
             </div>
+
+            <div v-if="moduleRconEntries.length" class="blueprint-section">
+              <h3>模块操作</h3>
+              <div class="module-rcon-list">
+                <article v-for="entry in moduleRconEntries.slice(0, 6)" :key="entry.key" class="module-rcon-item">
+                  <div>
+                    <strong>{{ entry.name }}</strong>
+                    <span>{{ entry.label }} · {{ entry.count }} 条返回</span>
+                  </div>
+                  <code v-for="line in entry.commands" :key="line">{{ line }}</code>
+                </article>
+              </div>
+            </div>
           </section>
 
           <h2>RCON 返回</h2>

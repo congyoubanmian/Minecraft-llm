@@ -88,6 +88,22 @@ createApp({
     blueprintInterfaces() {
       return this.designBlueprint?.interfaces || [];
     },
+    moduleRconEntries() {
+      return Object.entries(this.project?.module_rcon || {})
+        .map(([key, commands]) => {
+          const [name, action = "paste"] = key.split(":");
+          const list = Array.isArray(commands) ? commands : [];
+          return {
+            key,
+            name,
+            action,
+            label: this.moduleActionLabel(action),
+            count: list.length,
+            commands: list.slice(-4),
+          };
+        })
+        .reverse();
+    },
     previewMeta() {
       if (!this.preview) return "暂无预览";
       const size = this.preview.size?.join(" x ") || "-";
@@ -655,6 +671,14 @@ createApp({
     moduleSchematicUrl(module) {
       if (!this.project?.id || !module?.name) return "#";
       return `/api/projects/${this.project.id}/modules/${encodeURIComponent(module.name)}/schematic`;
+    },
+    moduleActionLabel(action) {
+      const labels = {
+        paste: "粘贴",
+        clear: "清空",
+        replace: "替换",
+      };
+      return labels[action] || action || "粘贴";
     },
     roleText(role) {
       const labels = {
