@@ -188,6 +188,17 @@ input {
   font: inherit;
 }
 
+select {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #cbd5cf;
+  border-radius: 8px;
+  padding: 8px 9px;
+  background: #fbfcfb;
+  color: #17211d;
+  font: inherit;
+}
+
 input:disabled {
   background: #eef2f0;
   color: #8a958f;
@@ -407,6 +418,14 @@ button:disabled {
   margin-bottom: 14px;
   padding-bottom: 14px;
   border-bottom: 1px solid #d8dfda;
+}
+
+.project-list-controls {
+  flex: 1 1 460px;
+  max-width: 560px;
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(130px, 170px);
+  gap: 8px;
 }
 
 .empty-list {
@@ -995,10 +1014,16 @@ pre {
 
   .title-row,
   .preview-toolbar,
+  .list-toolbar,
   .preview-actions,
   .button-row,
   .workbench {
     display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .project-list-controls {
+    max-width: none;
     grid-template-columns: 1fr;
   }
 

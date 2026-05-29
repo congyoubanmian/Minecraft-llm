@@ -10,6 +10,8 @@ createApp({
       health: "checking",
       route: "list",
       projects: [],
+      projectSearch: "",
+      projectSort: "updated_desc",
       projectListLoading: false,
       world: null,
       placements: [],
@@ -121,6 +123,13 @@ createApp({
           };
         })
         .reverse();
+    },
+    visibleProjects() {
+      const query = this.projectSearch.trim().toLowerCase();
+      const filtered = query
+        ? this.projects.filter((item) => this.projectSearchText(item).includes(query))
+        : [...this.projects];
+      return filtered.sort((left, right) => this.compareProjects(left, right, this.projectSort));
     },
     previewMeta() {
       if (!this.preview) return "暂无预览";
@@ -942,6 +951,54 @@ createApp({
     projectSizeText(item) {
       if (item.preview?.size) return item.preview.size.join(" x ");
       return this.placementSize(item);
+    },
+    projectVolume(item) {
+      const size = item.preview?.size;
+      if (Array.isArray(size) && size.length >= 3) {
+        return Number(size[0] || 0) * Number(size[1] || 0) * Number(size[2] || 0);
+      }
+      const placementSize = item.placement?.size;
+      if (placementSize) {
+        return Number(placementSize.x || 0) * Number(placementSize.y || 0) * Number(placementSize.z || 0);
+      }
+      return 0;
+    },
+    projectBlockCount(item) {
+      return Number(item.preview?.block_count || 0);
+    },
+    projectSnapshotBytes(item) {
+      return Number(item.snapshot_summary?.bytes || 0);
+    },
+    projectTimeValue(item) {
+      const value = item.updated_at || item.created_at || "";
+      const time = new Date(value).getTime();
+      return Number.isNaN(time) ? 0 : time;
+    },
+    projectSearchText(item) {
+      return [
+        item.id,
+        item.name,
+        item.status,
+        item.last_message,
+        item.analysis_report?.template_guess,
+        item.analysis_report?.design_blueprint?.building_type,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+    },
+    compareProjects(left, right, sortKey) {
+      const byUpdated = () => this.projectTimeValue(right) - this.projectTimeValue(left);
+      const compareText = (a, b) => String(a || "").localeCompare(String(b || ""), "zh-CN");
+      const tieBreak = byUpdated() || compareText(left.id, right.id);
+      const sorters = {
+        updated_desc: () => byUpdated() || compareText(left.id, right.id),
+        name_asc: () => compareText(left.name || left.id, right.name || right.id) || byUpdated(),
+        blocks_desc: () => this.projectBlockCount(right) - this.projectBlockCount(left) || tieBreak,
+        volume_desc: () => this.projectVolume(right) - this.projectVolume(left) || tieBreak,
+        snapshots_desc: () => this.projectSnapshotBytes(right) - this.projectSnapshotBytes(left) || tieBreak,
+      };
+      return (sorters[sortKey] || sorters.updated_desc)();
     },
     projectSnapshotText(item) {
       const summary = item.snapshot_summary;

@@ -78,16 +78,32 @@
           <div class="list-toolbar">
             <div>
               <h2>项目列表</h2>
-              <p>{{ projects.length }} 个项目</p>
+              <p>{{ visibleProjects.length }} / {{ projects.length }} 个项目</p>
+            </div>
+            <div class="project-list-controls">
+              <input
+                type="search"
+                v-model="projectSearch"
+                placeholder="搜索项目、状态、描述"
+                aria-label="搜索项目"
+              />
+              <select v-model="projectSort" aria-label="项目排序">
+                <option value="updated_desc">最近更新</option>
+                <option value="name_asc">名称 A-Z</option>
+                <option value="blocks_desc">方块最多</option>
+                <option value="volume_desc">体积最大</option>
+                <option value="snapshots_desc">快照占用</option>
+              </select>
             </div>
             <button type="button" class="secondary-button" @click="loadProjects">刷新</button>
           </div>
 
           <div v-if="projectListLoading" class="empty-list">正在加载项目</div>
           <div v-else-if="!projects.length" class="empty-list">暂无项目，先创建一个。</div>
+          <div v-else-if="!visibleProjects.length" class="empty-list">没有匹配的项目。</div>
           <div v-else class="project-grid">
             <article
-              v-for="item in projects"
+              v-for="item in visibleProjects"
               :key="item.id"
               class="project-card"
               :data-status="item.status"
