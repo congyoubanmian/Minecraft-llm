@@ -11,6 +11,9 @@ createApp({
       route: "list",
       projects: [],
       projectListLoading: false,
+      world: null,
+      worldLoading: false,
+      worldAction: "",
       library: {
         materials: {},
         components: {},
@@ -150,6 +153,7 @@ createApp({
       this.clearPreview();
       this.destroyPreviewRenderer();
       this.loadProjects();
+      this.loadWorldStatus();
     },
     goHome() {
       window.location.hash = "#/";
@@ -177,6 +181,51 @@ createApp({
         console.error(error);
       } finally {
         this.projectListLoading = false;
+      }
+    },
+    async loadWorldStatus() {
+      this.worldLoading = true;
+      try {
+        const response = await this.apiFetch(`/api/world/status?ts=${Date.now()}`);
+        if (!response.ok) throw new Error(await response.text());
+        this.world = await response.json();
+      } catch (error) {
+        this.world = { error: error instanceof Error ? error.message : String(error) };
+      } finally {
+        this.worldLoading = false;
+      }
+    },
+    async backupWorld() {
+      this.worldAction = "backup";
+      try {
+        const response = await this.apiFetch("/api/world/backup", { method: "POST" });
+        if (!response.ok) throw new Error(await response.text());
+        const payload = await response.json();
+        await this.loadWorldStatus();
+        alert(`备份完成：${payload.backup}`);
+      } catch (error) {
+        alert(`备份失败：${error instanceof Error ? error.message : String(error)}`);
+      } finally {
+        this.worldAction = "";
+      }
+    },
+    async resetWorld() {
+      const confirmation = prompt("这会备份并重置 Minecraft 世界。请输入 RESET_WORLD 确认。");
+      if (confirmation !== "RESET_WORLD") return;
+      this.worldAction = "reset";
+      try {
+        const response = await this.apiFetch("/api/world/reset", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ confirm: confirmation }),
+        });
+        if (!response.ok) throw new Error(await response.text());
+        await this.loadWorldStatus();
+        alert("世界已重置，Minecraft 正在重新生成干净世界。");
+      } catch (error) {
+        alert(`重置失败：${error instanceof Error ? error.message : String(error)}`);
+      } finally {
+        this.worldAction = "";
       }
     },
     insertMaterialPrompt(name, material) {

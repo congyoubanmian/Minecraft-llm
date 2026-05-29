@@ -30,55 +30,86 @@
         </div>
       </section>
 
-      <section v-if="route === 'list'" class="project-list panel">
-        <div class="list-toolbar">
-          <div>
-            <h2>项目列表</h2>
-            <p>{{ projects.length }} 个项目</p>
-          </div>
-          <button type="button" class="secondary-button" @click="loadProjects">刷新</button>
-        </div>
-
-        <div v-if="projectListLoading" class="empty-list">正在加载项目</div>
-        <div v-else-if="!projects.length" class="empty-list">暂无项目，先创建一个。</div>
-        <div v-else class="project-grid">
-          <article
-            v-for="item in projects"
-            :key="item.id"
-            class="project-card"
-            :data-status="item.status"
-            @click="openProject(item.id)"
-          >
-            <div class="project-card-header">
-              <div>
-                <h2>{{ item.name || item.id }}</h2>
-                <p>{{ item.last_message || "无文字描述" }}</p>
-              </div>
-              <div class="project-card-actions">
-                <span class="project-status">{{ item.status || "-" }}</span>
-                <button type="button" class="delete-button" @click.stop="deleteProject(item.id)" title="删除项目">&times;</button>
-              </div>
+      <section v-if="route === 'list'" class="list-page">
+        <section class="world-panel panel">
+          <div class="list-toolbar">
+            <div>
+              <h2>世界状态</h2>
+              <p>{{ world?.rcon?.ok ? world.rcon.tps : (world?.rcon?.error || "等待刷新") }}</p>
             </div>
-            <dl class="project-card-facts">
-              <div>
-                <dt>ID</dt>
-                <dd>{{ item.id }}</dd>
+            <div class="button-row compact-actions">
+              <button type="button" class="secondary-button" :disabled="worldLoading" @click="loadWorldStatus">刷新</button>
+              <button type="button" :disabled="worldAction" @click="backupWorld">{{ worldAction === "backup" ? "备份中" : "备份世界" }}</button>
+              <button type="button" class="danger-button" :disabled="worldAction" @click="resetWorld">{{ worldAction === "reset" ? "重置中" : "重置世界" }}</button>
+            </div>
+          </div>
+
+          <div class="world-grid">
+            <article v-for="item in world?.worlds || []" :key="item.name" class="world-card">
+              <strong>{{ item.name }}</strong>
+              <span>{{ item.exists ? formatBytes(item.bytes) : "不存在" }}</span>
+            </article>
+            <article class="world-card">
+              <strong>Backups</strong>
+              <span>{{ world?.backups?.count ?? 0 }} 个 · {{ formatBytes(world?.backups?.bytes || 0) }}</span>
+            </article>
+            <article class="world-card wide">
+              <strong>Players</strong>
+              <span>{{ world?.rcon?.players || "-" }}</span>
+            </article>
+          </div>
+        </section>
+
+        <section class="project-list panel">
+          <div class="list-toolbar">
+            <div>
+              <h2>项目列表</h2>
+              <p>{{ projects.length }} 个项目</p>
+            </div>
+            <button type="button" class="secondary-button" @click="loadProjects">刷新</button>
+          </div>
+
+          <div v-if="projectListLoading" class="empty-list">正在加载项目</div>
+          <div v-else-if="!projects.length" class="empty-list">暂无项目，先创建一个。</div>
+          <div v-else class="project-grid">
+            <article
+              v-for="item in projects"
+              :key="item.id"
+              class="project-card"
+              :data-status="item.status"
+              @click="openProject(item.id)"
+            >
+              <div class="project-card-header">
+                <div>
+                  <h2>{{ item.name || item.id }}</h2>
+                  <p>{{ item.last_message || "无文字描述" }}</p>
+                </div>
+                <div class="project-card-actions">
+                  <span class="project-status">{{ item.status || "-" }}</span>
+                  <button type="button" class="delete-button" @click.stop="deleteProject(item.id)" title="删除项目">&times;</button>
+                </div>
               </div>
-              <div>
-                <dt>Preview</dt>
-                <dd>{{ item.preview?.preview_count || 0 }} / {{ item.preview?.block_count || 0 }}</dd>
-              </div>
-              <div>
-                <dt>Size</dt>
-                <dd>{{ projectSizeText(item) }}</dd>
-              </div>
-              <div>
-                <dt>Updated</dt>
-                <dd>{{ formatTime(item.updated_at || item.created_at) }}</dd>
-              </div>
-            </dl>
-          </article>
-        </div>
+              <dl class="project-card-facts">
+                <div>
+                  <dt>ID</dt>
+                  <dd>{{ item.id }}</dd>
+                </div>
+                <div>
+                  <dt>Preview</dt>
+                  <dd>{{ item.preview?.preview_count || 0 }} / {{ item.preview?.block_count || 0 }}</dd>
+                </div>
+                <div>
+                  <dt>Size</dt>
+                  <dd>{{ projectSizeText(item) }}</dd>
+                </div>
+                <div>
+                  <dt>Updated</dt>
+                  <dd>{{ formatTime(item.updated_at || item.created_at) }}</dd>
+                </div>
+              </dl>
+            </article>
+          </div>
+        </section>
       </section>
 
       <section v-if="route === 'project'" class="workbench">

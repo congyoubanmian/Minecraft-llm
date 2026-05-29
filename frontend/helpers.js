@@ -18,6 +18,18 @@ window.McHelpers = {
       if (typeof value !== "number") return "-";
       return `${Math.round(value * 1000) / 10}%`;
     },
+    formatBytes(value) {
+      if (typeof value !== "number") return "-";
+      if (value < 1024) return `${value} B`;
+      const units = ["KB", "MB", "GB", "TB"];
+      let size = value / 1024;
+      let unit = 0;
+      while (size >= 1024 && unit < units.length - 1) {
+        size /= 1024;
+        unit += 1;
+      }
+      return `${size.toFixed(size >= 100 ? 0 : size >= 10 ? 1 : 2)} ${units[unit]}`;
+    },
     colorForBlock(block) {
       if (block.includes("dark_oak")) return "#3f2a1a";
       if (block.includes("spruce")) return "#6b4728";

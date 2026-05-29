@@ -26,6 +26,7 @@ from backend.dsl.schema import BuildPlan
 from backend.library import load_components, load_design_contract, load_materials, load_templates
 from backend.minecraft import FaweController
 from backend.minecraft.rcon import MinecraftRcon, RconConfig
+from backend.minecraft.world_manager import backup_worlds, reset_worlds, world_status
 from backend.schematic.generator import generate_outputs, render_plan_to_blocks
 
 
@@ -134,6 +135,10 @@ class PlacementRequest(BaseModel):
     spawn_z: int | None = None
 
 
+class ResetWorldRequest(BaseModel):
+    confirm: str
+
+
 @app.get("/api/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
@@ -147,6 +152,23 @@ def get_library() -> dict[str, Any]:
         "templates": load_templates().get("templates", {}),
         "design_contract": load_design_contract().get("design_contract", {}),
     }
+
+
+@app.get("/api/world/status")
+def get_world_status() -> dict[str, Any]:
+    return world_status()
+
+
+@app.post("/api/world/backup", dependencies=[Depends(_require_api_key)])
+def backup_world() -> dict[str, Any]:
+    return backup_worlds()
+
+
+@app.post("/api/world/reset", dependencies=[Depends(_require_api_key)])
+def reset_world(request: ResetWorldRequest) -> dict[str, Any]:
+    if request.confirm != "RESET_WORLD":
+        raise HTTPException(status_code=400, detail='confirm must be "RESET_WORLD"')
+    return reset_worlds()
 
 
 @app.websocket("/ws/projects/{project_id}")

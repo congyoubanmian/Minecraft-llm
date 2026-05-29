@@ -235,7 +235,18 @@ GET  /api/projects/{project_id}/materials
 GET  /api/projects/{project_id}/analysis-report
 GET  /api/projects/{project_id}/schematic
 GET  /api/library
+GET  /api/world/status
+POST /api/world/backup
+POST /api/world/reset
 ```
+
+世界重置接口会先备份当前世界，再停止 Minecraft/Bot，移动 `server/world*` 到 `backups/world_reset_时间戳/`，最后重启服务。调用 `POST /api/world/reset` 时必须传：
+
+```json
+{"confirm": "RESET_WORLD"}
+```
+
+网页首页的“世界状态”面板也使用同一组接口，可查看 TPS、在线玩家、世界目录体积和备份数量。
 
 旧版单任务接口仍保留：
 
