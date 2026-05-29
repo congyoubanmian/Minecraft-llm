@@ -958,7 +958,7 @@ def _snapshot_module_schematic(
         snapshot["fallback_error"] = error
     snapshots = state.setdefault("module_snapshots", [])
     snapshots.append(snapshot)
-    state["module_snapshots"] = snapshots[-50:]
+    _trim_module_snapshots(state)
     return snapshot
 
 
@@ -1019,14 +1019,32 @@ def _delete_module_snapshot(
             continue
         removed_snapshot = snapshots.pop(index)
         state["module_snapshots"] = snapshots
-        file_removed = False
-        path_value = snapshot.get("path")
-        path = Path(path_value) if path_value else None
-        if path and path.exists() and _is_path_inside(path, settings.schematic_dir):
-            path.unlink()
-            file_removed = True
+        file_removed = _remove_snapshot_file(snapshot)
         return {"snapshot": removed_snapshot, "file_removed": file_removed}
     return None
+
+
+def _trim_module_snapshots(state: dict[str, Any], keep: int = 50) -> list[dict[str, Any]]:
+    snapshots = state.get("module_snapshots") or []
+    if keep < 1 or len(snapshots) <= keep:
+        state["module_snapshots"] = snapshots
+        return []
+    removed = snapshots[:-keep]
+    state["module_snapshots"] = snapshots[-keep:]
+    for snapshot in removed:
+        _remove_snapshot_file(snapshot)
+    return removed
+
+
+def _remove_snapshot_file(snapshot: dict[str, Any]) -> bool:
+    path_value = snapshot.get("path")
+    if not path_value:
+        return False
+    path = Path(path_value)
+    if path.exists() and _is_path_inside(path, settings.schematic_dir):
+        path.unlink()
+        return True
+    return False
 
 
 def _is_path_inside(path: Path, parent: Path) -> bool:

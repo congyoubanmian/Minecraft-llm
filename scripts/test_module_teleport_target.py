@@ -23,6 +23,7 @@ from backend.main import (
     _module_world_target,
     _record_module_operation,
     _snapshot_module_schematic,
+    _trim_module_snapshots,
 )
 
 
@@ -117,6 +118,22 @@ def main() -> None:
             assert delete_state["module_snapshots"] == []
             assert not Path(snapshot["path"]).exists()
             assert _delete_module_snapshot(delete_state, snapshot_id=snapshot["id"]) is None
+
+            trim_dir = main_module.settings.schematic_dir
+            outside_path = Path(tmp_dir) / "outside_snapshot.schem"
+            outside_path.write_bytes(b"outside")
+            trim_snapshots = []
+            for index in range(52):
+                path = outside_path if index == 0 else trim_dir / f"snapshot_{index}.schem"
+                path.write_bytes(b"old")
+                trim_snapshots.append({"id": f"s{index}", "module": "skybridge", "path": str(path)})
+            trim_state = {"module_snapshots": trim_snapshots}
+            removed_snapshots = _trim_module_snapshots(trim_state)
+            assert len(removed_snapshots) == 2
+            assert [snapshot["id"] for snapshot in trim_state["module_snapshots"][:2]] == ["s2", "s3"]
+            assert outside_path.exists()
+            assert not (trim_dir / "snapshot_1.schem").exists()
+            assert (trim_dir / "snapshot_2.schem").exists()
 
             class FakeFaweController:
                 def save_region(self, schematic_path, bounds):
