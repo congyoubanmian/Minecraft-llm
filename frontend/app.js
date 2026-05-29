@@ -915,7 +915,8 @@ createApp({
     projectSnapshotText(item) {
       const summary = item.snapshot_summary;
       if (!summary?.count) return "0";
-      return `${summary.available_count || 0}/${summary.count} 可用 · ${summary.module_count || 0} 模块`;
+      const latest = summary.latest_created_at ? ` · ${this.formatTime(summary.latest_created_at)}` : "";
+      return `${summary.available_count || 0}/${summary.count} 可用 · ${summary.module_count || 0} 模块${latest}`;
     },
   },
 }).mount("#app");
