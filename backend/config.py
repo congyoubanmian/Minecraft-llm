@@ -38,6 +38,8 @@ class Settings(BaseSettings):
     codex_command: str = "codex"
     codex_model: str | None = None
     codex_timeout_seconds: int = 420
+    planner_auto_repair: bool = True
+    planner_repair_attempts: int = 1
 
     cors_origins: str = "http://localhost:8000,http://localhost:5173,http://localhost:3000"
 

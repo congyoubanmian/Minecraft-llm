@@ -19,7 +19,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from backend.ai import analyze_image, plan_build
-from backend.ai.planner import plan_from_conversation
+from backend.ai.planner import plan_from_conversation, repair_plan_from_diagnostics
 from backend.analysis import analyze_build
 from backend.config import ROOT_DIR, settings
 from backend.dsl.schema import BuildPlan
@@ -317,7 +317,7 @@ def get_project(project_id: str) -> dict[str, Any]:
 @app.post("/api/projects/{project_id}/chat", dependencies=[Depends(_require_api_key)])
 def chat_project(project_id: str, request: ChatRequest, background_tasks: BackgroundTasks) -> dict[str, str]:
     state = _load_project(project_id)
-    if state["status"] in BUSY_STATUSES:
+    if _is_busy_status(state["status"]):
         raise HTTPException(status_code=409, detail="project is already generating")
     message = request.message.strip()
     if not message:
@@ -360,7 +360,7 @@ def paste_project(project_id: str) -> dict[str, Any]:
 @app.post("/api/projects/{project_id}/cancel", dependencies=[Depends(_require_api_key)])
 def cancel_project(project_id: str) -> dict[str, str]:
     state = _load_project(project_id)
-    if state["status"] not in BUSY_STATUSES:
+    if not _is_busy_status(state["status"]):
         raise HTTPException(status_code=409, detail="project is not in a cancellable state")
     state["status"] = "cancelled"
     state["error"] = "cancelled by user"
@@ -408,7 +408,7 @@ def delete_project(project_id: str) -> dict[str, Any]:
         raise HTTPException(status_code=404, detail="project not found")
 
     state = _load_project(project_id)
-    if state.get("status") in BUSY_STATUSES:
+    if _is_busy_status(state.get("status")):
         raise HTTPException(status_code=409, detail="cannot delete project while generating")
 
     shutil.rmtree(project_path, ignore_errors=True)
@@ -513,6 +513,8 @@ def _run_project_generation(project_id: str) -> None:
             current_plan=state.get("plan"),
             image_path=image_path,
         )
+        plan, preflight_report = _repair_plan_if_needed(project_id, state, plan, image_path)
+        state["preflight_analysis_report"] = preflight_report
         state["plan"] = plan.model_dump(by_alias=True, mode="json")
         if not state.get("placement"):
             state["placement"] = _allocate_placement(project_id, plan)
@@ -574,6 +576,10 @@ def _check_cancelled(project_id: str) -> bool:
         return True
 
 
+def _is_busy_status(status: Any) -> bool:
+    return status in BUSY_STATUSES or (isinstance(status, str) and status.startswith("repairing_plan_"))
+
+
 def _write_outputs(plan: BuildPlan, schematic_dir: Path, preview_dir: Path | None = None) -> tuple[Path, Path, Path, Path, dict[str, Any]]:
     output_dir = preview_dir or schematic_dir
     blocks = render_plan_to_blocks(plan)
@@ -582,6 +588,84 @@ def _write_outputs(plan: BuildPlan, schematic_dir: Path, preview_dir: Path | Non
     analysis_report_path = output_dir / f"{plan.name}.analysis.json"
     analysis_report_path.write_text(json.dumps(analysis_report, ensure_ascii=False, indent=2), encoding="utf-8")
     return schematic_path, preview_path, material_path, analysis_report_path, analysis_report
+
+
+def _repair_plan_if_needed(
+    project_id: str,
+    state: dict[str, Any],
+    plan: BuildPlan,
+    image_path: Path | None,
+) -> tuple[BuildPlan, dict[str, Any]]:
+    blocks = render_plan_to_blocks(plan)
+    report = analyze_build(plan, blocks)
+    warnings = report.get("warnings") or []
+    state["repair_history"] = []
+    if not _should_repair(warnings):
+        return plan, report
+    if not settings.planner_auto_repair or settings.planner_repair_attempts <= 0:
+        return plan, report
+
+    current = plan
+    current_report = report
+    for attempt in range(1, settings.planner_repair_attempts + 1):
+        if _check_cancelled(project_id):
+            return current, current_report
+        state["status"] = f"repairing_plan_{attempt}"
+        state["updated_at"] = _now()
+        state["repair_history"].append(
+            {
+                "attempt": attempt,
+                "input_warnings": current_report.get("warnings", []),
+                "started_at": _now(),
+            }
+        )
+        _save_project(project_id, state)
+
+        repaired = repair_plan_from_diagnostics(
+            name=f"project_{project_id}",
+            analysis=state.get("analysis"),
+            messages=state.get("messages", []),
+            current_plan=current.model_dump(by_alias=True, mode="json"),
+            diagnostics=current_report,
+            image_path=image_path,
+            attempt=attempt,
+        )
+        repaired_blocks = render_plan_to_blocks(repaired)
+        repaired_report = analyze_build(repaired, repaired_blocks)
+        state["repair_history"][-1].update(
+            {
+                "completed_at": _now(),
+                "output_warnings": repaired_report.get("warnings", []),
+                "accepted": True,
+            }
+        )
+        current = repaired
+        current_report = repaired_report
+        if not _should_repair(current_report.get("warnings", [])):
+            break
+
+    return current, current_report
+
+
+def _should_repair(warnings: list[str]) -> bool:
+    if not warnings:
+        return False
+    repair_tokens = (
+        "缺少设计规约",
+        "模块",
+        "接口",
+        "广州塔",
+        "比例",
+        "玻璃比例偏高",
+        "灯光比例偏低",
+        "parts 数偏少",
+        "performance_budget",
+        "完整预览方块数超过",
+        "动态效果",
+        "标记为 animated",
+        "中央空洞",
+    )
+    return any(any(token in warning for token in repair_tokens) for warning in warnings)
 
 
 def _ensure_project_placement(project_id: str, state: dict[str, Any]) -> dict[str, Any]:

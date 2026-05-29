@@ -40,6 +40,32 @@ def plan_from_conversation(
     return _run_codex(prompt, name, output_path, image_path, error_label="Codex conversation planner failed")
 
 
+def repair_plan_from_diagnostics(
+    *,
+    name: str,
+    analysis: dict | None,
+    messages: list[dict[str, str]],
+    current_plan: dict,
+    diagnostics: dict,
+    image_path: Path | None = None,
+    attempt: int = 1,
+) -> BuildPlan:
+    if settings.planner_mode.lower() == "static":
+        return BuildPlan.model_validate(current_plan)
+
+    settings.generated_plan_dir.mkdir(parents=True, exist_ok=True)
+    output_path = settings.generated_plan_dir / f"{name}.repair{attempt}.json"
+    prompt = _build_repair_prompt(
+        name=name,
+        output_path=output_path,
+        analysis=analysis or {},
+        messages=messages,
+        current_plan=current_plan,
+        diagnostics=diagnostics,
+    )
+    return _run_codex(prompt, name, output_path, image_path, error_label="Codex repair planner failed")
+
+
 def _codex_plan(summary: VisionSummary, name: str, image_path: Path | None) -> BuildPlan:
     settings.generated_plan_dir.mkdir(parents=True, exist_ok=True)
     output_path = settings.generated_plan_dir / f"{name}.json"
@@ -508,6 +534,68 @@ Conversation messages:
 
 Current plan, if any:
 {json.dumps(current_plan or {}, ensure_ascii=False, indent=2)}
+""".strip()
+
+
+def _build_repair_prompt(
+    *,
+    name: str,
+    output_path: Path,
+    analysis: dict,
+    messages: list[dict[str, str]],
+    current_plan: dict,
+    diagnostics: dict,
+) -> str:
+    library_context = get_library_context()
+    severe_warnings = diagnostics.get("warnings", [])
+    return f"""
+You are repairing a Minecraft BuildPlan JSON after automatic diagnostics.
+
+Write exactly one complete replacement JSON file at:
+{output_path}
+
+Do not modify any other file. Return no prose outside that file.
+
+Repair objective:
+- Keep the same project name: {name}
+- Preserve the user's latest intent and the useful parts of the current plan.
+- Fix every relevant diagnostic warning, especially template mismatch, bad
+  proportions, missing module bboxes, broken interfaces, missing lighting, overly
+  high glass ratio for ancient buildings, or performance budget violations.
+- Update analysis.design_spec first, then update parts so they match the repaired
+  design_spec. Do not leave analysis claiming a design that parts do not implement.
+- If a warning is intentionally not fixable in Minecraft, add a short note in
+  analysis.assumptions and keep performance_budget conservative.
+
+Hard requirements:
+- The output must validate against backend/dsl/schema.py.
+- Include analysis.selected_template, analysis.component_strategy, and
+  analysis.design_spec with modules, interfaces, material_schedule,
+  quality_checks, and performance_budget.
+- Keep every module bbox inside BuildPlan size.
+- Do not use more than 4096 entries in any single blocks part.
+- Prefer reusable components only when they match the selected template.
+- Prefer static lighting unless the user explicitly asked for animation.
+- Use valid vanilla Java Edition block ids without the minecraft: prefix, or use
+  palette keys that resolve to valid block ids.
+
+Available material palettes, component blueprints, and architecture templates:
+{json.dumps(library_context, ensure_ascii=False, indent=2)}
+
+Diagnostics to fix:
+{json.dumps(severe_warnings, ensure_ascii=False, indent=2)}
+
+Full diagnostics:
+{json.dumps(diagnostics, ensure_ascii=False, indent=2)}
+
+Image/vision analysis:
+{json.dumps(analysis, ensure_ascii=False, indent=2)}
+
+Conversation messages:
+{json.dumps(messages, ensure_ascii=False, indent=2)}
+
+Current plan to repair:
+{json.dumps(current_plan, ensure_ascii=False, indent=2)}
 """.strip()
 
 

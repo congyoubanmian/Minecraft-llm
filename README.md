@@ -8,6 +8,8 @@
 上传图片或输入文字
   -> 图片分析 / 对话上下文
   -> Codex CLI 生成 Minecraft BuildPlan JSON DSL
+  -> 渲染并分析：比例、模板、模块接口、材料和性能预算
+  -> 如有关键 warning，Codex 自动修复一轮
   -> DSL 渲染成统一 BlockList
   -> 导出 preview.json / materials.json / .schem
   -> Mineflayer Bot 调用 FAWE 粘贴到 Paper 服务器
@@ -34,6 +36,9 @@
 
 6. **坐标自动分配，避免多个建筑互相覆盖**
    后端会根据已有项目 bounds 分配新的粘贴位置，并把出生点放在建筑外侧。
+
+7. **生成后诊断和自动修复**
+   后端会先把 DSL 渲染成 `BlockList` 做预检。如果发现比例错误、模板错配、模块接口缺失、材料比例异常或性能预算超限，会把诊断结果反馈给 Codex 自动修复一轮，再输出最终 schematic。
 
 核心中间层是：
 
@@ -168,6 +173,8 @@ PLANNER_MODE=codex
 CODEX_COMMAND=codex
 CODEX_MODEL=
 CODEX_TIMEOUT_SECONDS=420
+PLANNER_AUTO_REPAIR=true
+PLANNER_REPAIR_ATTEMPTS=1
 
 RCON_HOST=localhost
 RCON_PORT=25575
