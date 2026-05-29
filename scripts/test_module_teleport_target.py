@@ -16,6 +16,7 @@ from backend.main import (
     _clear_module_area,
     _clear_module_plan,
     _latest_module_snapshot,
+    _module_snapshot_by_path,
     _module_operation_plan,
     _module_world_target,
     _record_module_operation,
@@ -98,6 +99,9 @@ def main() -> None:
             assert Path(snapshot["path"]).parent == main_module.settings.schematic_dir
             assert Path(snapshot["path"]).read_bytes() == b"schem-data"
             assert _latest_module_snapshot(snapshot_state, "skybridge") == snapshot
+            assert _module_snapshot_by_path(snapshot_state, "skybridge") == snapshot
+            assert _module_snapshot_by_path(snapshot_state, "skybridge", snapshot["path"]) == snapshot
+            assert _module_snapshot_by_path(snapshot_state, "skybridge", "/tmp/missing.schem") is None
 
             class FakeFaweController:
                 def save_region(self, schematic_path, bounds):

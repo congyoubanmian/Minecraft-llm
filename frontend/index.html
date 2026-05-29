@@ -492,9 +492,17 @@
                 </dl>
                 <div v-if="modulePlan.snapshots?.length" class="module-snapshot-list">
                   <strong>快照记录</strong>
-                  <span v-for="snapshot in modulePlan.snapshots" :key="snapshot.path || snapshot.created_at">
-                    {{ snapshotTime(snapshot) }}
-                  </span>
+                  <div v-for="snapshot in modulePlan.snapshots" :key="snapshot.path || snapshot.created_at">
+                    <span>{{ snapshotTime(snapshot) }}</span>
+                    <button
+                      type="button"
+                      class="text-button"
+                      :disabled="moduleAction || !selectedBlueprintModule"
+                      @click="rollbackBlueprintModule(selectedBlueprintModule, snapshot)"
+                    >
+                      回滚
+                    </button>
+                  </div>
                 </div>
                 <p v-else>{{ modulePlanLoading ? "正在计算模块坐标与命令" : "暂无执行计划，需先粘贴项目并生成模块边界。" }}</p>
                 <p v-if="modulePlan && !modulePlan.clear.safe" class="danger-note">

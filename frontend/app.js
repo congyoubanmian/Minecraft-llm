@@ -642,7 +642,7 @@ createApp({
       if (!point) return "-";
       return `${point.x}, ${point.y}, ${point.z}`;
     },
-    moduleConfirmText(module, action) {
+    moduleConfirmText(module, action, snapshot = null) {
       const name = module?.name || "模块";
       const plan = this.modulePlan?.module?.name === name ? this.modulePlan : null;
       if (!plan) {
@@ -660,7 +660,7 @@ createApp({
       ];
       if (action === "paste") lines.push(`粘贴点：${this.formatPoint(plan.paste)}`);
       if (action === "replace") lines.push("步骤：先清空再粘贴");
-      if (action === "rollback") lines.push(`回滚快照：${this.snapshotTime(plan.latest_snapshot)}`);
+      if (action === "rollback") lines.push(`回滚快照：${this.snapshotTime(snapshot || plan.latest_snapshot)}`);
       if (plan.clear && !plan.clear.safe) lines.push("警告：该模块超过安全清空上限，后端会拒绝执行清空/替换。");
       return lines.join("\n");
     },
@@ -765,15 +765,15 @@ createApp({
         this.moduleAction = "";
       }
     },
-    async rollbackBlueprintModule(module) {
-      if (!this.project?.id || !module?.name || !this.hasModuleSnapshot(module)) return;
-      if (!confirm(this.moduleConfirmText(module, "rollback"))) return;
+    async rollbackBlueprintModule(module, snapshot = null) {
+      if (!this.project?.id || !module?.name || (!snapshot && !this.hasModuleSnapshot(module))) return;
+      if (!confirm(this.moduleConfirmText(module, "rollback", snapshot))) return;
       this.moduleAction = `rollback:${module.name}`;
       try {
         const response = await this.apiFetch(`/api/projects/${this.project.id}/modules/${encodeURIComponent(module.name)}/rollback`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ confirm: "ROLLBACK_MODULE" }),
+          body: JSON.stringify({ confirm: "ROLLBACK_MODULE", snapshot_path: snapshot?.path || null }),
         });
         if (!response.ok) throw new Error(await response.text());
         await response.json();

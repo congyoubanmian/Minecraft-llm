@@ -151,6 +151,7 @@ class ResetWorldRequest(BaseModel):
 class PlacementActionRequest(BaseModel):
     player: str | None = None
     confirm: str | None = None
+    snapshot_path: str | None = None
 
 
 @app.get("/api/health")
@@ -318,7 +319,7 @@ def rollback_project_module(project_id: str, module_name: str, request: Placemen
     if request.confirm != "ROLLBACK_MODULE":
         raise HTTPException(status_code=400, detail='confirm must be "ROLLBACK_MODULE"')
     state, target = _module_operation_context(project_id, module_name)
-    snapshot = _latest_module_snapshot(state, module_name)
+    snapshot = _module_snapshot_by_path(state, module_name, request.snapshot_path)
     if not snapshot:
         raise HTTPException(status_code=404, detail="module snapshot not found")
     snapshot_path = Path(snapshot["path"])
@@ -922,6 +923,19 @@ def _snapshot_module_schematic(
 def _latest_module_snapshot(state: dict[str, Any], module_name: str) -> dict[str, Any] | None:
     snapshots = _module_snapshots(state, module_name)
     return snapshots[0] if snapshots else None
+
+
+def _module_snapshot_by_path(
+    state: dict[str, Any],
+    module_name: str,
+    snapshot_path: str | None = None,
+) -> dict[str, Any] | None:
+    if not snapshot_path:
+        return _latest_module_snapshot(state, module_name)
+    for snapshot in _module_snapshots(state, module_name):
+        if snapshot.get("path") == snapshot_path:
+            return snapshot
+    return None
 
 
 def _module_snapshots(state: dict[str, Any], module_name: str | None = None) -> list[dict[str, Any]]:

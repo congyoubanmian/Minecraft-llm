@@ -891,8 +891,20 @@ pre {
   font-size: 12px;
 }
 
+.module-snapshot-list div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
 .module-snapshot-list span {
   overflow-wrap: anywhere;
+}
+
+.module-snapshot-list .text-button {
+  min-height: 24px;
+  padding: 0;
 }
 
 .module-rcon-list {
