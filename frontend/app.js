@@ -675,8 +675,13 @@ createApp({
       }
       return null;
     },
+    isSnapshotUsable(snapshot) {
+      if (!snapshot) return false;
+      if (snapshot.file) return Boolean(snapshot.file.exists);
+      return Boolean(snapshot.path);
+    },
     hasModuleSnapshot(module) {
-      return Boolean(this.latestSnapshotFor(module));
+      return this.isSnapshotUsable(this.latestSnapshotFor(module));
     },
     snapshotTime(snapshot) {
       if (!snapshot?.created_at) return "未知时间";
@@ -778,6 +783,7 @@ createApp({
     },
     async rollbackBlueprintModule(module, snapshot = null) {
       if (!this.project?.id || !module?.name || (!snapshot && !this.hasModuleSnapshot(module))) return;
+      if (snapshot && !this.isSnapshotUsable(snapshot)) return;
       if (!confirm(this.moduleConfirmText(module, "rollback", snapshot))) return;
       this.moduleAction = `rollback:${module.name}`;
       try {

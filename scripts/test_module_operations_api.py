@@ -16,6 +16,7 @@ from backend.main import (
     clear_project_module_operations,
     delete_project_module_snapshot,
     download_project_module_snapshot,
+    get_project,
     get_project_module_operations,
     get_project_module_snapshots,
 )
@@ -56,6 +57,11 @@ def main() -> None:
         assert payload["project_id"] == project_id
         assert len(payload["module_operations"]) == 1
         assert payload["module_rcon"]["core:replace"] == ["a"]
+
+        project_payload = get_project(project_id)
+        assert project_payload["module_snapshots"][0]["file"]["exists"] is True
+        disk_state = json.loads((project_dir / "state.json").read_text(encoding="utf-8"))
+        assert "file" not in disk_state["module_snapshots"][0]
 
         snapshots = get_project_module_snapshots(project_id)
         assert snapshots["project_id"] == project_id

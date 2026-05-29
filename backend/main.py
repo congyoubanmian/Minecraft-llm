@@ -543,7 +543,7 @@ def list_projects() -> dict[str, Any]:
 
 @app.get("/api/projects/{project_id}")
 def get_project(project_id: str) -> dict[str, Any]:
-    return _load_project(project_id)
+    return _project_response(_load_project(project_id))
 
 
 @app.get("/api/projects/{project_id}/module-operations")
@@ -1080,6 +1080,13 @@ def _snapshot_with_file_status(snapshot: dict[str, Any]) -> dict[str, Any]:
             file_status["exists"] = True
             file_status["size"] = path.stat().st_size
     payload["file"] = file_status
+    return payload
+
+
+def _project_response(state: dict[str, Any]) -> dict[str, Any]:
+    payload = dict(state)
+    if "module_snapshots" in payload:
+        payload["module_snapshots"] = [_snapshot_with_file_status(snapshot) for snapshot in payload.get("module_snapshots") or []]
     return payload
 
 
