@@ -350,6 +350,73 @@
           </ul>
           <pre v-else>{{ formatJson(analysisReport || {}) }}</pre>
 
+          <section v-if="designBlueprint?.present" class="blueprint-panel">
+            <div class="blueprint-header">
+              <h2>设计蓝图</h2>
+              <span :class="['blueprint-state', designBlueprint.stitch_ready ? 'ready' : 'check']">
+                {{ designBlueprint.stitch_ready ? "可分部施工" : "需检查接口" }}
+              </span>
+            </div>
+            <dl class="facts compact-facts">
+              <div>
+                <dt>Type</dt>
+                <dd>{{ designBlueprint.building_type || "-" }}</dd>
+              </div>
+              <div>
+                <dt>Stages</dt>
+                <dd>{{ designBlueprint.stage_count || 0 }}</dd>
+              </div>
+              <div>
+                <dt>Coverage</dt>
+                <dd>{{ ratioText(designBlueprint.coverage?.module_volume_to_plan) }}</dd>
+              </div>
+              <div>
+                <dt>Grid</dt>
+                <dd>{{ (designBlueprint.grid || []).slice(0, 2).join("；") || "-" }}</dd>
+              </div>
+            </dl>
+
+            <div class="blueprint-section">
+              <h3>施工阶段</h3>
+              <div class="stage-list">
+                <article v-for="stage in blueprintStages" :key="`${stage.index}-${stage.role}`" class="stage-item">
+                  <strong>{{ stage.index }}. {{ roleText(stage.role) }}</strong>
+                  <span>{{ stage.module_count }} 模块 · {{ bboxText(stage.bbox) }}</span>
+                </article>
+              </div>
+            </div>
+
+            <div class="blueprint-section">
+              <h3>模块</h3>
+              <div class="module-list">
+                <article v-for="module in blueprintModules.slice(0, 10)" :key="module.name" class="module-item">
+                  <div>
+                    <strong>{{ module.name }}</strong>
+                    <span>{{ roleText(module.role) }} · {{ sizeText(module.size) }}</span>
+                  </div>
+                  <p>{{ (module.materials || []).slice(0, 3).join("；") || bboxText(module.bbox) }}</p>
+                </article>
+              </div>
+            </div>
+
+            <div v-if="blueprintInterfaces.length" class="blueprint-section">
+              <h3>接口</h3>
+              <ul class="interface-list">
+                <li v-for="edge in blueprintInterfaces.slice(0, 8)" :key="`${edge.from}-${edge.to}-${edge.kind}`">
+                  {{ edge.from }}.{{ edge.from_face }} -> {{ edge.to }}.{{ edge.to_face }} · {{ edge.kind }}
+                </li>
+              </ul>
+            </div>
+
+            <div class="blueprint-section">
+              <h3>材料与检查</h3>
+              <ul class="interface-list">
+                <li v-for="item in (designBlueprint.material_schedule || []).slice(0, 6)" :key="item">{{ item }}</li>
+                <li v-for="item in (designBlueprint.quality_checks || []).slice(0, 6)" :key="item">{{ item }}</li>
+              </ul>
+            </div>
+          </section>
+
           <h2>RCON 返回</h2>
           <pre>{{ formatJson(project?.rcon || []) }}</pre>
         </aside>

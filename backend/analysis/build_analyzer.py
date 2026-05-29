@@ -18,6 +18,7 @@ def analyze_build(plan: BuildPlan, blocks: BlockList) -> dict[str, Any]:
     ratios = _material_ratios(materials, total)
     module_report = _module_report(plan)
     warnings = _warnings(plan, materials, ratios, component_counts, template, module_report)
+    blueprint = _design_blueprint(plan, module_report, materials, warnings)
 
     return {
         "template_guess": template,
@@ -25,6 +26,7 @@ def analyze_build(plan: BuildPlan, blocks: BlockList) -> dict[str, Any]:
         "aspect": _aspect(plan.size),
         "part_count": len(plan.parts),
         "design_spec": module_report,
+        "design_blueprint": blueprint,
         "component_counts": dict(component_counts),
         "component_categories": categories,
         "material_ratios": ratios,
@@ -267,6 +269,123 @@ def _performance_budget_dump(design_spec: DesignSpec) -> dict[str, Any] | None:
     if design_spec.performance_budget is None:
         return None
     return design_spec.performance_budget.model_dump(mode="json")
+
+
+def _design_blueprint(
+    plan: BuildPlan,
+    module_report: dict[str, Any],
+    materials: dict[str, int],
+    warnings: list[str],
+) -> dict[str, Any]:
+    modules = module_report.get("modules") or []
+    interfaces = module_report.get("interfaces") or []
+    stages = _blueprint_stages(modules)
+    unresolved = list(module_report.get("missing_bbox") or [])
+    unresolved.extend(module_report.get("duplicate_names") or [])
+
+    return {
+        "present": bool(module_report.get("present")),
+        "name": plan.name,
+        "size": list(plan.size),
+        "building_type": module_report.get("building_type"),
+        "scale_intent": module_report.get("scale_intent"),
+        "grid": module_report.get("grid") or [],
+        "stitch_ready": bool(module_report.get("stitch_ready")),
+        "stage_count": len(stages),
+        "stages": stages,
+        "modules": [_blueprint_module(module) for module in modules],
+        "interfaces": [_blueprint_interface(interface) for interface in interfaces],
+        "material_schedule": module_report.get("material_schedule") or [],
+        "quality_checks": module_report.get("quality_checks") or [],
+        "performance_budget": module_report.get("performance_budget"),
+        "coverage": module_report.get("coverage") or {},
+        "top_materials": list(materials.items())[:12],
+        "risks": warnings[:12],
+        "unresolved": unresolved,
+    }
+
+
+def _blueprint_stages(modules: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    stage_order = [
+        "foundation",
+        "void",
+        "mass",
+        "structure",
+        "circulation",
+        "facade",
+        "roof",
+        "interior",
+        "lighting",
+        "detail",
+        "landscape",
+        "services",
+        "architecture",
+        "entry",
+        "unknown",
+    ]
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for module in modules:
+        grouped.setdefault(module.get("role") or "unknown", []).append(module)
+
+    ordered_roles = [role for role in stage_order if role in grouped]
+    ordered_roles.extend(sorted(role for role in grouped if role not in stage_order))
+
+    stages: list[dict[str, Any]] = []
+    for index, role in enumerate(ordered_roles, start=1):
+        items = grouped[role]
+        stages.append(
+            {
+                "index": index,
+                "role": role,
+                "module_count": len(items),
+                "modules": [item["name"] for item in items],
+                "bbox": _combined_bbox([item["bbox"] for item in items if item.get("bbox")]),
+                "volume": sum(item.get("volume", 0) for item in items),
+            }
+        )
+    return stages
+
+
+def _blueprint_module(module: dict[str, Any]) -> dict[str, Any]:
+    bbox = module.get("bbox")
+    return {
+        "name": module.get("name"),
+        "role": module.get("role"),
+        "bbox": bbox,
+        "size": _bbox_size(bbox) if bbox else None,
+        "volume": module.get("volume", 0),
+        "materials": module.get("materials") or [],
+        "interfaces": module.get("interfaces") or {},
+        "notes": module.get("notes") or [],
+    }
+
+
+def _blueprint_interface(interface: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "from": interface.get("module_a"),
+        "from_face": interface.get("face_a"),
+        "to": interface.get("module_b"),
+        "to_face": interface.get("face_b"),
+        "kind": interface.get("kind"),
+        "note": interface.get("note", ""),
+    }
+
+
+def _combined_bbox(boxes: list[list[list[int]]]) -> list[list[int]] | None:
+    if not boxes:
+        return None
+    min_x = min(box[0][0] for box in boxes)
+    min_y = min(box[0][1] for box in boxes)
+    min_z = min(box[0][2] for box in boxes)
+    max_x = max(box[1][0] for box in boxes)
+    max_y = max(box[1][1] for box in boxes)
+    max_z = max(box[1][2] for box in boxes)
+    return [[min_x, min_y, min_z], [max_x, max_y, max_z]]
+
+
+def _bbox_size(bbox: list[list[int]]) -> list[int]:
+    (x1, y1, z1), (x2, y2, z2) = bbox
+    return [x2 - x1 + 1, y2 - y1 + 1, z2 - z1 + 1]
 
 
 def _module_coverage(size: tuple[int, int, int], modules: list[dict[str, Any]]) -> dict[str, float]:

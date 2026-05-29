@@ -77,6 +77,11 @@ def main() -> None:
     assert report["design_spec"]["present"] is True
     assert report["design_spec"]["stitch_ready"] is True
     assert report["design_spec"]["performance_budget"]["max_blocks"] == 20
+    assert report["design_blueprint"]["present"] is True
+    assert report["design_blueprint"]["stitch_ready"] is True
+    assert report["design_blueprint"]["stage_count"] == 2
+    assert report["design_blueprint"]["modules"][0]["size"] == [16, 1, 16]
+    assert report["design_blueprint"]["interfaces"][0]["from"] == "base"
     assert any("performance_budget.max_blocks" in warning for warning in report["warnings"])
     print({"blocks": len(blocks), "warnings": report["warnings"]})
 

@@ -74,6 +74,18 @@ createApp({
     analysisReport() {
       return this.project?.analysis_report || null;
     },
+    designBlueprint() {
+      return this.analysisReport?.design_blueprint || null;
+    },
+    blueprintStages() {
+      return this.designBlueprint?.stages || [];
+    },
+    blueprintModules() {
+      return this.designBlueprint?.modules || [];
+    },
+    blueprintInterfaces() {
+      return this.designBlueprint?.interfaces || [];
+    },
     previewMeta() {
       if (!this.preview) return "暂无预览";
       const size = this.preview.size?.join(" x ") || "-";
@@ -539,6 +551,34 @@ createApp({
       const size = item.placement?.size;
       if (!size) return "-";
       return `${size.x} x ${size.y} x ${size.z}`;
+    },
+    bboxText(bbox) {
+      if (!bbox) return "-";
+      return `${bbox[0].join(", ")} -> ${bbox[1].join(", ")}`;
+    },
+    sizeText(size) {
+      if (!size) return "-";
+      return Array.isArray(size) ? size.join(" x ") : "-";
+    },
+    roleText(role) {
+      const labels = {
+        foundation: "基础",
+        void: "清空",
+        mass: "体量",
+        structure: "结构",
+        circulation: "动线",
+        facade: "立面",
+        roof: "屋顶",
+        interior: "室内",
+        lighting: "灯光",
+        detail: "细节",
+        landscape: "景观",
+        services: "设备",
+        architecture: "建筑",
+        entry: "入口",
+        unknown: "未知",
+      };
+      return labels[role] || role || "-";
     },
     activePlacementCount() {
       return this.placements.filter((item) => item.active !== false).length;

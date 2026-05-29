@@ -691,6 +691,101 @@ pre {
   line-height: 1.45;
 }
 
+.blueprint-panel {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px;
+  border: 1px solid #d8dfda;
+  border-radius: 8px;
+  background: #f8faf9;
+}
+
+.blueprint-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.blueprint-header h2,
+.blueprint-section h3 {
+  margin: 0;
+}
+
+.blueprint-state {
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.blueprint-state.ready {
+  background: #dff3e6;
+  color: #146336;
+}
+
+.blueprint-state.check {
+  background: #fff0cf;
+  color: #8a4d11;
+}
+
+.blueprint-section {
+  display: grid;
+  gap: 8px;
+}
+
+.blueprint-section h3 {
+  font-size: 13px;
+}
+
+.stage-list,
+.module-list {
+  display: grid;
+  gap: 8px;
+}
+
+.stage-item,
+.module-item {
+  display: grid;
+  gap: 4px;
+  padding: 9px;
+  border: 1px solid #e1e7e3;
+  border-radius: 7px;
+  background: #ffffff;
+}
+
+.stage-item strong,
+.module-item strong {
+  font-size: 13px;
+}
+
+.stage-item span,
+.module-item span,
+.module-item p,
+.interface-list {
+  color: #58645f;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.module-item div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.module-item p {
+  margin: 0;
+}
+
+.interface-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
 @media (max-width: 1180px) {
   .workbench {
     grid-template-columns: minmax(280px, 360px) 1fr;
