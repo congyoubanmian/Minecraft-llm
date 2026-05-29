@@ -238,6 +238,7 @@ window.McPreview = {
     },
     filteredPreviewBlocks() {
       const blocks = this.preview?.blocks || [];
+      if (this.preview?.module_filtered) return blocks;
       const bbox = this.selectedBlueprintModule?.bbox;
       if (!bbox) return blocks;
       const [min, max] = bbox;

@@ -525,7 +525,9 @@ createApp({
     },
     async loadPreview(mode = this.previewMode) {
       if (!this.project?.id || !this.project?.preview_path) return;
-      const response = await this.apiFetch(`/api/projects/${this.project.id}/preview?mode=${mode}&ts=${Date.now()}`);
+      const query = new URLSearchParams({ mode, ts: String(Date.now()) });
+      if (this.selectedBlueprintModule?.name) query.set("module", this.selectedBlueprintModule.name);
+      const response = await this.apiFetch(`/api/projects/${this.project.id}/preview?${query.toString()}`);
       if (!response.ok) return;
       this.preview = await response.json();
       this.previewMode = this.preview.mode || mode;
@@ -565,13 +567,13 @@ createApp({
       if (!size) return "-";
       return Array.isArray(size) ? size.join(" x ") : "-";
     },
-    selectBlueprintModule(module) {
+    async selectBlueprintModule(module) {
       this.selectedBlueprintModule = module;
-      this.renderPreview();
+      await this.loadPreview(this.previewMode);
     },
-    clearBlueprintModule() {
+    async clearBlueprintModule() {
       this.selectedBlueprintModule = null;
-      this.renderPreview();
+      await this.loadPreview(this.previewMode);
     },
     isSelectedBlueprintModule(module) {
       return Boolean(this.selectedBlueprintModule && module?.name === this.selectedBlueprintModule.name);

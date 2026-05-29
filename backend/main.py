@@ -14,7 +14,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, HTTPException, Request, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -533,11 +533,17 @@ def download_project_schematic(project_id: str) -> FileResponse:
 
 
 @app.get("/api/projects/{project_id}/preview")
-def get_project_preview(project_id: str, mode: str = "surface") -> FileResponse:
+def get_project_preview(project_id: str, mode: str = "surface", module: str | None = None) -> Response:
     state = _load_project(project_id)
     preview_path = _preview_path_for_mode(state, mode)
     if not preview_path:
         raise HTTPException(status_code=404, detail="preview not found")
+    if module:
+        payload = _module_preview_payload(state, preview_path, module)
+        return Response(
+            content=json.dumps(payload, ensure_ascii=False, separators=(",", ":")),
+            media_type="application/json",
+        )
     return FileResponse(preview_path, media_type="application/json")
 
 
@@ -554,6 +560,52 @@ def _preview_path_for_mode(state: dict[str, Any], mode: str) -> str | None:
         return surface_path
     fallback_path = state.get("preview_path")
     return fallback_path if fallback_path and Path(fallback_path).exists() else None
+
+
+def _module_preview_payload(state: dict[str, Any], preview_path: str, module_name: str) -> dict[str, Any]:
+    preview = json.loads(Path(preview_path).read_text(encoding="utf-8"))
+    module = _blueprint_module_by_name(state, module_name)
+    if not module:
+        raise HTTPException(status_code=404, detail="blueprint module not found")
+    bbox = module.get("bbox")
+    if not bbox:
+        raise HTTPException(status_code=409, detail="blueprint module has no bbox")
+
+    filtered = _blocks_in_bbox(preview.get("blocks") or [], bbox)
+    payload = dict(preview)
+    payload["blocks"] = filtered
+    payload["preview_count"] = len(filtered)
+    payload["module"] = {
+        "name": module.get("name"),
+        "role": module.get("role"),
+        "bbox": bbox,
+        "size": module.get("size"),
+    }
+    payload["module_filtered"] = True
+    payload["module_source_count"] = len(preview.get("blocks") or [])
+    return payload
+
+
+def _blueprint_module_by_name(state: dict[str, Any], module_name: str) -> dict[str, Any] | None:
+    blueprint = (state.get("analysis_report") or {}).get("design_blueprint") or {}
+    for module in blueprint.get("modules") or []:
+        if module.get("name") == module_name:
+            return module
+    return None
+
+
+def _blocks_in_bbox(blocks: list[list[Any]], bbox: list[list[int]]) -> list[list[Any]]:
+    (min_x, min_y, min_z), (max_x, max_y, max_z) = bbox
+    return [
+        block
+        for block in blocks
+        if (
+            len(block) >= 4
+            and min_x <= block[0] <= max_x
+            and min_y <= block[1] <= max_y
+            and min_z <= block[2] <= max_z
+        )
+    ]
 
 
 @app.get("/api/projects/{project_id}/materials")
