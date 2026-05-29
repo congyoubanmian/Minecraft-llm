@@ -548,6 +548,18 @@ def get_project_module_operations(project_id: str) -> dict[str, Any]:
     }
 
 
+@app.get("/api/projects/{project_id}/module-snapshots")
+def get_project_module_snapshots(project_id: str, module: str | None = None) -> dict[str, Any]:
+    state = _load_project(project_id)
+    snapshots = _module_snapshots(state, module)
+    return {
+        "project_id": project_id,
+        "module": module,
+        "snapshot_count": len(snapshots),
+        "snapshots": snapshots,
+    }
+
+
 @app.delete("/api/projects/{project_id}/module-operations", dependencies=[Depends(_require_api_key)])
 def clear_project_module_operations(project_id: str) -> dict[str, Any]:
     state = _load_project(project_id)
@@ -818,6 +830,7 @@ def _module_operation_plan(
         "module": target,
         "schematic_path": schematic_path,
         "latest_snapshot": _latest_module_snapshot(state, module_name),
+        "snapshots": _module_snapshots(state, module_name)[:5],
         "world_bounds": target["world_bounds"],
         "teleport": target["teleport"],
         "clear": clear,
@@ -907,10 +920,17 @@ def _snapshot_module_schematic(
 
 
 def _latest_module_snapshot(state: dict[str, Any], module_name: str) -> dict[str, Any] | None:
-    for snapshot in reversed(state.get("module_snapshots") or []):
-        if snapshot.get("module") == module_name:
-            return snapshot
-    return None
+    snapshots = _module_snapshots(state, module_name)
+    return snapshots[0] if snapshots else None
+
+
+def _module_snapshots(state: dict[str, Any], module_name: str | None = None) -> list[dict[str, Any]]:
+    snapshots = [
+        snapshot
+        for snapshot in state.get("module_snapshots") or []
+        if module_name is None or snapshot.get("module") == module_name
+    ]
+    return list(reversed(snapshots))
 
 
 def _record_module_operation(

@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from backend.main import clear_project_module_operations, get_project_module_operations
+from backend.main import clear_project_module_operations, get_project_module_operations, get_project_module_snapshots
 
 
 def main() -> None:
@@ -25,6 +25,11 @@ def main() -> None:
             "updated_at": "2026-01-01T00:00:00+00:00",
             "module_operations": [{"module": "core", "action": "replace", "commands": ["a"]}],
             "module_rcon": {"core:replace": ["a"]},
+            "module_snapshots": [
+                {"module": "core", "created_at": "2026-01-01T00:00:00+00:00", "source": "generated"},
+                {"module": "roof", "created_at": "2026-01-01T00:01:00+00:00", "source": "world"},
+                {"module": "core", "created_at": "2026-01-01T00:02:00+00:00", "source": "world"},
+            ],
         }
         (project_dir / "state.json").write_text(json.dumps(state), encoding="utf-8")
 
@@ -32,6 +37,18 @@ def main() -> None:
         assert payload["project_id"] == project_id
         assert len(payload["module_operations"]) == 1
         assert payload["module_rcon"]["core:replace"] == ["a"]
+
+        snapshots = get_project_module_snapshots(project_id)
+        assert snapshots["project_id"] == project_id
+        assert snapshots["snapshot_count"] == 3
+        assert snapshots["snapshots"][0]["module"] == "core"
+        assert snapshots["snapshots"][0]["created_at"].endswith("00:02:00+00:00")
+
+        core_snapshots = get_project_module_snapshots(project_id, module="core")
+        assert core_snapshots["module"] == "core"
+        assert core_snapshots["snapshot_count"] == 2
+        assert core_snapshots["snapshots"][0]["source"] == "world"
+        assert core_snapshots["snapshots"][1]["source"] == "generated"
 
         cleared = clear_project_module_operations(project_id)
         assert cleared["removed_operations"] == 1

@@ -880,6 +880,21 @@ pre {
   font-weight: 700;
 }
 
+.module-snapshot-list {
+  display: grid;
+  gap: 5px;
+  padding-top: 4px;
+}
+
+.module-snapshot-list strong {
+  color: #23312b;
+  font-size: 12px;
+}
+
+.module-snapshot-list span {
+  overflow-wrap: anywhere;
+}
+
 .module-rcon-list {
   display: grid;
   gap: 8px;

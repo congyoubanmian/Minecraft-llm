@@ -490,6 +490,12 @@
                     <dd>{{ modulePlan.latest_snapshot ? snapshotTime(modulePlan.latest_snapshot) : "暂无" }}</dd>
                   </div>
                 </dl>
+                <div v-if="modulePlan.snapshots?.length" class="module-snapshot-list">
+                  <strong>快照记录</strong>
+                  <span v-for="snapshot in modulePlan.snapshots" :key="snapshot.path || snapshot.created_at">
+                    {{ snapshotTime(snapshot) }}
+                  </span>
+                </div>
                 <p v-else>{{ modulePlanLoading ? "正在计算模块坐标与命令" : "暂无执行计划，需先粘贴项目并生成模块边界。" }}</p>
                 <p v-if="modulePlan && !modulePlan.clear.safe" class="danger-note">
                   该模块超过清空安全上限，清空和替换会被后端拒绝。
