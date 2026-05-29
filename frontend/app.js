@@ -15,6 +15,7 @@ createApp({
       placements: [],
       worldLoading: false,
       worldAction: "",
+      moduleAction: "",
       library: {
         materials: {},
         components: {},
@@ -574,6 +575,22 @@ createApp({
     async clearBlueprintModule() {
       this.selectedBlueprintModule = null;
       await this.loadPreview(this.previewMode);
+    },
+    async teleportBlueprintModule(module) {
+      if (!this.project?.id || !module?.name) return;
+      this.moduleAction = module.name;
+      try {
+        const response = await this.apiFetch(`/api/projects/${this.project.id}/modules/${encodeURIComponent(module.name)}/teleport`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        });
+        if (!response.ok) throw new Error(await response.text());
+      } catch (error) {
+        alert(`模块传送失败：${error instanceof Error ? error.message : String(error)}`);
+      } finally {
+        this.moduleAction = "";
+      }
     },
     isSelectedBlueprintModule(module) {
       return Boolean(this.selectedBlueprintModule && module?.name === this.selectedBlueprintModule.name);

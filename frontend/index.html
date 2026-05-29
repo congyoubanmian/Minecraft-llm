@@ -405,9 +405,19 @@
                     <span>{{ roleText(module.role) }} · {{ sizeText(module.size) }}</span>
                   </div>
                   <p>{{ (module.materials || []).slice(0, 3).join("；") || bboxText(module.bbox) }}</p>
-                  <button type="button" class="text-button" :disabled="!module.bbox" @click="selectBlueprintModule(module)">
-                    查看
-                  </button>
+                  <div class="module-actions">
+                    <button type="button" class="text-button" :disabled="!module.bbox" @click="selectBlueprintModule(module)">
+                      查看
+                    </button>
+                    <button
+                      type="button"
+                      class="text-button"
+                      :disabled="!module.bbox || !project?.placement || moduleAction"
+                      @click="teleportBlueprintModule(module)"
+                    >
+                      {{ moduleAction === module.name ? "传送中" : "传送" }}
+                    </button>
+                  </div>
                 </article>
               </div>
             </div>

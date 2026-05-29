@@ -208,6 +208,26 @@ def teleport_to_placement(project_id: str, request: PlacementActionRequest) -> d
     return {"project_id": project_id, "command": f"/{command}", "response": _rcon_command(command)}
 
 
+@app.post("/api/projects/{project_id}/modules/{module_name}/teleport", dependencies=[Depends(_require_api_key)])
+def teleport_to_project_module(project_id: str, module_name: str, request: PlacementActionRequest) -> dict[str, Any]:
+    state = _load_project(project_id)
+    placement = state.get("placement") or get_project_placement(project_id)
+    if not placement:
+        raise HTTPException(status_code=409, detail="project has no placement")
+    module = _blueprint_module_by_name(state, module_name)
+    if not module:
+        raise HTTPException(status_code=404, detail="blueprint module not found")
+    target = _module_world_target(placement, module)
+    player = request.player or "@p"
+    command = f"tp {player} {target['teleport']['x']} {target['teleport']['y']} {target['teleport']['z']}"
+    return {
+        "project_id": project_id,
+        "module": target,
+        "command": f"/{command}",
+        "response": _rcon_command(command),
+    }
+
+
 @app.post("/api/placements/{project_id}/archive", dependencies=[Depends(_require_api_key)])
 def archive_placement(project_id: str) -> dict[str, Any]:
     archived = archive_project_placement(project_id, reason="manual_archive")
@@ -606,6 +626,41 @@ def _blocks_in_bbox(blocks: list[list[Any]], bbox: list[list[int]]) -> list[list
             and min_z <= block[2] <= max_z
         )
     ]
+
+
+def _module_world_target(placement: dict[str, Any], module: dict[str, Any]) -> dict[str, Any]:
+    bbox = module.get("bbox")
+    if not bbox:
+        raise HTTPException(status_code=409, detail="blueprint module has no bbox")
+    paste = placement.get("paste")
+    if not paste:
+        raise HTTPException(status_code=409, detail="placement has no paste coordinate")
+    (min_x, min_y, min_z), (max_x, max_y, max_z) = bbox
+    world_bounds = {
+        "min_x": paste["x"] + min_x,
+        "min_y": paste["y"] + min_y,
+        "min_z": paste["z"] + min_z,
+        "max_x": paste["x"] + max_x,
+        "max_y": paste["y"] + max_y,
+        "max_z": paste["z"] + max_z,
+    }
+    width = max_x - min_x + 1
+    depth = max_z - min_z + 1
+    height = max_y - min_y + 1
+    stand_off = max(8, min(48, max(width, depth) // 2 + 8))
+    teleport = {
+        "x": (world_bounds["min_x"] + world_bounds["max_x"]) // 2,
+        "y": min(world_bounds["max_y"] + 6, world_bounds["min_y"] + max(4, height // 2)),
+        "z": world_bounds["min_z"] - stand_off,
+    }
+    return {
+        "name": module.get("name"),
+        "role": module.get("role"),
+        "local_bbox": bbox,
+        "world_bounds": world_bounds,
+        "teleport": teleport,
+        "stand_off": stand_off,
+    }
 
 
 @app.get("/api/projects/{project_id}/materials")

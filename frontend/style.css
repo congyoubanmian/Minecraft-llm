@@ -797,10 +797,16 @@ pre {
 }
 
 .module-toolbar .text-button,
-.module-item .text-button {
+.module-actions .text-button {
   min-height: 28px;
   justify-self: start;
   padding: 0;
+}
+
+.module-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .interface-list {
