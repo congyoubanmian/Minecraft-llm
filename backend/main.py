@@ -1057,11 +1057,30 @@ def _is_path_inside(path: Path, parent: Path) -> bool:
 
 def _module_snapshots(state: dict[str, Any], module_name: str | None = None) -> list[dict[str, Any]]:
     snapshots = [
-        snapshot
+        _snapshot_with_file_status(snapshot)
         for snapshot in state.get("module_snapshots") or []
         if module_name is None or snapshot.get("module") == module_name
     ]
     return list(reversed(snapshots))
+
+
+def _snapshot_with_file_status(snapshot: dict[str, Any]) -> dict[str, Any]:
+    payload = dict(snapshot)
+    path_value = snapshot.get("path")
+    file_status = {
+        "exists": False,
+        "name": Path(path_value).name if path_value else None,
+        "size": None,
+        "managed": False,
+    }
+    if path_value:
+        path = Path(path_value)
+        file_status["managed"] = _is_path_inside(path, settings.schematic_dir)
+        if path.exists():
+            file_status["exists"] = True
+            file_status["size"] = path.stat().st_size
+    payload["file"] = file_status
+    return payload
 
 
 def _record_module_operation(

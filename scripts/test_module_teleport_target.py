@@ -23,6 +23,7 @@ from backend.main import (
     _module_world_target,
     _record_module_operation,
     _snapshot_module_schematic,
+    _snapshot_with_file_status,
     _trim_module_snapshots,
 )
 
@@ -102,14 +103,21 @@ def main() -> None:
             assert Path(snapshot["path"]).exists()
             assert Path(snapshot["path"]).parent == main_module.settings.schematic_dir
             assert Path(snapshot["path"]).read_bytes() == b"schem-data"
-            assert _latest_module_snapshot(snapshot_state, "skybridge") == snapshot
-            assert _module_snapshot_by_ref(snapshot_state, "skybridge") == snapshot
-            assert _module_snapshot_by_ref(snapshot_state, "skybridge", snapshot_id=snapshot["id"]) == snapshot
-            assert _module_snapshot_by_ref(snapshot_state, "skybridge", snapshot_path=snapshot["path"]) == snapshot
+            latest_snapshot = _latest_module_snapshot(snapshot_state, "skybridge")
+            assert latest_snapshot["id"] == snapshot["id"]
+            assert latest_snapshot["file"]["exists"] is True
+            assert _module_snapshot_by_ref(snapshot_state, "skybridge")["id"] == snapshot["id"]
+            assert _module_snapshot_by_ref(snapshot_state, "skybridge", snapshot_id=snapshot["id"])["id"] == snapshot["id"]
+            assert _module_snapshot_by_ref(snapshot_state, "skybridge", snapshot_path=snapshot["path"])["id"] == snapshot["id"]
             assert _module_snapshot_by_ref(snapshot_state, "skybridge", snapshot_path="/tmp/missing.schem") is None
             assert _snapshot_by_ref(snapshot_state, snapshot_id=snapshot["id"]) == snapshot
             assert _snapshot_by_ref(snapshot_state, snapshot_path=snapshot["path"]) == snapshot
             assert _snapshot_by_ref(snapshot_state, snapshot_path="/tmp/missing.schem") is None
+            snapshot_status = _snapshot_with_file_status(snapshot)
+            assert snapshot_status["file"]["exists"] is True
+            assert snapshot_status["file"]["name"] == Path(snapshot["path"]).name
+            assert snapshot_status["file"]["size"] == len(b"schem-data")
+            assert snapshot_status["file"]["managed"] is True
             delete_state = {"module_snapshots": [snapshot]}
             deleted = _delete_module_snapshot(delete_state, snapshot_id=snapshot["id"])
             assert deleted is not None

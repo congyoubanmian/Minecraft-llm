@@ -68,6 +68,11 @@ def main() -> None:
         assert core_snapshots["snapshot_count"] == 2
         assert core_snapshots["snapshots"][0]["source"] == "world"
         assert core_snapshots["snapshots"][1]["source"] == "generated"
+        assert core_snapshots["snapshots"][0]["file"]["exists"] is False
+        assert core_snapshots["snapshots"][1]["file"]["exists"] is True
+        assert core_snapshots["snapshots"][1]["file"]["name"] == snapshot_file.name
+        assert core_snapshots["snapshots"][1]["file"]["size"] == len(b"snapshot")
+        assert core_snapshots["snapshots"][1]["file"]["managed"] is True
 
         download = download_project_module_snapshot(project_id, snapshot_id="snapshot-core-generated")
         assert Path(download.path) == snapshot_file

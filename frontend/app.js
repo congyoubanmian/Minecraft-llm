@@ -692,6 +692,12 @@ createApp({
       };
       return labels[source] || "";
     },
+    snapshotFileText(snapshot) {
+      if (!snapshot?.path) return "无文件";
+      if (!snapshot.file?.exists) return "文件缺失";
+      const size = Number(snapshot.file.size || 0);
+      return size ? `${Math.ceil(size / 1024)} KB` : "空文件";
+    },
     moduleSnapshotDownloadUrl(snapshot) {
       if (!this.project?.id || !snapshot?.path) return "#";
       const query = new URLSearchParams(snapshot.id ? { snapshot_id: snapshot.id } : { snapshot_path: snapshot.path });

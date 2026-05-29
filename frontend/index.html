@@ -493,10 +493,10 @@
                 <div v-if="modulePlan.snapshots?.length" class="module-snapshot-list">
                   <strong>快照记录</strong>
                   <div v-for="snapshot in modulePlan.snapshots" :key="snapshot.id || snapshot.path || snapshot.created_at">
-                    <span>{{ snapshotTime(snapshot) }}</span>
+                    <span>{{ snapshotTime(snapshot) }} · {{ snapshotFileText(snapshot) }}</span>
                     <div>
                       <a
-                        v-if="snapshot.path"
+                        v-if="snapshot.path && snapshot.file?.exists"
                         class="text-button"
                         :href="moduleSnapshotDownloadUrl(snapshot)"
                       >
@@ -505,7 +505,7 @@
                       <button
                         type="button"
                         class="text-button"
-                        :disabled="moduleAction || !selectedBlueprintModule"
+                        :disabled="moduleAction || !selectedBlueprintModule || !snapshot.file?.exists"
                         @click="rollbackBlueprintModule(selectedBlueprintModule, snapshot)"
                       >
                         回滚
