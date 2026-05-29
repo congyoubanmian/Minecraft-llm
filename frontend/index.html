@@ -422,7 +422,15 @@
                       :disabled="!module.bbox || !project?.placement || moduleAction"
                       @click="teleportBlueprintModule(module)"
                     >
-                      {{ moduleAction === module.name ? "传送中" : "传送" }}
+                      {{ moduleAction === `teleport:${module.name}` ? "传送中" : "传送" }}
+                    </button>
+                    <button
+                      type="button"
+                      class="text-button danger-text-button"
+                      :disabled="!module.bbox || !project?.placement || moduleAction"
+                      @click="pasteBlueprintModule(module)"
+                    >
+                      {{ moduleAction === `paste:${module.name}` ? "粘贴中" : "粘贴" }}
                     </button>
                   </div>
                 </article>

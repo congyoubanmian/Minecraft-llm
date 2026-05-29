@@ -578,7 +578,7 @@ createApp({
     },
     async teleportBlueprintModule(module) {
       if (!this.project?.id || !module?.name) return;
-      this.moduleAction = module.name;
+      this.moduleAction = `teleport:${module.name}`;
       try {
         const response = await this.apiFetch(`/api/projects/${this.project.id}/modules/${encodeURIComponent(module.name)}/teleport`, {
           method: "POST",
@@ -588,6 +588,25 @@ createApp({
         if (!response.ok) throw new Error(await response.text());
       } catch (error) {
         alert(`模块传送失败：${error instanceof Error ? error.message : String(error)}`);
+      } finally {
+        this.moduleAction = "";
+      }
+    },
+    async pasteBlueprintModule(module) {
+      if (!this.project?.id || !module?.name) return;
+      if (!confirm(`粘贴模块 ${module.name} 到 Minecraft？这会覆盖该模块所在区域。`)) return;
+      this.moduleAction = `paste:${module.name}`;
+      try {
+        const response = await this.apiFetch(`/api/projects/${this.project.id}/modules/${encodeURIComponent(module.name)}/paste`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ confirm: "PASTE_MODULE" }),
+        });
+        if (!response.ok) throw new Error(await response.text());
+        await response.json();
+        await this.fetchProject(this.project.id);
+      } catch (error) {
+        alert(`模块粘贴失败：${error instanceof Error ? error.message : String(error)}`);
       } finally {
         this.moduleAction = "";
       }

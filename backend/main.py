@@ -228,6 +228,38 @@ def teleport_to_project_module(project_id: str, module_name: str, request: Place
     }
 
 
+@app.post("/api/projects/{project_id}/modules/{module_name}/paste", dependencies=[Depends(_require_api_key)])
+def paste_project_module(project_id: str, module_name: str, request: PlacementActionRequest) -> dict[str, Any]:
+    if request.confirm != "PASTE_MODULE":
+        raise HTTPException(status_code=400, detail='confirm must be "PASTE_MODULE"')
+    state = _load_project(project_id)
+    placement = state.get("placement") or get_project_placement(project_id)
+    if not placement:
+        raise HTTPException(status_code=409, detail="project has no placement")
+    module = _blueprint_module_by_name(state, module_name)
+    if not module:
+        raise HTTPException(status_code=404, detail="blueprint module not found")
+    target = _module_world_target(placement, module)
+    schematic_path = _module_schematic_path(project_id, state, module_name, output_dir=settings.schematic_dir)
+    paste = target["world_bounds"]
+    controller = FaweController()
+    commands = controller.paste_schematic(
+        schematic_path=schematic_path,
+        x=paste["min_x"],
+        y=paste["min_y"],
+        z=paste["min_z"],
+    )
+    state["updated_at"] = _now()
+    state.setdefault("module_rcon", {})[module_name] = commands
+    _save_project(project_id, state)
+    return {
+        "project_id": project_id,
+        "module": target,
+        "schematic_path": str(schematic_path),
+        "rcon": commands,
+    }
+
+
 @app.post("/api/placements/{project_id}/archive", dependencies=[Depends(_require_api_key)])
 def archive_placement(project_id: str) -> dict[str, Any]:
     archived = archive_project_placement(project_id, reason="manual_archive")
@@ -635,7 +667,7 @@ def _blocks_in_bbox(blocks: list[list[Any]], bbox: list[list[int]]) -> list[list
     ]
 
 
-def _module_schematic_path(project_id: str, state: dict[str, Any], module_name: str) -> Path:
+def _module_schematic_path(project_id: str, state: dict[str, Any], module_name: str, output_dir: Path | None = None) -> Path:
     if not state.get("plan"):
         raise HTTPException(status_code=409, detail="project has no generated plan")
     module = _blueprint_module_by_name(state, module_name)
@@ -651,7 +683,7 @@ def _module_schematic_path(project_id: str, state: dict[str, Any], module_name: 
     if len(cropped) == 0:
         raise HTTPException(status_code=409, detail="blueprint module contains no blocks")
 
-    module_dir = _project_path(project_id) / "modules"
+    module_dir = output_dir or (_project_path(project_id) / "modules")
     safe_module = _safe_filename(module_name)
     return cropped.write_schematic(module_dir, f"{plan.name}.{safe_module}")
 

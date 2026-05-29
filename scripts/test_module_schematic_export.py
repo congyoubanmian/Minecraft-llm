@@ -58,6 +58,10 @@ def test_module_schematic_path() -> None:
             path = _module_schematic_path(project_id, state, "stone core")
             assert path.exists()
             assert path.name == "module_export_smoke.stone_core.schem"
+            with tempfile.TemporaryDirectory() as schematic_tmp:
+                fawe_path = _module_schematic_path(project_id, state, "stone core", output_dir=Path(schematic_tmp))
+                assert fawe_path.exists()
+                assert fawe_path.parent == Path(schematic_tmp)
         finally:
             if project_dir.exists():
                 for child in sorted(project_dir.rglob("*"), reverse=True):
