@@ -27,6 +27,7 @@ from backend.library import load_components, load_design_contract, load_material
 from backend.minecraft import FaweController
 from backend.minecraft.rcon import MinecraftRcon, RconConfig
 from backend.minecraft.world_manager import backup_worlds, reset_worlds, world_status
+from backend.placement import archive_project_placement, list_placements, rebuild_placement_registry, upsert_project_placement
 from backend.schematic.generator import generate_outputs, render_plan_to_blocks
 
 
@@ -168,7 +169,20 @@ def backup_world() -> dict[str, Any]:
 def reset_world(request: ResetWorldRequest) -> dict[str, Any]:
     if request.confirm != "RESET_WORLD":
         raise HTTPException(status_code=400, detail='confirm must be "RESET_WORLD"')
-    return reset_worlds()
+    result = reset_worlds()
+    for placement in list_placements(active_only=True):
+        archive_project_placement(placement["project_id"], reason="world_reset")
+    return result
+
+
+@app.get("/api/placements")
+def get_placements(active_only: bool = False) -> dict[str, Any]:
+    return {"placements": list_placements(active_only=active_only)}
+
+
+@app.post("/api/placements/rebuild", dependencies=[Depends(_require_api_key)])
+def rebuild_placements() -> dict[str, Any]:
+    return rebuild_placement_registry(_iter_project_states())
 
 
 @app.websocket("/ws/projects/{project_id}")
@@ -373,6 +387,12 @@ def paste_project(project_id: str) -> dict[str, Any]:
         z=placement["paste"]["z"],
     )
     state["rcon"].extend(_set_spawnpoint(placement))
+    upsert_project_placement(
+        project_id=project_id,
+        placement=placement,
+        project_name=(state.get("plan") or {}).get("name"),
+        pasted=True,
+    )
     state["status"] = "done"
     state["updated_at"] = _now()
     _save_project(project_id, state)
@@ -417,6 +437,12 @@ def update_project_placement(project_id: str, request: PlacementRequest) -> dict
     placement = _placement_from_paste(project_id, BuildPlan.model_validate(plan), paste, spawn)
     _assert_no_overlap(project_id, placement)
     state["placement"] = placement
+    upsert_project_placement(
+        project_id=project_id,
+        placement=placement,
+        project_name=(state.get("plan") or {}).get("name"),
+        pasted=bool(state.get("rcon")),
+    )
     state["updated_at"] = _now()
     _save_project(project_id, state)
     return {"project_id": project_id, "placement": placement}
@@ -434,6 +460,7 @@ def delete_project(project_id: str) -> dict[str, Any]:
         raise HTTPException(status_code=409, detail="cannot delete project while generating")
 
     shutil.rmtree(project_path, ignore_errors=True)
+    archive_project_placement(project_id, reason="project_deleted")
     _invalidate_project_cache()
     return {"project_id": project_id, "deleted": True}
 
@@ -570,6 +597,12 @@ def _run_project_generation(project_id: str) -> None:
                 z=placement["paste"]["z"],
             )
             state["rcon"].extend(_set_spawnpoint(placement))
+            upsert_project_placement(
+                project_id=project_id,
+                placement=placement,
+                project_name=(state.get("plan") or {}).get("name"),
+                pasted=True,
+            )
 
         state["messages"].append(
             {
@@ -697,6 +730,12 @@ def _ensure_project_placement(project_id: str, state: dict[str, Any]) -> dict[st
         raise HTTPException(status_code=409, detail="project has no generated plan")
     placement = _allocate_placement(project_id, BuildPlan.model_validate(state["plan"]))
     state["placement"] = placement
+    upsert_project_placement(
+        project_id=project_id,
+        placement=placement,
+        project_name=(state.get("plan") or {}).get("name"),
+        pasted=bool(state.get("rcon")),
+    )
     state["updated_at"] = _now()
     _save_project(project_id, state)
     return placement
@@ -764,6 +803,12 @@ def _assert_no_overlap(project_id: str, placement: dict[str, Any]) -> None:
 
 def _overlaps_existing(project_id: str, placement: dict[str, Any]) -> bool:
     current = _expanded_bounds(placement["bounds"], placement.get("margin", settings.paste_margin))
+    for other in list_placements(active_only=True):
+        if other.get("project_id") == project_id or not other.get("bounds"):
+            continue
+        other_bounds = _expanded_bounds(other["bounds"], other.get("margin", 0))
+        if _bounds_overlap(current, other_bounds):
+            return True
     for other in _iter_project_states():
         if other.get("id") == project_id or not other.get("placement"):
             continue

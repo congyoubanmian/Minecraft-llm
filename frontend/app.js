@@ -12,6 +12,7 @@ createApp({
       projects: [],
       projectListLoading: false,
       world: null,
+      placements: [],
       worldLoading: false,
       worldAction: "",
       library: {
@@ -186,9 +187,15 @@ createApp({
     async loadWorldStatus() {
       this.worldLoading = true;
       try {
-        const response = await this.apiFetch(`/api/world/status?ts=${Date.now()}`);
-        if (!response.ok) throw new Error(await response.text());
-        this.world = await response.json();
+        const [worldResponse, placementResponse] = await Promise.all([
+          this.apiFetch(`/api/world/status?ts=${Date.now()}`),
+          this.apiFetch(`/api/placements?ts=${Date.now()}`),
+        ]);
+        if (!worldResponse.ok) throw new Error(await worldResponse.text());
+        if (!placementResponse.ok) throw new Error(await placementResponse.text());
+        this.world = await worldResponse.json();
+        const placementPayload = await placementResponse.json();
+        this.placements = placementPayload.placements || [];
       } catch (error) {
         this.world = { error: error instanceof Error ? error.message : String(error) };
       } finally {
@@ -205,6 +212,19 @@ createApp({
         alert(`备份完成：${payload.backup}`);
       } catch (error) {
         alert(`备份失败：${error instanceof Error ? error.message : String(error)}`);
+      } finally {
+        this.worldAction = "";
+      }
+    },
+    async rebuildPlacements() {
+      this.worldAction = "rebuild";
+      try {
+        const response = await this.apiFetch("/api/placements/rebuild", { method: "POST" });
+        if (!response.ok) throw new Error(await response.text());
+        await this.loadWorldStatus();
+        alert("区域索引已从项目状态重建。");
+      } catch (error) {
+        alert(`重建失败：${error instanceof Error ? error.message : String(error)}`);
       } finally {
         this.worldAction = "";
       }
@@ -454,6 +474,15 @@ createApp({
       const size = item.placement?.size;
       if (!size) return "-";
       return `${size.x} x ${size.y} x ${size.z}`;
+    },
+    activePlacementCount() {
+      return this.placements.filter((item) => item.active !== false).length;
+    },
+    latestPlacementText() {
+      const latest = this.placements[0];
+      if (!latest) return "-";
+      const paste = latest.paste;
+      return `${latest.project_name || latest.project_id} @ ${paste?.x ?? "-"}, ${paste?.y ?? "-"}, ${paste?.z ?? "-"}`;
     },
     projectSizeText(item) {
       if (item.preview?.size) return item.preview.size.join(" x ");

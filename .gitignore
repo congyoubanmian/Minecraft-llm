@@ -11,6 +11,7 @@ backend/uploads/*
 backend/generated_plans/*
 !backend/generated_plans/.gitkeep
 backend/projects/
+backend/placement/registry.json
 server/*
 !server/.gitkeep
 McSTools/

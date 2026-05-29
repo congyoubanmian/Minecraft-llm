@@ -39,6 +39,7 @@
             </div>
             <div class="button-row compact-actions">
               <button type="button" class="secondary-button" :disabled="worldLoading" @click="loadWorldStatus">刷新</button>
+              <button type="button" class="secondary-button" :disabled="worldAction" @click="rebuildPlacements">{{ worldAction === "rebuild" ? "重建中" : "重建区域索引" }}</button>
               <button type="button" :disabled="worldAction" @click="backupWorld">{{ worldAction === "backup" ? "备份中" : "备份世界" }}</button>
               <button type="button" class="danger-button" :disabled="worldAction" @click="resetWorld">{{ worldAction === "reset" ? "重置中" : "重置世界" }}</button>
             </div>
@@ -53,9 +54,17 @@
               <strong>Backups</strong>
               <span>{{ world?.backups?.count ?? 0 }} 个 · {{ formatBytes(world?.backups?.bytes || 0) }}</span>
             </article>
+            <article class="world-card">
+              <strong>Areas</strong>
+              <span>{{ activePlacementCount() }} active / {{ placements.length }} total</span>
+            </article>
             <article class="world-card wide">
               <strong>Players</strong>
               <span>{{ world?.rcon?.players || "-" }}</span>
+            </article>
+            <article class="world-card wide">
+              <strong>Latest Area</strong>
+              <span>{{ latestPlacementText() }}</span>
             </article>
           </div>
         </section>
