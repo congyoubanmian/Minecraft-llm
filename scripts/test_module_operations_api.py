@@ -69,6 +69,7 @@ def main() -> None:
         assert project_summary["snapshot_summary"]["count"] == 3
         assert project_summary["snapshot_summary"]["available_count"] == 1
         assert project_summary["snapshot_summary"]["module_count"] == 2
+        assert project_summary["snapshot_summary"]["bytes"] == len(b"snapshot")
 
         snapshots = get_project_module_snapshots(project_id)
         assert snapshots["project_id"] == project_id

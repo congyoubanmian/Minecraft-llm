@@ -916,7 +916,8 @@ createApp({
       const summary = item.snapshot_summary;
       if (!summary?.count) return "0";
       const latest = summary.latest_created_at ? ` · ${this.formatTime(summary.latest_created_at)}` : "";
-      return `${summary.available_count || 0}/${summary.count} 可用 · ${summary.module_count || 0} 模块${latest}`;
+      const bytes = summary.bytes ? ` · ${this.formatBytes(summary.bytes)}` : "";
+      return `${summary.available_count || 0}/${summary.count} 可用 · ${summary.module_count || 0} 模块${bytes}${latest}`;
     },
   },
 }).mount("#app");

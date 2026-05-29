@@ -1095,10 +1095,12 @@ def _snapshot_summary(state: dict[str, Any]) -> dict[str, Any]:
     snapshots = [_snapshot_with_file_status(snapshot) for snapshot in state.get("module_snapshots") or []]
     modules = {snapshot.get("module") for snapshot in snapshots if snapshot.get("module")}
     available = [snapshot for snapshot in snapshots if snapshot.get("file", {}).get("exists")]
+    bytes_total = sum(int(snapshot.get("file", {}).get("size") or 0) for snapshot in available)
     latest = max((snapshot.get("created_at") or "" for snapshot in snapshots), default="")
     return {
         "count": len(snapshots),
         "available_count": len(available),
+        "bytes": bytes_total,
         "module_count": len(modules),
         "latest_created_at": latest or None,
     }
