@@ -9,7 +9,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 import backend.main as main_module
-from backend.main import _bounds_volume, _clear_module_area, _module_world_target
+from backend.main import _bounds_volume, _clear_module_area, _module_world_target, _record_module_operation
 
 
 def main() -> None:
@@ -45,6 +45,18 @@ def main() -> None:
     assert cleared["blocks"] == 4059
     assert cleared["command"] == "/fill 110 104 220 150 112 230 air replace"
     assert cleared["response"] == "ran:fill 110 104 220 150 112 230 air replace"
+
+    state = {}
+    operation = _record_module_operation(state, "skybridge", "replace", target, ["clear", "paste"], blocks=4059)
+    assert operation["module"] == "skybridge"
+    assert operation["action"] == "replace"
+    assert operation["command_count"] == 2
+    assert operation["blocks"] == 4059
+    assert len(state["module_operations"]) == 1
+    for index in range(60):
+        _record_module_operation(state, f"m{index}", "paste", target, ["paste"])
+    assert len(state["module_operations"]) == 50
+    assert state["module_operations"][0]["module"] == "m10"
     print({"module_teleport_target": "ok"})
 
 

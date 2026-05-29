@@ -89,6 +89,21 @@ createApp({
       return this.designBlueprint?.interfaces || [];
     },
     moduleRconEntries() {
+      const operations = this.project?.module_operations || [];
+      if (operations.length) {
+        return operations
+          .map((operation, index) => ({
+            key: `${operation.created_at || index}:${operation.module}:${operation.action}`,
+            name: operation.module,
+            action: operation.action,
+            label: this.moduleActionLabel(operation.action),
+            count: operation.command_count ?? operation.commands?.length ?? 0,
+            created_at: operation.created_at,
+            blocks: operation.blocks,
+            commands: (operation.commands || []).slice(-4),
+          }))
+          .reverse();
+      }
       return Object.entries(this.project?.module_rcon || {})
         .map(([key, commands]) => {
           const [name, action = "paste"] = key.split(":");

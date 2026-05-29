@@ -843,9 +843,14 @@ pre {
   font-size: 13px;
 }
 
-.module-rcon-item span {
+.module-rcon-item span,
+.module-rcon-item small {
   color: #58645f;
   font-size: 12px;
+}
+
+.module-rcon-item small {
+  font-size: 11px;
 }
 
 .module-rcon-item code {

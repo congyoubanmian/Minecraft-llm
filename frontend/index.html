@@ -476,8 +476,9 @@
                 <article v-for="entry in moduleRconEntries.slice(0, 6)" :key="entry.key" class="module-rcon-item">
                   <div>
                     <strong>{{ entry.name }}</strong>
-                    <span>{{ entry.label }} · {{ entry.count }} 条返回</span>
+                    <span>{{ entry.label }} · {{ entry.count }} 条返回<span v-if="entry.blocks"> · {{ entry.blocks }} 方块</span></span>
                   </div>
+                  <small v-if="entry.created_at">{{ entry.created_at }}</small>
                   <code v-for="line in entry.commands" :key="line">{{ line }}</code>
                 </article>
               </div>

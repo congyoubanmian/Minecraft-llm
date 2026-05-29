@@ -237,6 +237,7 @@ def paste_project_module(project_id: str, module_name: str, request: PlacementAc
     commands = _paste_module_schematic(schematic_path, target)
     state["updated_at"] = _now()
     state.setdefault("module_rcon", {})[module_name] = commands
+    _record_module_operation(state, module_name, "paste", target, commands, schematic_path=schematic_path)
     _save_project(project_id, state)
     return {
         "project_id": project_id,
@@ -254,6 +255,14 @@ def clear_project_module(project_id: str, module_name: str, request: PlacementAc
     clear_result = _clear_module_area(target)
     state["updated_at"] = _now()
     state.setdefault("module_rcon", {})[f"{module_name}:clear"] = [clear_result["command"], clear_result["response"]]
+    _record_module_operation(
+        state,
+        module_name,
+        "clear",
+        target,
+        [clear_result["command"], clear_result["response"]],
+        blocks=clear_result["blocks"],
+    )
     _save_project(project_id, state)
     return {
         "project_id": project_id,
@@ -273,6 +282,15 @@ def replace_project_module(project_id: str, module_name: str, request: Placement
     rcon = [clear_result["command"], clear_result["response"], *paste_commands]
     state["updated_at"] = _now()
     state.setdefault("module_rcon", {})[f"{module_name}:replace"] = rcon
+    _record_module_operation(
+        state,
+        module_name,
+        "replace",
+        target,
+        rcon,
+        schematic_path=schematic_path,
+        blocks=clear_result["blocks"],
+    )
     _save_project(project_id, state)
     return {
         "project_id": project_id,
@@ -723,6 +741,35 @@ def _paste_module_schematic(schematic_path: Path, target: dict[str, Any]) -> lis
         y=paste["min_y"],
         z=paste["min_z"],
     )
+
+
+def _record_module_operation(
+    state: dict[str, Any],
+    module_name: str,
+    action: str,
+    target: dict[str, Any],
+    commands: list[str],
+    *,
+    schematic_path: Path | None = None,
+    blocks: int | None = None,
+) -> dict[str, Any]:
+    operation = {
+        "module": module_name,
+        "action": action,
+        "created_at": _now(),
+        "command_count": len(commands),
+        "commands": commands,
+        "world_bounds": target.get("world_bounds"),
+        "teleport": target.get("teleport"),
+    }
+    if schematic_path is not None:
+        operation["schematic_path"] = str(schematic_path)
+    if blocks is not None:
+        operation["blocks"] = blocks
+    operations = state.setdefault("module_operations", [])
+    operations.append(operation)
+    del operations[:-50]
+    return operation
 
 
 def _module_schematic_path(project_id: str, state: dict[str, Any], module_name: str, output_dir: Path | None = None) -> Path:
