@@ -492,7 +492,7 @@
                 </dl>
                 <div v-if="modulePlan.snapshots?.length" class="module-snapshot-list">
                   <strong>快照记录</strong>
-                  <div v-for="snapshot in modulePlan.snapshots" :key="snapshot.path || snapshot.created_at">
+                  <div v-for="snapshot in modulePlan.snapshots" :key="snapshot.id || snapshot.path || snapshot.created_at">
                     <span>{{ snapshotTime(snapshot) }}</span>
                     <div>
                       <a

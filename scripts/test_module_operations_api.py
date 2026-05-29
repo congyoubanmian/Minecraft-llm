@@ -40,6 +40,7 @@ def main() -> None:
             "module_rcon": {"core:replace": ["a"]},
             "module_snapshots": [
                 {
+                    "id": "snapshot-core-generated",
                     "module": "core",
                     "created_at": "2026-01-01T00:00:00+00:00",
                     "source": "generated",
@@ -68,13 +69,13 @@ def main() -> None:
         assert core_snapshots["snapshots"][0]["source"] == "world"
         assert core_snapshots["snapshots"][1]["source"] == "generated"
 
-        download = download_project_module_snapshot(project_id, snapshot_path=str(snapshot_file))
+        download = download_project_module_snapshot(project_id, snapshot_id="snapshot-core-generated")
         assert Path(download.path) == snapshot_file
         assert download.filename == snapshot_file.name
 
         deleted = delete_project_module_snapshot(
             project_id,
-            ModuleSnapshotDeleteRequest(confirm="DELETE_MODULE_SNAPSHOT", snapshot_path=str(snapshot_file)),
+            ModuleSnapshotDeleteRequest(confirm="DELETE_MODULE_SNAPSHOT", snapshot_id="snapshot-core-generated"),
         )
         assert deleted["file_removed"] is True
         assert not snapshot_file.exists()

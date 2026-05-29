@@ -17,8 +17,8 @@ from backend.main import (
     _clear_module_plan,
     _delete_module_snapshot,
     _latest_module_snapshot,
-    _module_snapshot_by_path,
-    _snapshot_by_path,
+    _module_snapshot_by_ref,
+    _snapshot_by_ref,
     _module_operation_plan,
     _module_world_target,
     _record_module_operation,
@@ -95,25 +95,28 @@ def main() -> None:
             snapshot_state = {"schematic_path": str(source_path)}
             snapshot = _snapshot_module_schematic("project-1", snapshot_state, "skybridge", target, prefer_world=False)
             assert snapshot is not None
+            assert snapshot["id"]
             assert snapshot["module"] == "skybridge"
             assert snapshot["source"] == "generated"
             assert Path(snapshot["path"]).exists()
             assert Path(snapshot["path"]).parent == main_module.settings.schematic_dir
             assert Path(snapshot["path"]).read_bytes() == b"schem-data"
             assert _latest_module_snapshot(snapshot_state, "skybridge") == snapshot
-            assert _module_snapshot_by_path(snapshot_state, "skybridge") == snapshot
-            assert _module_snapshot_by_path(snapshot_state, "skybridge", snapshot["path"]) == snapshot
-            assert _module_snapshot_by_path(snapshot_state, "skybridge", "/tmp/missing.schem") is None
-            assert _snapshot_by_path(snapshot_state, snapshot["path"]) == snapshot
-            assert _snapshot_by_path(snapshot_state, "/tmp/missing.schem") is None
+            assert _module_snapshot_by_ref(snapshot_state, "skybridge") == snapshot
+            assert _module_snapshot_by_ref(snapshot_state, "skybridge", snapshot_id=snapshot["id"]) == snapshot
+            assert _module_snapshot_by_ref(snapshot_state, "skybridge", snapshot_path=snapshot["path"]) == snapshot
+            assert _module_snapshot_by_ref(snapshot_state, "skybridge", snapshot_path="/tmp/missing.schem") is None
+            assert _snapshot_by_ref(snapshot_state, snapshot_id=snapshot["id"]) == snapshot
+            assert _snapshot_by_ref(snapshot_state, snapshot_path=snapshot["path"]) == snapshot
+            assert _snapshot_by_ref(snapshot_state, snapshot_path="/tmp/missing.schem") is None
             delete_state = {"module_snapshots": [snapshot]}
-            deleted = _delete_module_snapshot(delete_state, snapshot["path"])
+            deleted = _delete_module_snapshot(delete_state, snapshot_id=snapshot["id"])
             assert deleted is not None
             assert deleted["snapshot"] == snapshot
             assert deleted["file_removed"] is True
             assert delete_state["module_snapshots"] == []
             assert not Path(snapshot["path"]).exists()
-            assert _delete_module_snapshot(delete_state, snapshot["path"]) is None
+            assert _delete_module_snapshot(delete_state, snapshot_id=snapshot["id"]) is None
 
             class FakeFaweController:
                 def save_region(self, schematic_path, bounds):

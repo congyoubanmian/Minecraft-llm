@@ -694,7 +694,7 @@ createApp({
     },
     moduleSnapshotDownloadUrl(snapshot) {
       if (!this.project?.id || !snapshot?.path) return "#";
-      const query = new URLSearchParams({ snapshot_path: snapshot.path });
+      const query = new URLSearchParams(snapshot.id ? { snapshot_id: snapshot.id } : { snapshot_path: snapshot.path });
       return `/api/projects/${this.project.id}/module-snapshots/download?${query.toString()}`;
     },
     async teleportBlueprintModule(module) {
@@ -778,7 +778,11 @@ createApp({
         const response = await this.apiFetch(`/api/projects/${this.project.id}/modules/${encodeURIComponent(module.name)}/rollback`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ confirm: "ROLLBACK_MODULE", snapshot_path: snapshot?.path || null }),
+          body: JSON.stringify({
+            confirm: "ROLLBACK_MODULE",
+            snapshot_id: snapshot?.id || null,
+            snapshot_path: snapshot?.id ? null : snapshot?.path || null,
+          }),
         });
         if (!response.ok) throw new Error(await response.text());
         await response.json();
@@ -798,7 +802,11 @@ createApp({
         const response = await this.apiFetch(`/api/projects/${this.project.id}/module-snapshots`, {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ confirm: "DELETE_MODULE_SNAPSHOT", snapshot_path: snapshot.path }),
+          body: JSON.stringify({
+            confirm: "DELETE_MODULE_SNAPSHOT",
+            snapshot_id: snapshot.id || null,
+            snapshot_path: snapshot.id ? null : snapshot.path,
+          }),
         });
         if (!response.ok) throw new Error(await response.text());
         await response.json();

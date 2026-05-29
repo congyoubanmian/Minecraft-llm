@@ -151,12 +151,14 @@ class ResetWorldRequest(BaseModel):
 class PlacementActionRequest(BaseModel):
     player: str | None = None
     confirm: str | None = None
+    snapshot_id: str | None = None
     snapshot_path: str | None = None
 
 
 class ModuleSnapshotDeleteRequest(BaseModel):
     confirm: str
-    snapshot_path: str
+    snapshot_id: str | None = None
+    snapshot_path: str | None = None
 
 
 @app.get("/api/health")
@@ -324,7 +326,7 @@ def rollback_project_module(project_id: str, module_name: str, request: Placemen
     if request.confirm != "ROLLBACK_MODULE":
         raise HTTPException(status_code=400, detail='confirm must be "ROLLBACK_MODULE"')
     state, target = _module_operation_context(project_id, module_name)
-    snapshot = _module_snapshot_by_path(state, module_name, request.snapshot_path)
+    snapshot = _module_snapshot_by_ref(state, module_name, request.snapshot_id, request.snapshot_path)
     if not snapshot:
         raise HTTPException(status_code=404, detail="module snapshot not found")
     snapshot_path = Path(snapshot["path"])
@@ -567,12 +569,16 @@ def get_project_module_snapshots(project_id: str, module: str | None = None) -> 
 
 
 @app.get("/api/projects/{project_id}/module-snapshots/download")
-def download_project_module_snapshot(project_id: str, snapshot_path: str) -> FileResponse:
+def download_project_module_snapshot(
+    project_id: str,
+    snapshot_id: str | None = None,
+    snapshot_path: str | None = None,
+) -> FileResponse:
     state = _load_project(project_id)
-    snapshot = _snapshot_by_path(state, snapshot_path)
+    snapshot = _snapshot_by_ref(state, snapshot_id, snapshot_path)
     if not snapshot:
         raise HTTPException(status_code=404, detail="module snapshot not found")
-    path = Path(snapshot_path)
+    path = Path(snapshot["path"])
     if not path.exists():
         raise HTTPException(status_code=404, detail="module snapshot file not found")
     return FileResponse(path, filename=path.name)
@@ -583,7 +589,7 @@ def delete_project_module_snapshot(project_id: str, request: ModuleSnapshotDelet
     if request.confirm != "DELETE_MODULE_SNAPSHOT":
         raise HTTPException(status_code=400, detail='confirm must be "DELETE_MODULE_SNAPSHOT"')
     state = _load_project(project_id)
-    removed = _delete_module_snapshot(state, request.snapshot_path)
+    removed = _delete_module_snapshot(state, request.snapshot_id, request.snapshot_path)
     if not removed:
         raise HTTPException(status_code=404, detail="module snapshot not found")
     state["updated_at"] = _now()
@@ -926,6 +932,7 @@ def _snapshot_module_schematic(
         if not source_path or not Path(source_path).exists():
             if error:
                 return {
+                    "id": uuid.uuid4().hex,
                     "module": module_name,
                     "created_at": _now(),
                     "source": "failed",
@@ -936,6 +943,7 @@ def _snapshot_module_schematic(
         shutil.copy2(source_path, snapshot_path)
 
     snapshot = {
+        "id": uuid.uuid4().hex,
         "module": module_name,
         "created_at": _now(),
         "source": source,
@@ -959,36 +967,62 @@ def _latest_module_snapshot(state: dict[str, Any], module_name: str) -> dict[str
     return snapshots[0] if snapshots else None
 
 
-def _module_snapshot_by_path(
+def _module_snapshot_by_ref(
     state: dict[str, Any],
     module_name: str,
+    snapshot_id: str | None = None,
     snapshot_path: str | None = None,
 ) -> dict[str, Any] | None:
-    if not snapshot_path:
+    if not snapshot_id and not snapshot_path:
         return _latest_module_snapshot(state, module_name)
     for snapshot in _module_snapshots(state, module_name):
-        if snapshot.get("path") == snapshot_path:
+        if _snapshot_ref_matches(snapshot, snapshot_id, snapshot_path):
             return snapshot
     return None
 
 
-def _snapshot_by_path(state: dict[str, Any], snapshot_path: str) -> dict[str, Any] | None:
+def _snapshot_by_ref(
+    state: dict[str, Any],
+    snapshot_id: str | None = None,
+    snapshot_path: str | None = None,
+) -> dict[str, Any] | None:
+    if not snapshot_id and not snapshot_path:
+        return None
     for snapshot in state.get("module_snapshots") or []:
-        if snapshot.get("path") == snapshot_path:
+        if _snapshot_ref_matches(snapshot, snapshot_id, snapshot_path):
             return snapshot
     return None
 
 
-def _delete_module_snapshot(state: dict[str, Any], snapshot_path: str) -> dict[str, Any] | None:
+def _snapshot_ref_matches(
+    snapshot: dict[str, Any],
+    snapshot_id: str | None = None,
+    snapshot_path: str | None = None,
+) -> bool:
+    if snapshot_id and snapshot.get("id") == snapshot_id:
+        return True
+    if snapshot_path and snapshot.get("path") == snapshot_path:
+        return True
+    return False
+
+
+def _delete_module_snapshot(
+    state: dict[str, Any],
+    snapshot_id: str | None = None,
+    snapshot_path: str | None = None,
+) -> dict[str, Any] | None:
+    if not snapshot_id and not snapshot_path:
+        return None
     snapshots = state.get("module_snapshots") or []
     for index, snapshot in enumerate(snapshots):
-        if snapshot.get("path") != snapshot_path:
+        if not _snapshot_ref_matches(snapshot, snapshot_id, snapshot_path):
             continue
         removed_snapshot = snapshots.pop(index)
         state["module_snapshots"] = snapshots
         file_removed = False
-        path = Path(snapshot_path)
-        if path.exists() and _is_path_inside(path, settings.schematic_dir):
+        path_value = snapshot.get("path")
+        path = Path(path_value) if path_value else None
+        if path and path.exists() and _is_path_inside(path, settings.schematic_dir):
             path.unlink()
             file_removed = True
         return {"snapshot": removed_snapshot, "file_removed": file_removed}
