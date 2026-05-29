@@ -471,7 +471,17 @@
             </div>
 
             <div v-if="moduleRconEntries.length" class="blueprint-section">
-              <h3>模块操作</h3>
+              <div class="module-log-header">
+                <h3>模块操作</h3>
+                <div>
+                  <button type="button" class="text-button" :disabled="moduleLogAction" @click="refreshModuleOperations">
+                    {{ moduleLogAction === "refresh" ? "刷新中" : "刷新" }}
+                  </button>
+                  <button type="button" class="text-button danger-text-button" :disabled="moduleLogAction" @click="clearModuleOperations">
+                    {{ moduleLogAction === "clear" ? "清空中" : "清空记录" }}
+                  </button>
+                </div>
+              </div>
               <div class="module-rcon-list">
                 <article v-for="entry in moduleRconEntries.slice(0, 6)" :key="entry.key" class="module-rcon-item">
                   <div>

@@ -823,6 +823,19 @@ pre {
   gap: 8px;
 }
 
+.module-log-header,
+.module-log-header div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.module-log-header .text-button {
+  min-height: 28px;
+  padding: 0;
+}
+
 .module-rcon-item {
   display: grid;
   gap: 6px;

@@ -502,6 +502,32 @@ def get_project(project_id: str) -> dict[str, Any]:
     return _load_project(project_id)
 
 
+@app.get("/api/projects/{project_id}/module-operations")
+def get_project_module_operations(project_id: str) -> dict[str, Any]:
+    state = _load_project(project_id)
+    return {
+        "project_id": project_id,
+        "module_operations": state.get("module_operations") or [],
+        "module_rcon": state.get("module_rcon") or {},
+    }
+
+
+@app.delete("/api/projects/{project_id}/module-operations", dependencies=[Depends(_require_api_key)])
+def clear_project_module_operations(project_id: str) -> dict[str, Any]:
+    state = _load_project(project_id)
+    removed_operations = len(state.get("module_operations") or [])
+    removed_rcon = len(state.get("module_rcon") or {})
+    state["module_operations"] = []
+    state["module_rcon"] = {}
+    state["updated_at"] = _now()
+    _save_project(project_id, state)
+    return {
+        "project_id": project_id,
+        "removed_operations": removed_operations,
+        "removed_rcon": removed_rcon,
+    }
+
+
 @app.post("/api/projects/{project_id}/chat", dependencies=[Depends(_require_api_key)])
 def chat_project(project_id: str, request: ChatRequest, background_tasks: BackgroundTasks) -> dict[str, str]:
     state = _load_project(project_id)

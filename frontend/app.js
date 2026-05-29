@@ -16,6 +16,7 @@ createApp({
       worldLoading: false,
       worldAction: "",
       moduleAction: "",
+      moduleLogAction: "",
       library: {
         materials: {},
         components: {},
@@ -678,6 +679,36 @@ createApp({
         alert(`模块替换失败：${error instanceof Error ? error.message : String(error)}`);
       } finally {
         this.moduleAction = "";
+      }
+    },
+    async refreshModuleOperations() {
+      if (!this.project?.id) return;
+      this.moduleLogAction = "refresh";
+      try {
+        const response = await this.apiFetch(`/api/projects/${this.project.id}/module-operations?ts=${Date.now()}`);
+        if (!response.ok) throw new Error(await response.text());
+        const payload = await response.json();
+        this.project.module_operations = payload.module_operations || [];
+        this.project.module_rcon = payload.module_rcon || {};
+      } catch (error) {
+        alert(`刷新模块记录失败：${error instanceof Error ? error.message : String(error)}`);
+      } finally {
+        this.moduleLogAction = "";
+      }
+    },
+    async clearModuleOperations() {
+      if (!this.project?.id || !confirm("清空当前项目的模块操作记录？")) return;
+      this.moduleLogAction = "clear";
+      try {
+        const response = await this.apiFetch(`/api/projects/${this.project.id}/module-operations`, { method: "DELETE" });
+        if (!response.ok) throw new Error(await response.text());
+        await response.json();
+        this.project.module_operations = [];
+        this.project.module_rcon = {};
+      } catch (error) {
+        alert(`清空模块记录失败：${error instanceof Error ? error.message : String(error)}`);
+      } finally {
+        this.moduleLogAction = "";
       }
     },
     isSelectedBlueprintModule(module) {
