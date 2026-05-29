@@ -260,6 +260,39 @@ def paste_project_module(project_id: str, module_name: str, request: PlacementAc
     }
 
 
+@app.post("/api/projects/{project_id}/modules/{module_name}/clear", dependencies=[Depends(_require_api_key)])
+def clear_project_module(project_id: str, module_name: str, request: PlacementActionRequest) -> dict[str, Any]:
+    if request.confirm != "CLEAR_MODULE":
+        raise HTTPException(status_code=400, detail='confirm must be "CLEAR_MODULE"')
+    state = _load_project(project_id)
+    placement = state.get("placement") or get_project_placement(project_id)
+    if not placement:
+        raise HTTPException(status_code=409, detail="project has no placement")
+    module = _blueprint_module_by_name(state, module_name)
+    if not module:
+        raise HTTPException(status_code=404, detail="blueprint module not found")
+    target = _module_world_target(placement, module)
+    bounds = target["world_bounds"]
+    volume = _bounds_volume(bounds)
+    if volume > 1_000_000:
+        raise HTTPException(status_code=409, detail=f"module area too large to clear safely: {volume} blocks")
+    command = (
+        f"fill {bounds['min_x']} {bounds['min_y']} {bounds['min_z']} "
+        f"{bounds['max_x']} {bounds['max_y']} {bounds['max_z']} air replace"
+    )
+    response = _rcon_command(command)
+    state["updated_at"] = _now()
+    state.setdefault("module_rcon", {})[f"{module_name}:clear"] = [f"/{command}", response]
+    _save_project(project_id, state)
+    return {
+        "project_id": project_id,
+        "module": target,
+        "blocks": volume,
+        "command": f"/{command}",
+        "response": response,
+    }
+
+
 @app.post("/api/placements/{project_id}/archive", dependencies=[Depends(_require_api_key)])
 def archive_placement(project_id: str) -> dict[str, Any]:
     archived = archive_project_placement(project_id, reason="manual_archive")

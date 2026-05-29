@@ -428,6 +428,14 @@
                       type="button"
                       class="text-button danger-text-button"
                       :disabled="!module.bbox || !project?.placement || moduleAction"
+                      @click="clearBlueprintModuleArea(module)"
+                    >
+                      {{ moduleAction === `clear:${module.name}` ? "清空中" : "清空" }}
+                    </button>
+                    <button
+                      type="button"
+                      class="text-button danger-text-button"
+                      :disabled="!module.bbox || !project?.placement || moduleAction"
                       @click="pasteBlueprintModule(module)"
                     >
                       {{ moduleAction === `paste:${module.name}` ? "粘贴中" : "粘贴" }}

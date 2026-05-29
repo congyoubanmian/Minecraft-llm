@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from backend.main import _module_world_target
+from backend.main import _bounds_volume, _module_world_target
 
 
 def main() -> None:
@@ -34,6 +34,7 @@ def main() -> None:
     assert target["teleport"]["x"] == 130
     assert target["teleport"]["y"] == 108
     assert target["teleport"]["z"] == 192
+    assert _bounds_volume(target["world_bounds"]) == 4059
     print({"module_teleport_target": "ok"})
 
 

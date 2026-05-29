@@ -611,6 +611,25 @@ createApp({
         this.moduleAction = "";
       }
     },
+    async clearBlueprintModuleArea(module) {
+      if (!this.project?.id || !module?.name) return;
+      if (!confirm(`清空 Minecraft 中的模块区域 ${module.name}？`)) return;
+      this.moduleAction = `clear:${module.name}`;
+      try {
+        const response = await this.apiFetch(`/api/projects/${this.project.id}/modules/${encodeURIComponent(module.name)}/clear`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ confirm: "CLEAR_MODULE" }),
+        });
+        if (!response.ok) throw new Error(await response.text());
+        await response.json();
+        await this.fetchProject(this.project.id);
+      } catch (error) {
+        alert(`模块清空失败：${error instanceof Error ? error.message : String(error)}`);
+      } finally {
+        this.moduleAction = "";
+      }
+    },
     isSelectedBlueprintModule(module) {
       return Boolean(this.selectedBlueprintModule && module?.name === this.selectedBlueprintModule.name);
     },
