@@ -532,6 +532,7 @@ def list_projects() -> dict[str, Any]:
                 "placement": state.get("placement"),
                 "analysis_report": state.get("analysis_report"),
                 "preview": preview,
+                "snapshot_summary": _snapshot_summary(state),
                 "last_message": _last_user_message(state.get("messages", [])),
                 "error": state.get("error"),
             }
@@ -1088,6 +1089,19 @@ def _project_response(state: dict[str, Any]) -> dict[str, Any]:
     if "module_snapshots" in payload:
         payload["module_snapshots"] = [_snapshot_with_file_status(snapshot) for snapshot in payload.get("module_snapshots") or []]
     return payload
+
+
+def _snapshot_summary(state: dict[str, Any]) -> dict[str, Any]:
+    snapshots = [_snapshot_with_file_status(snapshot) for snapshot in state.get("module_snapshots") or []]
+    modules = {snapshot.get("module") for snapshot in snapshots if snapshot.get("module")}
+    available = [snapshot for snapshot in snapshots if snapshot.get("file", {}).get("exists")]
+    latest = max((snapshot.get("created_at") or "" for snapshot in snapshots), default="")
+    return {
+        "count": len(snapshots),
+        "available_count": len(available),
+        "module_count": len(modules),
+        "latest_created_at": latest or None,
+    }
 
 
 def _record_module_operation(

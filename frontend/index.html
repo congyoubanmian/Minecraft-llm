@@ -117,6 +117,10 @@
                   <dd>{{ projectSizeText(item) }}</dd>
                 </div>
                 <div>
+                  <dt>Snapshots</dt>
+                  <dd>{{ projectSnapshotText(item) }}</dd>
+                </div>
+                <div>
                   <dt>Updated</dt>
                   <dd>{{ formatTime(item.updated_at || item.created_at) }}</dd>
                 </div>

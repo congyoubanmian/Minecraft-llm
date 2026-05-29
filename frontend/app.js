@@ -912,5 +912,10 @@ createApp({
       if (item.preview?.size) return item.preview.size.join(" x ");
       return this.placementSize(item);
     },
+    projectSnapshotText(item) {
+      const summary = item.snapshot_summary;
+      if (!summary?.count) return "0";
+      return `${summary.available_count || 0}/${summary.count} 可用 · ${summary.module_count || 0} 模块`;
+    },
   },
 }).mount("#app");

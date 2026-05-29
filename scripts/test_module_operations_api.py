@@ -19,6 +19,7 @@ from backend.main import (
     get_project,
     get_project_module_operations,
     get_project_module_snapshots,
+    list_projects,
 )
 
 
@@ -62,6 +63,12 @@ def main() -> None:
         assert project_payload["module_snapshots"][0]["file"]["exists"] is True
         disk_state = json.loads((project_dir / "state.json").read_text(encoding="utf-8"))
         assert "file" not in disk_state["module_snapshots"][0]
+
+        projects_payload = list_projects()
+        project_summary = next(item for item in projects_payload["projects"] if item["id"] == project_id)
+        assert project_summary["snapshot_summary"]["count"] == 3
+        assert project_summary["snapshot_summary"]["available_count"] == 1
+        assert project_summary["snapshot_summary"]["module_count"] == 2
 
         snapshots = get_project_module_snapshots(project_id)
         assert snapshots["project_id"] == project_id
