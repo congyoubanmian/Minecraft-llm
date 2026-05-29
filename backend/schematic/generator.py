@@ -34,7 +34,7 @@ def generate_outputs(
     preview_dir: Path,
     max_preview_blocks: int = 120_000,
     blocks: BlockList | None = None,
-) -> tuple[Path, Path, Path]:
+) -> tuple[Path, Path, Path, Path]:
     blocks = blocks or render_plan_to_blocks(plan)
     schematic_path = blocks.write_schematic(schematic_dir, plan.name)
     preview_path = blocks.write_preview(
@@ -45,8 +45,16 @@ def generate_outputs(
         palette=_preview_palette(plan),
         max_blocks=max_preview_blocks,
     )
+    surface_preview_path = blocks.write_surface_preview(
+        output_dir=preview_dir,
+        name=plan.name,
+        size=plan.size,
+        origin=plan.origin,
+        palette=_preview_palette(plan),
+        max_blocks=max_preview_blocks,
+    )
     material_path = blocks.write_material_report(preview_dir, plan.name)
-    return schematic_path, preview_path, material_path
+    return schematic_path, preview_path, surface_preview_path, material_path
 
 
 def generate_schematic(plan: BuildPlan, output_dir: Path) -> Path:

@@ -243,7 +243,7 @@ def main() -> None:
 
     plan = build_plan()
     rendered = render_plan_to_blocks(plan)
-    schematic_path, preview_path, material_path = generate_outputs(plan, settings.schematic_dir, project_dir, blocks=rendered)
+    schematic_path, preview_path, surface_preview_path, material_path = generate_outputs(plan, settings.schematic_dir, project_dir, blocks=rendered)
     analysis_report = analyze_build(plan, rendered)
     analysis_report_path = project_dir / f"{NAME}.analysis.json"
     analysis_report_path.write_text(json.dumps(analysis_report, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -265,6 +265,7 @@ def main() -> None:
             "plan_path": str(project_dir / "plan.json"),
             "schematic_path": str(schematic_path),
             "preview_path": str(preview_path),
+            "surface_preview_path": str(surface_preview_path),
             "materials_path": str(material_path),
             "analysis_report_path": str(analysis_report_path),
             "analysis_report": analysis_report,

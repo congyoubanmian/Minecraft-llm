@@ -270,6 +270,7 @@ async def create_build(background_tasks: BackgroundTasks, image: UploadFile = Fi
         "image_path": str(image_path),
         "schematic_path": None,
         "preview_path": None,
+        "surface_preview_path": None,
         "materials_path": None,
         "analysis_report_path": None,
         "placement": None,
@@ -300,11 +301,14 @@ def download_schematic(task_id: str) -> FileResponse:
 
 
 @app.get("/api/builds/{task_id}/preview")
-def get_build_preview(task_id: str) -> FileResponse:
+def get_build_preview(task_id: str, mode: str = "surface") -> FileResponse:
     task = tasks.get(task_id)
-    if not task or not task.get("preview_path"):
+    if not task:
         raise HTTPException(status_code=404, detail="preview not found")
-    return FileResponse(task["preview_path"], media_type="application/json")
+    preview_path = _preview_path_for_mode(task, mode)
+    if not preview_path:
+        raise HTTPException(status_code=404, detail="preview not found")
+    return FileResponse(preview_path, media_type="application/json")
 
 
 @app.post("/api/projects", dependencies=[Depends(_require_api_key)])
@@ -338,6 +342,7 @@ async def create_project(
         "plan_path": None,
         "schematic_path": None,
         "preview_path": None,
+        "surface_preview_path": None,
         "materials_path": None,
         "analysis_report_path": None,
         "placement": None,
@@ -358,14 +363,17 @@ def list_projects() -> dict[str, Any]:
     for state in _iter_project_states():
         plan = state.get("plan") or {}
         preview = None
-        if state.get("preview_path"):
+        summary_preview_path = state.get("surface_preview_path") or state.get("preview_path")
+        if summary_preview_path:
             try:
-                preview_path = Path(state["preview_path"])
+                preview_path = Path(summary_preview_path)
                 if preview_path.exists():
                     preview_data = json.loads(preview_path.read_text(encoding="utf-8"))
                     preview = {
+                        "mode": preview_data.get("mode"),
                         "size": preview_data.get("size"),
                         "block_count": preview_data.get("block_count"),
+                        "preview_source_count": preview_data.get("preview_source_count"),
                         "preview_count": preview_data.get("preview_count"),
                         "sampled": preview_data.get("sampled"),
                     }
@@ -382,7 +390,7 @@ def list_projects() -> dict[str, Any]:
                 "name": plan.get("name") or f"project_{state.get('id', '')}",
                 "has_image": bool(state.get("image_path")),
                 "has_plan": bool(state.get("plan")),
-                "has_preview": bool(state.get("preview_path")),
+                "has_preview": bool(summary_preview_path),
                 "has_schematic": bool(state.get("schematic_path")),
                 "placement": state.get("placement"),
                 "analysis_report": state.get("analysis_report"),
@@ -525,11 +533,27 @@ def download_project_schematic(project_id: str) -> FileResponse:
 
 
 @app.get("/api/projects/{project_id}/preview")
-def get_project_preview(project_id: str) -> FileResponse:
+def get_project_preview(project_id: str, mode: str = "surface") -> FileResponse:
     state = _load_project(project_id)
-    if not state.get("preview_path"):
+    preview_path = _preview_path_for_mode(state, mode)
+    if not preview_path:
         raise HTTPException(status_code=404, detail="preview not found")
-    return FileResponse(state["preview_path"], media_type="application/json")
+    return FileResponse(preview_path, media_type="application/json")
+
+
+def _preview_path_for_mode(state: dict[str, Any], mode: str) -> str | None:
+    if mode not in {"surface", "full"}:
+        raise HTTPException(status_code=400, detail="preview mode must be surface or full")
+
+    if mode == "full":
+        path = state.get("preview_path")
+        return path if path and Path(path).exists() else None
+
+    surface_path = state.get("surface_preview_path")
+    if surface_path and Path(surface_path).exists():
+        return surface_path
+    fallback_path = state.get("preview_path")
+    return fallback_path if fallback_path and Path(fallback_path).exists() else None
 
 
 @app.get("/api/projects/{project_id}/materials")
@@ -560,9 +584,10 @@ def _run_build_task(task_id: str, image_path: Path) -> None:
         task["plan_path"] = str(settings.generated_plan_dir / f"build_{task_id}.json")
 
         task["status"] = "generating_schematic"
-        schematic_path, preview_path, material_path, analysis_report_path, analysis_report = _write_outputs(plan, settings.schematic_dir)
+        schematic_path, preview_path, surface_preview_path, material_path, analysis_report_path, analysis_report = _write_outputs(plan, settings.schematic_dir)
         task["schematic_path"] = str(schematic_path)
         task["preview_path"] = str(preview_path)
+        task["surface_preview_path"] = str(surface_preview_path)
         task["materials_path"] = str(material_path)
         task["analysis_report_path"] = str(analysis_report_path)
         task["analysis_report"] = analysis_report
@@ -628,9 +653,10 @@ def _run_project_generation(project_id: str) -> None:
         state["updated_at"] = _now()
         _save_project(project_id, state)
 
-        schematic_path, preview_path, material_path, analysis_report_path, analysis_report = _write_outputs(plan, settings.schematic_dir, project_path)
+        schematic_path, preview_path, surface_preview_path, material_path, analysis_report_path, analysis_report = _write_outputs(plan, settings.schematic_dir, project_path)
         state["schematic_path"] = str(schematic_path)
         state["preview_path"] = str(preview_path)
+        state["surface_preview_path"] = str(surface_preview_path)
         state["materials_path"] = str(material_path)
         state["analysis_report_path"] = str(analysis_report_path)
         state["analysis_report"] = analysis_report
@@ -686,14 +712,14 @@ def _is_busy_status(status: Any) -> bool:
     return status in BUSY_STATUSES or (isinstance(status, str) and status.startswith("repairing_plan_"))
 
 
-def _write_outputs(plan: BuildPlan, schematic_dir: Path, preview_dir: Path | None = None) -> tuple[Path, Path, Path, Path, dict[str, Any]]:
+def _write_outputs(plan: BuildPlan, schematic_dir: Path, preview_dir: Path | None = None) -> tuple[Path, Path, Path, Path, Path, dict[str, Any]]:
     output_dir = preview_dir or schematic_dir
     blocks = render_plan_to_blocks(plan)
-    schematic_path, preview_path, material_path = generate_outputs(plan, schematic_dir, output_dir, blocks=blocks)
+    schematic_path, preview_path, surface_preview_path, material_path = generate_outputs(plan, schematic_dir, output_dir, blocks=blocks)
     analysis_report = analyze_build(plan, blocks)
     analysis_report_path = output_dir / f"{plan.name}.analysis.json"
     analysis_report_path.write_text(json.dumps(analysis_report, ensure_ascii=False, indent=2), encoding="utf-8")
-    return schematic_path, preview_path, material_path, analysis_report_path, analysis_report
+    return schematic_path, preview_path, surface_preview_path, material_path, analysis_report_path, analysis_report
 
 
 def _repair_plan_if_needed(

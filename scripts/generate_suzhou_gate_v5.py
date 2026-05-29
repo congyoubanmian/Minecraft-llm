@@ -294,7 +294,7 @@ def main() -> None:
     project_dir = settings.project_dir / PROJECT_ID
     project_dir.mkdir(parents=True, exist_ok=True)
     plan = build_plan()
-    schematic_path, preview_path, material_path = generate_outputs(
+    schematic_path, preview_path, surface_preview_path, material_path = generate_outputs(
         plan,
         schematic_dir=settings.schematic_dir,
         preview_dir=project_dir,
@@ -320,6 +320,7 @@ def main() -> None:
         "plan_path": str(project_dir / "plan.json"),
         "schematic_path": str(schematic_path),
         "preview_path": str(preview_path),
+            "surface_preview_path": str(surface_preview_path),
         "materials_path": str(material_path),
         "placement": placement,
         "rcon": [],
@@ -334,6 +335,7 @@ def main() -> None:
                 "project_id": PROJECT_ID,
                 "schematic": str(schematic_path),
                 "preview": str(preview_path),
+                "surface_preview": str(surface_preview_path),
                 "materials": str(material_path),
                 "placement": placement,
             },

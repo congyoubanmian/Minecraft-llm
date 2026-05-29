@@ -57,6 +57,16 @@ class BlockList:
     def items_sorted(self) -> list[BlockItem]:
         return sorted(self._blocks.items(), key=lambda item: (item[0][1], item[0][2], item[0][0]))
 
+    def non_air_items_sorted(self) -> list[BlockItem]:
+        return [(pos, block) for pos, block in self.items_sorted() if not _is_air(block)]
+
+    def surface_items_sorted(self) -> list[BlockItem]:
+        surface: list[BlockItem] = []
+        for pos, block in self.non_air_items_sorted():
+            if self._is_surface_block(pos):
+                surface.append((pos, block))
+        return surface
+
     def bounds(self) -> BlockBounds | None:
         if not self._blocks:
             return None
@@ -103,6 +113,29 @@ class BlockList:
         preview_path.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
         return preview_path
 
+    def write_surface_preview(
+        self,
+        output_dir: Path,
+        name: str,
+        size: tuple[int, int, int],
+        origin: tuple[int, int, int],
+        palette: dict[str, str],
+        max_blocks: int = 120_000,
+    ) -> Path:
+        output_dir.mkdir(parents=True, exist_ok=True)
+        payload = self.preview_payload(
+            name=name,
+            size=size,
+            origin=origin,
+            palette=palette,
+            max_blocks=max_blocks,
+            blocks=self.surface_items_sorted(),
+            mode="surface",
+        )
+        preview_path = output_dir / f"{name}.surface.preview.json"
+        preview_path.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+        return preview_path
+
     def preview_payload(
         self,
         name: str,
@@ -110,24 +143,32 @@ class BlockList:
         origin: tuple[int, int, int],
         palette: dict[str, str],
         max_blocks: int = 120_000,
+        blocks: list[BlockItem] | None = None,
+        mode: str = "full",
     ) -> dict:
-        blocks = [(pos, _base_block(block)) for pos, block in self.items_sorted() if not _is_air(block)]
-        full_count = len(blocks)
+        full_count = sum(1 for block in self._blocks.values() if not _is_air(block))
+        block_items = blocks if blocks is not None else self.non_air_items_sorted()
+        block_items = [(pos, _base_block(block)) for pos, block in block_items if not _is_air(block)]
+        source_count = len(block_items)
         sampled = False
-        if full_count > max_blocks:
+        if source_count > max_blocks:
             sampled = True
-            blocks = _sample_blocks(blocks, max_blocks)
+            block_items = _sample_blocks(block_items, max_blocks)
 
         bounds = self.bounds()
         return {
             "name": name,
+            "mode": mode,
+            "surface": mode == "surface",
             "size": list(size),
             "origin": list(origin),
             "bounds": bounds.model_dump() if bounds else None,
             "palette": palette,
-            "blocks": [[x, y, z, block] for (x, y, z), block in blocks],
+            "blocks": [[x, y, z, block] for (x, y, z), block in block_items],
             "block_count": full_count,
-            "preview_count": len(blocks),
+            "preview_source_count": source_count,
+            "surface_count": source_count if mode == "surface" else None,
+            "preview_count": len(block_items),
             "sampled": sampled,
             "materials": self.material_counts(),
         }
@@ -143,6 +184,21 @@ class BlockList:
         report_path = output_dir / f"{name}.materials.json"
         report_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
         return report_path
+
+    def _is_surface_block(self, pos: Vec3) -> bool:
+        x, y, z = pos
+        for dx, dy, dz in (
+            (1, 0, 0),
+            (-1, 0, 0),
+            (0, 1, 0),
+            (0, -1, 0),
+            (0, 0, 1),
+            (0, 0, -1),
+        ):
+            neighbor = self._blocks.get((x + dx, y + dy, z + dz))
+            if neighbor is None or _is_air(neighbor):
+                return True
+        return False
 
 
 def _sample_blocks(blocks: list[BlockItem], max_blocks: int) -> list[BlockItem]:

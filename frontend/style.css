@@ -55,6 +55,12 @@ body {
   gap: 10px;
 }
 
+.preview-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 h1,
 h2,
 p {
@@ -207,6 +213,30 @@ button {
 
 button[type="button"] {
   background: #285c78;
+}
+
+.segmented-control {
+  display: inline-flex;
+  overflow: hidden;
+  border: 1px solid #cdd6d1;
+  border-radius: 7px;
+  background: #eef2f0;
+}
+
+.segmented-control button {
+  min-height: 36px;
+  border-radius: 0;
+  background: transparent;
+  color: #43514b;
+}
+
+.segmented-control button + button {
+  border-left: 1px solid #cdd6d1;
+}
+
+.segmented-control button.active {
+  background: #17211d;
+  color: #ffffff;
 }
 
 .secondary-button {
@@ -680,6 +710,7 @@ pre {
 
   .title-row,
   .preview-toolbar,
+  .preview-actions,
   .button-row,
   .workbench {
     display: grid;

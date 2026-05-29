@@ -222,7 +222,17 @@
               <h2>3D 预览</h2>
               <p>{{ previewMeta }}</p>
             </div>
-            <button type="button" :disabled="!preview" @click="resetCamera">重置视角</button>
+            <div class="preview-actions">
+              <div class="segmented-control" aria-label="预览模式">
+                <button type="button" :class="{ active: previewMode === 'surface' }" :disabled="!project?.preview_path" @click="setPreviewMode('surface')">
+                  外表面
+                </button>
+                <button type="button" :class="{ active: previewMode === 'full' }" :disabled="!project?.preview_path" @click="setPreviewMode('full')">
+                  完整
+                </button>
+              </div>
+              <button type="button" :disabled="!preview" @click="resetCamera">重置视角</button>
+            </div>
           </div>
           <div ref="viewport" class="viewport">
             <div v-if="!preview" class="empty-preview">等待生成 preview.json</div>

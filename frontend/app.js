@@ -27,6 +27,7 @@ createApp({
       submitting: false,
       project: null,
       preview: null,
+      previewMode: "surface",
       placementForm: {
         x: null,
         y: null,
@@ -77,8 +78,10 @@ createApp({
       if (!this.preview) return "暂无预览";
       const size = this.preview.size?.join(" x ") || "-";
       const sampled = this.preview.sampled ? "，已抽样" : "";
+      const sourceCount = this.preview.preview_source_count || this.preview.preview_count || 0;
+      const previewKind = this.preview.mode === "surface" ? `外表面 ${sourceCount}` : `完整 ${this.preview.block_count || 0}`;
       const mode = this.renderMode === "webgl" ? "WebGL 3D" : "Canvas 2D";
-      return `${size}，${this.preview.preview_count} 个预览方块${sampled}，${mode}`;
+      return `${size}，${previewKind} 个方块，当前加载 ${this.preview.preview_count}${sampled}，${mode}`;
     },
   },
   mounted() {
@@ -139,6 +142,7 @@ createApp({
         this.route = "project";
         this.project = null;
         this.preview = null;
+        this.previewMode = "surface";
         this.chatInput = "";
         this.$nextTick(() => {
           this.ensurePreviewRenderer();
@@ -151,6 +155,7 @@ createApp({
       this.stopPolling();
       this.project = null;
       this.preview = null;
+      this.previewMode = "surface";
       this.clearPreview();
       this.destroyPreviewRenderer();
       this.loadProjects();
@@ -341,6 +346,7 @@ createApp({
       this.submitting = true;
       this.project = null;
       this.preview = null;
+      this.previewMode = "surface";
       this.clearPreview();
 
       const form = new FormData();
@@ -495,11 +501,17 @@ createApp({
       }
       this.$nextTick(this.scrollChat);
     },
-    async loadPreview() {
+    async setPreviewMode(mode) {
+      if (this.previewMode === mode) return;
+      this.previewMode = mode;
+      await this.loadPreview(mode);
+    },
+    async loadPreview(mode = this.previewMode) {
       if (!this.project?.id || !this.project?.preview_path) return;
-      const response = await this.apiFetch(`/api/projects/${this.project.id}/preview?ts=${Date.now()}`);
+      const response = await this.apiFetch(`/api/projects/${this.project.id}/preview?mode=${mode}&ts=${Date.now()}`);
       if (!response.ok) return;
       this.preview = await response.json();
+      this.previewMode = this.preview.mode || mode;
       this.renderPreview();
     },
     scrollChat() {

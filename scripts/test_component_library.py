@@ -46,12 +46,13 @@ def main() -> None:
     )
     blocks = render_plan_to_blocks(plan)
     output_dir = ROOT / "backend" / "generated_plans"
-    schematic_path, preview_path, material_path = generate_outputs(plan, output_dir, output_dir)
+    schematic_path, preview_path, surface_preview_path, material_path = generate_outputs(plan, output_dir, output_dir)
     print(
         {
             "blocks": len(blocks),
             "schematic": str(schematic_path),
             "preview": str(preview_path),
+                "surface_preview": str(surface_preview_path),
             "materials": str(material_path),
             "top_materials": list(blocks.material_counts().items())[:8],
         }

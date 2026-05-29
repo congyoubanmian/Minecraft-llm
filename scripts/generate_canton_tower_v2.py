@@ -432,7 +432,7 @@ def main() -> None:
 
     plan = build_plan()
     rendered = render_plan_to_blocks(plan)
-    schematic_path, preview_path, material_path = generate_outputs(
+    schematic_path, preview_path, surface_preview_path, material_path = generate_outputs(
         plan,
         schematic_dir=settings.schematic_dir,
         preview_dir=project_dir,
@@ -475,6 +475,7 @@ def main() -> None:
         "plan_path": str(project_dir / "plan.json"),
         "schematic_path": str(schematic_path),
         "preview_path": str(preview_path),
+            "surface_preview_path": str(surface_preview_path),
         "materials_path": str(material_path),
         "analysis_report_path": str(analysis_report_path),
         "analysis_report": analysis_report,
@@ -493,6 +494,7 @@ def main() -> None:
                 "analysis_report": analysis_report,
                 "schematic": str(schematic_path),
                 "preview": str(preview_path),
+                "surface_preview": str(surface_preview_path),
                 "materials": str(material_path),
                 "placement": placement,
             },
