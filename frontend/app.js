@@ -595,6 +595,10 @@ createApp({
     isSelectedBlueprintModule(module) {
       return Boolean(this.selectedBlueprintModule && module?.name === this.selectedBlueprintModule.name);
     },
+    moduleSchematicUrl(module) {
+      if (!this.project?.id || !module?.name) return "#";
+      return `/api/projects/${this.project.id}/modules/${encodeURIComponent(module.name)}/schematic`;
+    },
     roleText(role) {
       const labels = {
         foundation: "基础",

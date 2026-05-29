@@ -803,6 +803,11 @@ pre {
   padding: 0;
 }
 
+.module-actions .module-download {
+  display: inline-grid;
+  align-items: center;
+}
+
 .module-actions {
   display: flex;
   align-items: center;

@@ -409,6 +409,13 @@
                     <button type="button" class="text-button" :disabled="!module.bbox" @click="selectBlueprintModule(module)">
                       查看
                     </button>
+                    <a
+                      v-if="module.bbox && project?.id"
+                      class="text-button module-download"
+                      :href="moduleSchematicUrl(module)"
+                    >
+                      下载
+                    </a>
                     <button
                       type="button"
                       class="text-button"

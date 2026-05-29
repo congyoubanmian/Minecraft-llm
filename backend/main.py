@@ -552,6 +552,13 @@ def download_project_schematic(project_id: str) -> FileResponse:
     return FileResponse(state["schematic_path"], filename=Path(state["schematic_path"]).name)
 
 
+@app.get("/api/projects/{project_id}/modules/{module_name}/schematic")
+def download_project_module_schematic(project_id: str, module_name: str) -> FileResponse:
+    state = _load_project(project_id)
+    path = _module_schematic_path(project_id, state, module_name)
+    return FileResponse(path, filename=path.name)
+
+
 @app.get("/api/projects/{project_id}/preview")
 def get_project_preview(project_id: str, mode: str = "surface", module: str | None = None) -> Response:
     state = _load_project(project_id)
@@ -626,6 +633,39 @@ def _blocks_in_bbox(blocks: list[list[Any]], bbox: list[list[int]]) -> list[list
             and min_z <= block[2] <= max_z
         )
     ]
+
+
+def _module_schematic_path(project_id: str, state: dict[str, Any], module_name: str) -> Path:
+    if not state.get("plan"):
+        raise HTTPException(status_code=409, detail="project has no generated plan")
+    module = _blueprint_module_by_name(state, module_name)
+    if not module:
+        raise HTTPException(status_code=404, detail="blueprint module not found")
+    bbox = module.get("bbox")
+    if not bbox:
+        raise HTTPException(status_code=409, detail="blueprint module has no bbox")
+
+    plan = BuildPlan.model_validate(state["plan"])
+    blocks = render_plan_to_blocks(plan)
+    cropped = blocks.crop(_bbox_tuple(bbox), rebase=True)
+    if len(cropped) == 0:
+        raise HTTPException(status_code=409, detail="blueprint module contains no blocks")
+
+    module_dir = _project_path(project_id) / "modules"
+    safe_module = _safe_filename(module_name)
+    return cropped.write_schematic(module_dir, f"{plan.name}.{safe_module}")
+
+
+def _bbox_tuple(bbox: list[list[int]]) -> tuple[tuple[int, int, int], tuple[int, int, int]]:
+    return (
+        (int(bbox[0][0]), int(bbox[0][1]), int(bbox[0][2])),
+        (int(bbox[1][0]), int(bbox[1][1]), int(bbox[1][2])),
+    )
+
+
+def _safe_filename(value: str) -> str:
+    safe = "".join(char if char.isalnum() or char in {"_", "-"} else "_" for char in value.strip())
+    return safe or "module"
 
 
 def _module_world_target(placement: dict[str, Any], module: dict[str, Any]) -> dict[str, Any]:

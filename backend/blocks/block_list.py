@@ -67,6 +67,20 @@ class BlockList:
                 surface.append((pos, block))
         return surface
 
+    def crop(
+        self,
+        bbox: tuple[tuple[int, int, int], tuple[int, int, int]],
+        *,
+        rebase: bool = True,
+    ) -> "BlockList":
+        (min_x, min_y, min_z), (max_x, max_y, max_z) = bbox
+        cropped = BlockList()
+        for (x, y, z), block in self.items_sorted():
+            if min_x <= x <= max_x and min_y <= y <= max_y and min_z <= z <= max_z:
+                pos = (x - min_x, y - min_y, z - min_z) if rebase else (x, y, z)
+                cropped.set_block(pos, block)
+        return cropped
+
     def bounds(self) -> BlockBounds | None:
         if not self._blocks:
             return None
