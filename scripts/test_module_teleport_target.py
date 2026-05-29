@@ -8,7 +8,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from backend.main import _bounds_volume, _module_world_target
+import backend.main as main_module
+from backend.main import _bounds_volume, _clear_module_area, _module_world_target
 
 
 def main() -> None:
@@ -35,6 +36,15 @@ def main() -> None:
     assert target["teleport"]["y"] == 108
     assert target["teleport"]["z"] == 192
     assert _bounds_volume(target["world_bounds"]) == 4059
+    original_rcon = main_module._rcon_command
+    try:
+        main_module._rcon_command = lambda command: f"ran:{command}"
+        cleared = _clear_module_area(target)
+    finally:
+        main_module._rcon_command = original_rcon
+    assert cleared["blocks"] == 4059
+    assert cleared["command"] == "/fill 110 104 220 150 112 230 air replace"
+    assert cleared["response"] == "ran:fill 110 104 220 150 112 230 air replace"
     print({"module_teleport_target": "ok"})
 
 

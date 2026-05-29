@@ -436,6 +436,14 @@
                       type="button"
                       class="text-button danger-text-button"
                       :disabled="!module.bbox || !project?.placement || moduleAction"
+                      @click="replaceBlueprintModule(module)"
+                    >
+                      {{ moduleAction === `replace:${module.name}` ? "替换中" : "替换" }}
+                    </button>
+                    <button
+                      type="button"
+                      class="text-button danger-text-button"
+                      :disabled="!module.bbox || !project?.placement || moduleAction"
                       @click="pasteBlueprintModule(module)"
                     >
                       {{ moduleAction === `paste:${module.name}` ? "粘贴中" : "粘贴" }}

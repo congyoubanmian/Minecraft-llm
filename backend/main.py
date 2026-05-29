@@ -232,23 +232,9 @@ def teleport_to_project_module(project_id: str, module_name: str, request: Place
 def paste_project_module(project_id: str, module_name: str, request: PlacementActionRequest) -> dict[str, Any]:
     if request.confirm != "PASTE_MODULE":
         raise HTTPException(status_code=400, detail='confirm must be "PASTE_MODULE"')
-    state = _load_project(project_id)
-    placement = state.get("placement") or get_project_placement(project_id)
-    if not placement:
-        raise HTTPException(status_code=409, detail="project has no placement")
-    module = _blueprint_module_by_name(state, module_name)
-    if not module:
-        raise HTTPException(status_code=404, detail="blueprint module not found")
-    target = _module_world_target(placement, module)
+    state, target = _module_operation_context(project_id, module_name)
     schematic_path = _module_schematic_path(project_id, state, module_name, output_dir=settings.schematic_dir)
-    paste = target["world_bounds"]
-    controller = FaweController()
-    commands = controller.paste_schematic(
-        schematic_path=schematic_path,
-        x=paste["min_x"],
-        y=paste["min_y"],
-        z=paste["min_z"],
-    )
+    commands = _paste_module_schematic(schematic_path, target)
     state["updated_at"] = _now()
     state.setdefault("module_rcon", {})[module_name] = commands
     _save_project(project_id, state)
@@ -264,32 +250,36 @@ def paste_project_module(project_id: str, module_name: str, request: PlacementAc
 def clear_project_module(project_id: str, module_name: str, request: PlacementActionRequest) -> dict[str, Any]:
     if request.confirm != "CLEAR_MODULE":
         raise HTTPException(status_code=400, detail='confirm must be "CLEAR_MODULE"')
-    state = _load_project(project_id)
-    placement = state.get("placement") or get_project_placement(project_id)
-    if not placement:
-        raise HTTPException(status_code=409, detail="project has no placement")
-    module = _blueprint_module_by_name(state, module_name)
-    if not module:
-        raise HTTPException(status_code=404, detail="blueprint module not found")
-    target = _module_world_target(placement, module)
-    bounds = target["world_bounds"]
-    volume = _bounds_volume(bounds)
-    if volume > 1_000_000:
-        raise HTTPException(status_code=409, detail=f"module area too large to clear safely: {volume} blocks")
-    command = (
-        f"fill {bounds['min_x']} {bounds['min_y']} {bounds['min_z']} "
-        f"{bounds['max_x']} {bounds['max_y']} {bounds['max_z']} air replace"
-    )
-    response = _rcon_command(command)
+    state, target = _module_operation_context(project_id, module_name)
+    clear_result = _clear_module_area(target)
     state["updated_at"] = _now()
-    state.setdefault("module_rcon", {})[f"{module_name}:clear"] = [f"/{command}", response]
+    state.setdefault("module_rcon", {})[f"{module_name}:clear"] = [clear_result["command"], clear_result["response"]]
     _save_project(project_id, state)
     return {
         "project_id": project_id,
         "module": target,
-        "blocks": volume,
-        "command": f"/{command}",
-        "response": response,
+        **clear_result,
+    }
+
+
+@app.post("/api/projects/{project_id}/modules/{module_name}/replace", dependencies=[Depends(_require_api_key)])
+def replace_project_module(project_id: str, module_name: str, request: PlacementActionRequest) -> dict[str, Any]:
+    if request.confirm != "REPLACE_MODULE":
+        raise HTTPException(status_code=400, detail='confirm must be "REPLACE_MODULE"')
+    state, target = _module_operation_context(project_id, module_name)
+    schematic_path = _module_schematic_path(project_id, state, module_name, output_dir=settings.schematic_dir)
+    clear_result = _clear_module_area(target)
+    paste_commands = _paste_module_schematic(schematic_path, target)
+    rcon = [clear_result["command"], clear_result["response"], *paste_commands]
+    state["updated_at"] = _now()
+    state.setdefault("module_rcon", {})[f"{module_name}:replace"] = rcon
+    _save_project(project_id, state)
+    return {
+        "project_id": project_id,
+        "module": target,
+        "schematic_path": str(schematic_path),
+        "clear": clear_result,
+        "rcon": rcon,
     }
 
 
@@ -698,6 +688,41 @@ def _blocks_in_bbox(blocks: list[list[Any]], bbox: list[list[int]]) -> list[list
             and min_z <= block[2] <= max_z
         )
     ]
+
+
+def _module_operation_context(project_id: str, module_name: str) -> tuple[dict[str, Any], dict[str, Any]]:
+    state = _load_project(project_id)
+    placement = state.get("placement") or get_project_placement(project_id)
+    if not placement:
+        raise HTTPException(status_code=409, detail="project has no placement")
+    module = _blueprint_module_by_name(state, module_name)
+    if not module:
+        raise HTTPException(status_code=404, detail="blueprint module not found")
+    return state, _module_world_target(placement, module)
+
+
+def _clear_module_area(target: dict[str, Any]) -> dict[str, Any]:
+    bounds = target["world_bounds"]
+    volume = _bounds_volume(bounds)
+    if volume > 1_000_000:
+        raise HTTPException(status_code=409, detail=f"module area too large to clear safely: {volume} blocks")
+    command = (
+        f"fill {bounds['min_x']} {bounds['min_y']} {bounds['min_z']} "
+        f"{bounds['max_x']} {bounds['max_y']} {bounds['max_z']} air replace"
+    )
+    response = _rcon_command(command)
+    return {"blocks": volume, "command": f"/{command}", "response": response}
+
+
+def _paste_module_schematic(schematic_path: Path, target: dict[str, Any]) -> list[str]:
+    paste = target["world_bounds"]
+    controller = FaweController()
+    return controller.paste_schematic(
+        schematic_path=schematic_path,
+        x=paste["min_x"],
+        y=paste["min_y"],
+        z=paste["min_z"],
+    )
 
 
 def _module_schematic_path(project_id: str, state: dict[str, Any], module_name: str, output_dir: Path | None = None) -> Path:

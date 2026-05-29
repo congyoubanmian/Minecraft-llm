@@ -630,6 +630,25 @@ createApp({
         this.moduleAction = "";
       }
     },
+    async replaceBlueprintModule(module) {
+      if (!this.project?.id || !module?.name) return;
+      if (!confirm(`替换 Minecraft 中的模块 ${module.name}？这会先清空该模块区域再粘贴。`)) return;
+      this.moduleAction = `replace:${module.name}`;
+      try {
+        const response = await this.apiFetch(`/api/projects/${this.project.id}/modules/${encodeURIComponent(module.name)}/replace`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ confirm: "REPLACE_MODULE" }),
+        });
+        if (!response.ok) throw new Error(await response.text());
+        await response.json();
+        await this.fetchProject(this.project.id);
+      } catch (error) {
+        alert(`模块替换失败：${error instanceof Error ? error.message : String(error)}`);
+      } finally {
+        this.moduleAction = "";
+      }
+    },
     isSelectedBlueprintModule(module) {
       return Boolean(this.selectedBlueprintModule && module?.name === this.selectedBlueprintModule.name);
     },
