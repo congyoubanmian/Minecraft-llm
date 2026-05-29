@@ -20,3 +20,21 @@ class BotClient:
         response.raise_for_status()
         payload = response.json()
         return payload.get("commands", [])
+
+    def save_region(self, schematic_path: Path, bounds: dict[str, int]) -> list[str]:
+        response = httpx.post(
+            f"{self.base_url}/save-region",
+            json={
+                "schematic": schematic_path.stem,
+                "min_x": bounds["min_x"],
+                "min_y": bounds["min_y"],
+                "min_z": bounds["min_z"],
+                "max_x": bounds["max_x"],
+                "max_y": bounds["max_y"],
+                "max_z": bounds["max_z"],
+            },
+            timeout=90,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return payload.get("commands", [])

@@ -12,3 +12,6 @@ class FaweController:
 
     def paste_schematic(self, schematic_path: Path, x: int, y: int, z: int) -> list[str]:
         return self.bot.paste_schematic(schematic_path, x, y, z)
+
+    def save_region(self, schematic_path: Path, bounds: dict[str, int]) -> list[str]:
+        return self.bot.save_region(schematic_path, bounds)

@@ -81,22 +81,62 @@ def main() -> None:
     assert huge_plan["safe"] is False
 
     original_project_dir = main_module.settings.project_dir
+    original_schematic_dir = main_module.settings.schematic_dir
+    original_fawe_controller = main_module.FaweController
     try:
         with tempfile.TemporaryDirectory() as tmp_dir:
             main_module.settings.project_dir = Path(tmp_dir)
+            main_module.settings.schematic_dir = Path(tmp_dir) / "schematics"
             source_path = Path(tmp_dir) / "source.schem"
             source_path.write_bytes(b"schem-data")
             snapshot_state = {"schematic_path": str(source_path)}
-            snapshot = _snapshot_module_schematic("project-1", snapshot_state, "skybridge", target)
+            snapshot = _snapshot_module_schematic("project-1", snapshot_state, "skybridge", target, prefer_world=False)
             assert snapshot is not None
             assert snapshot["module"] == "skybridge"
+            assert snapshot["source"] == "generated"
             assert Path(snapshot["path"]).exists()
+            assert Path(snapshot["path"]).parent == main_module.settings.schematic_dir
             assert Path(snapshot["path"]).read_bytes() == b"schem-data"
             assert _latest_module_snapshot(snapshot_state, "skybridge") == snapshot
-            missing_snapshot = _snapshot_module_schematic("project-1", {}, "skybridge", target)
+
+            class FakeFaweController:
+                def save_region(self, schematic_path, bounds):
+                    schematic_path.write_bytes(b"world-data")
+                    assert bounds == target["world_bounds"]
+                    return ["//pos1", "//pos2", "//copy", "/schem save"]
+
+            main_module.FaweController = FakeFaweController
+            world_state = {"schematic_path": str(source_path)}
+            world_snapshot = _snapshot_module_schematic("project-1", world_state, "skybridge", target)
+            assert world_snapshot is not None
+            assert world_snapshot["source"] == "world"
+            assert world_snapshot["commands"][-1] == "/schem save"
+            assert Path(world_snapshot["path"]).read_bytes() == b"world-data"
+
+            class FailingFaweController:
+                def save_region(self, schematic_path, bounds):
+                    raise RuntimeError("bot unavailable")
+
+            main_module.FaweController = FailingFaweController
+            fallback_state = {"schematic_path": str(source_path)}
+            fallback_snapshot = _snapshot_module_schematic("project-1", fallback_state, "skybridge", target)
+            assert fallback_snapshot is not None
+            assert fallback_snapshot["source"] == "generated"
+            assert fallback_snapshot["fallback_error"] == "bot unavailable"
+            assert Path(fallback_snapshot["path"]).read_bytes() == b"schem-data"
+
+            failed_snapshot = _snapshot_module_schematic("project-1", {}, "skybridge", target)
+            assert failed_snapshot is not None
+            assert failed_snapshot["source"] == "failed"
+            assert failed_snapshot["error"] == "bot unavailable"
+
+            main_module.FaweController = original_fawe_controller
+            missing_snapshot = _snapshot_module_schematic("project-1", {}, "skybridge", target, prefer_world=False)
             assert missing_snapshot is None
     finally:
         main_module.settings.project_dir = original_project_dir
+        main_module.settings.schematic_dir = original_schematic_dir
+        main_module.FaweController = original_fawe_controller
 
     state = {}
     operation = _record_module_operation(

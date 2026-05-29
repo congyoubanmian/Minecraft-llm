@@ -680,7 +680,17 @@ createApp({
     },
     snapshotTime(snapshot) {
       if (!snapshot?.created_at) return "未知时间";
-      return snapshot.created_at.replace("T", " ").replace(/\.\d+/, "").replace("+00:00", " UTC");
+      const time = snapshot.created_at.replace("T", " ").replace(/\.\d+/, "").replace("+00:00", " UTC");
+      const source = this.snapshotSourceLabel(snapshot.source);
+      return source ? `${time} · ${source}` : time;
+    },
+    snapshotSourceLabel(source) {
+      const labels = {
+        world: "世界区域",
+        generated: "生成文件",
+        failed: "快照失败",
+      };
+      return labels[source] || "";
     },
     async teleportBlueprintModule(module) {
       if (!this.project?.id || !module?.name) return;

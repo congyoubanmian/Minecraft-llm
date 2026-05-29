@@ -83,6 +83,41 @@ app.post("/paste", async (req, res) => {
   }
 });
 
+app.post("/save-region", async (req, res) => {
+  try {
+    await waitUntilReady();
+    const {
+      schematic,
+      min_x: minX,
+      min_y: minY,
+      min_z: minZ,
+      max_x: maxX,
+      max_y: maxY,
+      max_z: maxZ,
+    } = req.body || {};
+    if (!schematic) {
+      res.status(400).json({ error: "schematic is required" });
+      return;
+    }
+    for (const [name, value] of Object.entries({ minX, minY, minZ, maxX, maxY, maxZ })) {
+      if (!Number.isInteger(value)) {
+        res.status(400).json({ error: `${name} must be an integer` });
+        return;
+      }
+    }
+
+    const commands = [];
+    commands.push(await chatCommand(`/tp ${config.username} ${minX} ${minY} ${minZ}`));
+    commands.push(await chatCommand(`//pos1 ${minX},${minY},${minZ}`));
+    commands.push(await chatCommand(`//pos2 ${maxX},${maxY},${maxZ}`));
+    commands.push(await chatCommand("//copy", 1800));
+    commands.push(await chatCommand(`/schem save ${schematic}`, 2500));
+    res.json({ ok: true, commands });
+  } catch (error) {
+    res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
 const port = Number(process.env.BOT_HTTP_PORT || 3001);
 app.listen(port, () => {
   console.log(`[bot] http listening on ${port}`);

@@ -241,7 +241,7 @@ def paste_project_module(project_id: str, module_name: str, request: PlacementAc
         raise HTTPException(status_code=400, detail='confirm must be "PASTE_MODULE"')
     state, target = _module_operation_context(project_id, module_name)
     schematic_path = _module_schematic_path(project_id, state, module_name, output_dir=settings.schematic_dir)
-    snapshot = _snapshot_module_schematic(project_id, state, module_name, target)
+    snapshot = _snapshot_module_schematic(project_id, state, module_name, target, prefer_world=False)
     commands = _paste_module_schematic(schematic_path, target)
     state["updated_at"] = _now()
     state.setdefault("module_rcon", {})[module_name] = commands
@@ -286,7 +286,7 @@ def replace_project_module(project_id: str, module_name: str, request: Placement
         raise HTTPException(status_code=400, detail='confirm must be "REPLACE_MODULE"')
     state, target = _module_operation_context(project_id, module_name)
     schematic_path = _module_schematic_path(project_id, state, module_name, output_dir=settings.schematic_dir)
-    snapshot = _snapshot_module_schematic(project_id, state, module_name, target)
+    snapshot = _snapshot_module_schematic(project_id, state, module_name, target, prefer_world=True)
     clear_result = _clear_module_area(target)
     paste_commands = _paste_module_schematic(schematic_path, target)
     rcon = [clear_result["command"], clear_result["response"], *paste_commands]
@@ -853,23 +853,53 @@ def _snapshot_module_schematic(
     state: dict[str, Any],
     module_name: str,
     target: dict[str, Any],
+    *,
+    prefer_world: bool = True,
 ) -> dict[str, Any] | None:
-    source_path = state.get("schematic_path")
-    if not source_path or not Path(source_path).exists():
-        return None
-    snapshot_dir = _project_path(project_id) / "module_snapshots"
+    snapshot_dir = settings.schematic_dir
     snapshot_dir.mkdir(parents=True, exist_ok=True)
     safe_name = _safe_filename(module_name)
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    snapshot_path = snapshot_dir / f"{timestamp}_{safe_name}_{uuid.uuid4().hex[:8]}.schem"
-    shutil.copy2(source_path, snapshot_path)
+    snapshot_path = snapshot_dir / f"snapshot_{_safe_filename(project_id)}_{timestamp}_{safe_name}_{uuid.uuid4().hex[:8]}.schem"
+
+    commands: list[str] = []
+    source = "generated"
+    error: str | None = None
+    if prefer_world:
+        try:
+            controller = FaweController()
+            commands = controller.save_region(snapshot_path, target["world_bounds"])
+            source = "world"
+        except Exception as exc:
+            error = str(exc)
+
+    source_path = state.get("schematic_path")
+    if source != "world":
+        if not source_path or not Path(source_path).exists():
+            if error:
+                return {
+                    "module": module_name,
+                    "created_at": _now(),
+                    "source": "failed",
+                    "error": error,
+                    "world_bounds": target.get("world_bounds"),
+                }
+            return None
+        shutil.copy2(source_path, snapshot_path)
+
     snapshot = {
         "module": module_name,
         "created_at": _now(),
+        "source": source,
         "path": str(snapshot_path),
-        "source_path": str(source_path),
         "world_bounds": target.get("world_bounds"),
     }
+    if commands:
+        snapshot["commands"] = commands
+    if source_path:
+        snapshot["source_path"] = str(source_path)
+    if error:
+        snapshot["fallback_error"] = error
     snapshots = state.setdefault("module_snapshots", [])
     snapshots.append(snapshot)
     state["module_snapshots"] = snapshots[-50:]
