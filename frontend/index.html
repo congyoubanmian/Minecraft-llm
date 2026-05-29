@@ -495,10 +495,24 @@
                   </div>
                 </dl>
                 <div v-if="modulePlan.snapshots?.length" class="module-snapshot-list">
-                  <strong>快照记录</strong>
-                  <div v-for="snapshot in modulePlan.snapshots" :key="snapshot.id || snapshot.path || snapshot.created_at">
+                  <div class="module-snapshot-header">
+                    <strong>快照记录</strong>
+                    <button
+                      type="button"
+                      class="text-button danger-text-button"
+                      :disabled="moduleAction || !missingSnapshotCount(selectedBlueprintModule)"
+                      @click="cleanupMissingModuleSnapshots(selectedBlueprintModule)"
+                    >
+                      {{ moduleAction === `cleanup-snapshots:${selectedBlueprintModule.name}` ? "清理中" : `清理缺失 ${missingSnapshotCount(selectedBlueprintModule)}` }}
+                    </button>
+                  </div>
+                  <div
+                    v-for="snapshot in modulePlan.snapshots"
+                    :key="snapshot.id || snapshot.path || snapshot.created_at"
+                    class="module-snapshot-row"
+                  >
                     <span>{{ snapshotTime(snapshot) }} · {{ snapshotFileText(snapshot) }}</span>
-                    <div>
+                    <div class="module-snapshot-actions">
                       <a
                         v-if="snapshot.path && snapshot.file?.exists"
                         class="text-button"

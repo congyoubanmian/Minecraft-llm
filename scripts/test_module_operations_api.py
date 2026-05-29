@@ -19,7 +19,9 @@ from backend.main import (
     get_project,
     get_project_module_operations,
     get_project_module_snapshots,
+    cleanup_project_module_snapshots,
     list_projects,
+    ModuleSnapshotCleanupRequest,
 )
 
 
@@ -87,6 +89,33 @@ def main() -> None:
         assert core_snapshots["snapshots"][1]["file"]["name"] == snapshot_file.name
         assert core_snapshots["snapshots"][1]["file"]["size"] == len(b"snapshot")
         assert core_snapshots["snapshots"][1]["file"]["managed"] is True
+
+        cleanup = cleanup_project_module_snapshots(
+            project_id,
+            ModuleSnapshotCleanupRequest(confirm="CLEANUP_MISSING_MODULE_SNAPSHOTS", module="core"),
+        )
+        assert cleanup["removed_count"] == 0
+        assert cleanup["remaining_count"] == 3
+
+        missing_snapshot_file = main_module.settings.schematic_dir / "missing_snapshot.schem"
+        state["module_snapshots"].append(
+            {
+                "id": "snapshot-core-missing",
+                "module": "core",
+                "created_at": "2026-01-01T00:03:00+00:00",
+                "source": "generated",
+                "path": str(missing_snapshot_file),
+            }
+        )
+        (project_dir / "state.json").write_text(json.dumps(state), encoding="utf-8")
+
+        cleanup = cleanup_project_module_snapshots(
+            project_id,
+            ModuleSnapshotCleanupRequest(confirm="CLEANUP_MISSING_MODULE_SNAPSHOTS", module="core"),
+        )
+        assert cleanup["removed_count"] == 1
+        assert cleanup["remaining_count"] == 3
+        assert cleanup["removed_snapshots"][0]["id"] == "snapshot-core-missing"
 
         download = download_project_module_snapshot(project_id, snapshot_id="snapshot-core-generated")
         assert Path(download.path) == snapshot_file

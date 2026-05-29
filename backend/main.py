@@ -161,6 +161,11 @@ class ModuleSnapshotDeleteRequest(BaseModel):
     snapshot_path: str | None = None
 
 
+class ModuleSnapshotCleanupRequest(BaseModel):
+    confirm: str
+    module: str | None = None
+
+
 @app.get("/api/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
@@ -599,6 +604,37 @@ def delete_project_module_snapshot(project_id: str, request: ModuleSnapshotDelet
         "project_id": project_id,
         "snapshot": removed["snapshot"],
         "file_removed": removed["file_removed"],
+    }
+
+
+@app.post("/api/projects/{project_id}/module-snapshots/cleanup", dependencies=[Depends(_require_api_key)])
+def cleanup_project_module_snapshots(project_id: str, request: ModuleSnapshotCleanupRequest) -> dict[str, Any]:
+    if request.confirm != "CLEANUP_MISSING_MODULE_SNAPSHOTS":
+        raise HTTPException(status_code=400, detail='confirm must be "CLEANUP_MISSING_MODULE_SNAPSHOTS"')
+    state = _load_project(project_id)
+    snapshots = state.get("module_snapshots") or []
+    kept: list[dict[str, Any]] = []
+    removed: list[dict[str, Any]] = []
+    for snapshot in snapshots:
+        if request.module and snapshot.get("module") != request.module:
+            kept.append(snapshot)
+            continue
+        file_status = _snapshot_with_file_status(snapshot).get("file", {})
+        if snapshot.get("path") and not file_status.get("exists"):
+            removed.append(snapshot)
+        else:
+            kept.append(snapshot)
+    state["module_snapshots"] = kept
+    if removed:
+        state["updated_at"] = _now()
+        _save_project(project_id, state)
+    return {
+        "project_id": project_id,
+        "module": request.module,
+        "removed_count": len(removed),
+        "remaining_count": len(kept),
+        "removed_snapshots": removed,
+        "snapshot_summary": _snapshot_summary(state),
     }
 
 

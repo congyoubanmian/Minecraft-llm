@@ -891,14 +891,15 @@ pre {
   font-size: 12px;
 }
 
-.module-snapshot-list div {
+.module-snapshot-header,
+.module-snapshot-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
 }
 
-.module-snapshot-list div div {
+.module-snapshot-actions {
   display: flex;
   align-items: center;
   gap: 8px;

@@ -683,6 +683,12 @@ createApp({
     hasModuleSnapshot(module) {
       return this.isSnapshotUsable(this.latestSnapshotFor(module));
     },
+    missingSnapshotCount(module) {
+      if (!module?.name) return 0;
+      return (this.project?.module_snapshots || []).filter(
+        (snapshot) => snapshot?.module === module.name && snapshot?.path && snapshot.file?.exists === false,
+      ).length;
+    },
     snapshotTime(snapshot) {
       if (!snapshot?.created_at) return "未知时间";
       const time = snapshot.created_at.replace("T", " ").replace(/\.\d+/, "").replace("+00:00", " UTC");
@@ -826,6 +832,31 @@ createApp({
         await this.loadModulePlan(module);
       } catch (error) {
         alert(`删除快照失败：${error instanceof Error ? error.message : String(error)}`);
+      } finally {
+        this.moduleAction = "";
+      }
+    },
+    async cleanupMissingModuleSnapshots(module) {
+      if (!this.project?.id || !module?.name) return;
+      const missingCount = this.missingSnapshotCount(module);
+      if (!missingCount) return;
+      if (!confirm(`清理模块 ${module.name} 的 ${missingCount} 条缺失快照记录？`)) return;
+      this.moduleAction = `cleanup-snapshots:${module.name}`;
+      try {
+        const response = await this.apiFetch(`/api/projects/${this.project.id}/module-snapshots/cleanup`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            confirm: "CLEANUP_MISSING_MODULE_SNAPSHOTS",
+            module: module.name,
+          }),
+        });
+        if (!response.ok) throw new Error(await response.text());
+        await response.json();
+        await this.fetchProject(this.project.id);
+        await this.loadModulePlan(module);
+      } catch (error) {
+        alert(`清理缺失快照失败：${error instanceof Error ? error.message : String(error)}`);
       } finally {
         this.moduleAction = "";
       }
