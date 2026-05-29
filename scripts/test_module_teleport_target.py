@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+import tempfile
 from pathlib import Path
 
 
@@ -14,9 +15,11 @@ from backend.main import (
     _bounds_volume,
     _clear_module_area,
     _clear_module_plan,
+    _latest_module_snapshot,
     _module_operation_plan,
     _module_world_target,
     _record_module_operation,
+    _snapshot_module_schematic,
 )
 
 
@@ -77,12 +80,39 @@ def main() -> None:
     assert huge_plan["blocks"] == 1030301
     assert huge_plan["safe"] is False
 
+    original_project_dir = main_module.settings.project_dir
+    try:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            main_module.settings.project_dir = Path(tmp_dir)
+            source_path = Path(tmp_dir) / "source.schem"
+            source_path.write_bytes(b"schem-data")
+            snapshot_state = {"schematic_path": str(source_path)}
+            snapshot = _snapshot_module_schematic("project-1", snapshot_state, "skybridge", target)
+            assert snapshot is not None
+            assert snapshot["module"] == "skybridge"
+            assert Path(snapshot["path"]).exists()
+            assert Path(snapshot["path"]).read_bytes() == b"schem-data"
+            assert _latest_module_snapshot(snapshot_state, "skybridge") == snapshot
+            missing_snapshot = _snapshot_module_schematic("project-1", {}, "skybridge", target)
+            assert missing_snapshot is None
+    finally:
+        main_module.settings.project_dir = original_project_dir
+
     state = {}
-    operation = _record_module_operation(state, "skybridge", "replace", target, ["clear", "paste"], blocks=4059)
+    operation = _record_module_operation(
+        state,
+        "skybridge",
+        "replace",
+        target,
+        ["clear", "paste"],
+        blocks=4059,
+        snapshot={"module": "skybridge", "path": "/tmp/skybridge.schem"},
+    )
     assert operation["module"] == "skybridge"
     assert operation["action"] == "replace"
     assert operation["command_count"] == 2
     assert operation["blocks"] == 4059
+    assert operation["snapshot"]["module"] == "skybridge"
     assert len(state["module_operations"]) == 1
     for index in range(60):
         _record_module_operation(state, f"m{index}", "paste", target, ["paste"])

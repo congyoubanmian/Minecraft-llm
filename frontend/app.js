@@ -660,8 +660,27 @@ createApp({
       ];
       if (action === "paste") lines.push(`粘贴点：${this.formatPoint(plan.paste)}`);
       if (action === "replace") lines.push("步骤：先清空再粘贴");
+      if (action === "rollback") lines.push(`回滚快照：${this.snapshotTime(plan.latest_snapshot)}`);
       if (plan.clear && !plan.clear.safe) lines.push("警告：该模块超过安全清空上限，后端会拒绝执行清空/替换。");
       return lines.join("\n");
+    },
+    latestSnapshotFor(module) {
+      if (!module?.name) return null;
+      if (this.modulePlan?.module?.name === module.name && this.modulePlan.latest_snapshot) {
+        return this.modulePlan.latest_snapshot;
+      }
+      const snapshots = this.project?.module_snapshots || [];
+      for (let index = snapshots.length - 1; index >= 0; index -= 1) {
+        if (snapshots[index]?.module === module.name) return snapshots[index];
+      }
+      return null;
+    },
+    hasModuleSnapshot(module) {
+      return Boolean(this.latestSnapshotFor(module));
+    },
+    snapshotTime(snapshot) {
+      if (!snapshot?.created_at) return "未知时间";
+      return snapshot.created_at.replace("T", " ").replace(/\.\d+/, "").replace("+00:00", " UTC");
     },
     async teleportBlueprintModule(module) {
       if (!this.project?.id || !module?.name) return;
@@ -736,6 +755,26 @@ createApp({
         this.moduleAction = "";
       }
     },
+    async rollbackBlueprintModule(module) {
+      if (!this.project?.id || !module?.name || !this.hasModuleSnapshot(module)) return;
+      if (!confirm(this.moduleConfirmText(module, "rollback"))) return;
+      this.moduleAction = `rollback:${module.name}`;
+      try {
+        const response = await this.apiFetch(`/api/projects/${this.project.id}/modules/${encodeURIComponent(module.name)}/rollback`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ confirm: "ROLLBACK_MODULE" }),
+        });
+        if (!response.ok) throw new Error(await response.text());
+        await response.json();
+        await this.fetchProject(this.project.id);
+        await this.loadModulePlan(module);
+      } catch (error) {
+        alert(`模块回滚失败：${error instanceof Error ? error.message : String(error)}`);
+      } finally {
+        this.moduleAction = "";
+      }
+    },
     async refreshModuleOperations() {
       if (!this.project?.id) return;
       this.moduleLogAction = "refresh";
@@ -778,6 +817,7 @@ createApp({
         paste: "粘贴",
         clear: "清空",
         replace: "替换",
+        rollback: "回滚",
       };
       return labels[action] || action || "粘贴";
     },

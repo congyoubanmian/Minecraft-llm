@@ -448,6 +448,14 @@
                     >
                       {{ moduleAction === `paste:${module.name}` ? "粘贴中" : "粘贴" }}
                     </button>
+                    <button
+                      type="button"
+                      class="text-button"
+                      :disabled="!module.bbox || !project?.placement || moduleAction || !hasModuleSnapshot(module)"
+                      @click="rollbackBlueprintModule(module)"
+                    >
+                      {{ moduleAction === `rollback:${module.name}` ? "回滚中" : "回滚" }}
+                    </button>
                   </div>
                 </article>
               </div>
@@ -476,6 +484,10 @@
                   <div>
                     <dt>清空命令</dt>
                     <dd><code>{{ modulePlan.clear.command }}</code></dd>
+                  </div>
+                  <div>
+                    <dt>最近快照</dt>
+                    <dd>{{ modulePlan.latest_snapshot ? snapshotTime(modulePlan.latest_snapshot) : "暂无" }}</dd>
                   </div>
                 </dl>
                 <p v-else>{{ modulePlanLoading ? "正在计算模块坐标与命令" : "暂无执行计划，需先粘贴项目并生成模块边界。" }}</p>

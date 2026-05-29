@@ -241,15 +241,17 @@ def paste_project_module(project_id: str, module_name: str, request: PlacementAc
         raise HTTPException(status_code=400, detail='confirm must be "PASTE_MODULE"')
     state, target = _module_operation_context(project_id, module_name)
     schematic_path = _module_schematic_path(project_id, state, module_name, output_dir=settings.schematic_dir)
+    snapshot = _snapshot_module_schematic(project_id, state, module_name, target)
     commands = _paste_module_schematic(schematic_path, target)
     state["updated_at"] = _now()
     state.setdefault("module_rcon", {})[module_name] = commands
-    _record_module_operation(state, module_name, "paste", target, commands, schematic_path=schematic_path)
+    _record_module_operation(state, module_name, "paste", target, commands, schematic_path=schematic_path, snapshot=snapshot)
     _save_project(project_id, state)
     return {
         "project_id": project_id,
         "module": target,
         "schematic_path": str(schematic_path),
+        "snapshot": snapshot,
         "rcon": commands,
     }
 
@@ -284,6 +286,7 @@ def replace_project_module(project_id: str, module_name: str, request: Placement
         raise HTTPException(status_code=400, detail='confirm must be "REPLACE_MODULE"')
     state, target = _module_operation_context(project_id, module_name)
     schematic_path = _module_schematic_path(project_id, state, module_name, output_dir=settings.schematic_dir)
+    snapshot = _snapshot_module_schematic(project_id, state, module_name, target)
     clear_result = _clear_module_area(target)
     paste_commands = _paste_module_schematic(schematic_path, target)
     rcon = [clear_result["command"], clear_result["response"], *paste_commands]
@@ -297,14 +300,40 @@ def replace_project_module(project_id: str, module_name: str, request: Placement
         rcon,
         schematic_path=schematic_path,
         blocks=clear_result["blocks"],
+        snapshot=snapshot,
     )
     _save_project(project_id, state)
     return {
         "project_id": project_id,
         "module": target,
         "schematic_path": str(schematic_path),
+        "snapshot": snapshot,
         "clear": clear_result,
         "rcon": rcon,
+    }
+
+
+@app.post("/api/projects/{project_id}/modules/{module_name}/rollback", dependencies=[Depends(_require_api_key)])
+def rollback_project_module(project_id: str, module_name: str, request: PlacementActionRequest) -> dict[str, Any]:
+    if request.confirm != "ROLLBACK_MODULE":
+        raise HTTPException(status_code=400, detail='confirm must be "ROLLBACK_MODULE"')
+    state, target = _module_operation_context(project_id, module_name)
+    snapshot = _latest_module_snapshot(state, module_name)
+    if not snapshot:
+        raise HTTPException(status_code=404, detail="module snapshot not found")
+    snapshot_path = Path(snapshot["path"])
+    if not snapshot_path.exists():
+        raise HTTPException(status_code=404, detail="module snapshot file not found")
+    commands = _paste_module_schematic(snapshot_path, target)
+    state["updated_at"] = _now()
+    state.setdefault("module_rcon", {})[f"{module_name}:rollback"] = commands
+    _record_module_operation(state, module_name, "rollback", target, commands, schematic_path=snapshot_path)
+    _save_project(project_id, state)
+    return {
+        "project_id": project_id,
+        "module": target,
+        "snapshot": snapshot,
+        "rcon": commands,
     }
 
 
@@ -788,6 +817,7 @@ def _module_operation_plan(
         "project_id": project_id,
         "module": target,
         "schematic_path": schematic_path,
+        "latest_snapshot": _latest_module_snapshot(state, module_name),
         "world_bounds": target["world_bounds"],
         "teleport": target["teleport"],
         "clear": clear,
@@ -818,6 +848,41 @@ def _paste_module_schematic(schematic_path: Path, target: dict[str, Any]) -> lis
     )
 
 
+def _snapshot_module_schematic(
+    project_id: str,
+    state: dict[str, Any],
+    module_name: str,
+    target: dict[str, Any],
+) -> dict[str, Any] | None:
+    source_path = state.get("schematic_path")
+    if not source_path or not Path(source_path).exists():
+        return None
+    snapshot_dir = _project_path(project_id) / "module_snapshots"
+    snapshot_dir.mkdir(parents=True, exist_ok=True)
+    safe_name = _safe_filename(module_name)
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    snapshot_path = snapshot_dir / f"{timestamp}_{safe_name}_{uuid.uuid4().hex[:8]}.schem"
+    shutil.copy2(source_path, snapshot_path)
+    snapshot = {
+        "module": module_name,
+        "created_at": _now(),
+        "path": str(snapshot_path),
+        "source_path": str(source_path),
+        "world_bounds": target.get("world_bounds"),
+    }
+    snapshots = state.setdefault("module_snapshots", [])
+    snapshots.append(snapshot)
+    state["module_snapshots"] = snapshots[-50:]
+    return snapshot
+
+
+def _latest_module_snapshot(state: dict[str, Any], module_name: str) -> dict[str, Any] | None:
+    for snapshot in reversed(state.get("module_snapshots") or []):
+        if snapshot.get("module") == module_name:
+            return snapshot
+    return None
+
+
 def _record_module_operation(
     state: dict[str, Any],
     module_name: str,
@@ -827,6 +892,7 @@ def _record_module_operation(
     *,
     schematic_path: Path | None = None,
     blocks: int | None = None,
+    snapshot: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     operation = {
         "module": module_name,
@@ -841,6 +907,8 @@ def _record_module_operation(
         operation["schematic_path"] = str(schematic_path)
     if blocks is not None:
         operation["blocks"] = blocks
+    if snapshot:
+        operation["snapshot"] = snapshot
     operations = state.setdefault("module_operations", [])
     operations.append(operation)
     del operations[:-50]
