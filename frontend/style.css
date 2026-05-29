@@ -356,6 +356,19 @@ button:disabled {
   font-weight: 800;
 }
 
+.mini-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 9px;
+}
+
+.mini-actions button {
+  min-height: 30px;
+  padding: 0 9px;
+  font-size: 12px;
+}
+
 .project-list {
   min-height: 680px;
 }

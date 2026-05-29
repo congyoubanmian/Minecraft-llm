@@ -35,6 +35,13 @@ def list_placements(active_only: bool = False) -> list[dict[str, Any]]:
     return sorted(placements, key=lambda item: item.get("updated_at") or item.get("created_at") or "", reverse=True)
 
 
+def get_project_placement(project_id: str) -> dict[str, Any] | None:
+    for item in _registry().load().get("placements", []):
+        if item.get("project_id") == project_id:
+            return item
+    return None
+
+
 def upsert_project_placement(
     *,
     project_id: str,
@@ -66,19 +73,40 @@ def upsert_project_placement(
     return record
 
 
-def archive_project_placement(project_id: str, *, reason: str = "archived") -> None:
+def archive_project_placement(project_id: str, *, reason: str = "archived") -> dict[str, Any] | None:
     registry = _registry()
     payload = registry.load()
     changed = False
+    archived: dict[str, Any] | None = None
     for item in payload.get("placements", []):
         if item.get("project_id") == project_id and item.get("active", True):
             item["active"] = False
             item["archived_at"] = _now()
             item["archive_reason"] = reason
             item["updated_at"] = _now()
+            archived = item
             changed = True
     if changed:
         registry.save(payload)
+    return archived
+
+
+def mark_project_placement_cleared(project_id: str) -> dict[str, Any] | None:
+    registry = _registry()
+    payload = registry.load()
+    changed = False
+    cleared: dict[str, Any] | None = None
+    for item in payload.get("placements", []):
+        if item.get("project_id") == project_id:
+            item["pasted"] = False
+            item["cleared_at"] = _now()
+            item["updated_at"] = _now()
+            cleared = item
+            changed = True
+            break
+    if changed:
+        registry.save(payload)
+    return cleared
 
 
 def rebuild_placement_registry(project_states: list[dict[str, Any]]) -> dict[str, Any]:

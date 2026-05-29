@@ -240,6 +240,9 @@ POST /api/world/backup
 POST /api/world/reset
 GET  /api/placements
 POST /api/placements/rebuild
+POST /api/placements/{project_id}/teleport
+POST /api/placements/{project_id}/archive
+POST /api/placements/{project_id}/clear
 ```
 
 世界重置接口会先备份当前世界，再停止 Minecraft/Bot，移动 `server/world*` 到 `backups/world_reset_时间戳/`，最后重启服务。调用 `POST /api/world/reset` 时必须传：
@@ -251,6 +254,12 @@ POST /api/placements/rebuild
 网页首页的“世界状态”面板也使用同一组接口，可查看 TPS、在线玩家、世界目录体积和备份数量。
 
 粘贴区域会同步到 `backend/placement/registry.json`。这个运行时索引不会提交到 Git；如果旧项目已经有 `placement` 字段，可以通过 `POST /api/placements/rebuild` 从项目状态重建索引。首页会显示 active/total 区域数量和最近一个区域。
+
+区域操作支持传送、归档和清空。清空会执行 `fill ... air replace`，默认限制 500 万方块以内，并要求：
+
+```json
+{"confirm": "CLEAR_AREA"}
+```
 
 旧版单任务接口仍保留：
 

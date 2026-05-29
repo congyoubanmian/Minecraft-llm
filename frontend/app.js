@@ -229,6 +229,59 @@ createApp({
         this.worldAction = "";
       }
     },
+    async teleportLatestPlacement() {
+      const latest = this.placements[0];
+      if (!latest) return;
+      this.worldAction = "teleport";
+      try {
+        const response = await this.apiFetch(`/api/placements/${latest.project_id}/teleport`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        });
+        if (!response.ok) throw new Error(await response.text());
+        await this.loadWorldStatus();
+      } catch (error) {
+        alert(`传送失败：${error instanceof Error ? error.message : String(error)}`);
+      } finally {
+        this.worldAction = "";
+      }
+    },
+    async archiveLatestPlacement() {
+      const latest = this.placements[0];
+      if (!latest || !confirm(`归档区域 ${latest.project_name || latest.project_id}？`)) return;
+      this.worldAction = "archive";
+      try {
+        const response = await this.apiFetch(`/api/placements/${latest.project_id}/archive`, { method: "POST" });
+        if (!response.ok) throw new Error(await response.text());
+        await this.loadWorldStatus();
+      } catch (error) {
+        alert(`归档失败：${error instanceof Error ? error.message : String(error)}`);
+      } finally {
+        this.worldAction = "";
+      }
+    },
+    async clearLatestPlacement() {
+      const latest = this.placements[0];
+      if (!latest) return;
+      const confirmation = prompt(`清空区域 ${latest.project_name || latest.project_id}。请输入 CLEAR_AREA 确认。`);
+      if (confirmation !== "CLEAR_AREA") return;
+      this.worldAction = "clear";
+      try {
+        const response = await this.apiFetch(`/api/placements/${latest.project_id}/clear`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ confirm: confirmation }),
+        });
+        if (!response.ok) throw new Error(await response.text());
+        await this.loadWorldStatus();
+        alert("区域已清空。");
+      } catch (error) {
+        alert(`清空失败：${error instanceof Error ? error.message : String(error)}`);
+      } finally {
+        this.worldAction = "";
+      }
+    },
     async resetWorld() {
       const confirmation = prompt("这会备份并重置 Minecraft 世界。请输入 RESET_WORLD 确认。");
       if (confirmation !== "RESET_WORLD") return;
@@ -483,6 +536,9 @@ createApp({
       if (!latest) return "-";
       const paste = latest.paste;
       return `${latest.project_name || latest.project_id} @ ${paste?.x ?? "-"}, ${paste?.y ?? "-"}, ${paste?.z ?? "-"}`;
+    },
+    hasLatestPlacement() {
+      return Boolean(this.placements[0]);
     },
     projectSizeText(item) {
       if (item.preview?.size) return item.preview.size.join(" x ");

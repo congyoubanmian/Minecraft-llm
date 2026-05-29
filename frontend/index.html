@@ -65,6 +65,11 @@
             <article class="world-card wide">
               <strong>Latest Area</strong>
               <span>{{ latestPlacementText() }}</span>
+              <div class="mini-actions">
+                <button type="button" class="secondary-button" :disabled="!hasLatestPlacement() || worldAction" @click="teleportLatestPlacement">传送</button>
+                <button type="button" class="secondary-button" :disabled="!hasLatestPlacement() || worldAction" @click="archiveLatestPlacement">归档</button>
+                <button type="button" class="danger-button" :disabled="!hasLatestPlacement() || worldAction" @click="clearLatestPlacement">清空</button>
+              </div>
             </article>
           </div>
         </section>

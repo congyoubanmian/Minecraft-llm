@@ -27,7 +27,14 @@ from backend.library import load_components, load_design_contract, load_material
 from backend.minecraft import FaweController
 from backend.minecraft.rcon import MinecraftRcon, RconConfig
 from backend.minecraft.world_manager import backup_worlds, reset_worlds, world_status
-from backend.placement import archive_project_placement, list_placements, rebuild_placement_registry, upsert_project_placement
+from backend.placement import (
+    archive_project_placement,
+    get_project_placement,
+    list_placements,
+    mark_project_placement_cleared,
+    rebuild_placement_registry,
+    upsert_project_placement,
+)
 from backend.schematic.generator import generate_outputs, render_plan_to_blocks
 
 
@@ -140,6 +147,11 @@ class ResetWorldRequest(BaseModel):
     confirm: str
 
 
+class PlacementActionRequest(BaseModel):
+    player: str | None = None
+    confirm: str | None = None
+
+
 @app.get("/api/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
@@ -183,6 +195,45 @@ def get_placements(active_only: bool = False) -> dict[str, Any]:
 @app.post("/api/placements/rebuild", dependencies=[Depends(_require_api_key)])
 def rebuild_placements() -> dict[str, Any]:
     return rebuild_placement_registry(_iter_project_states())
+
+
+@app.post("/api/placements/{project_id}/teleport", dependencies=[Depends(_require_api_key)])
+def teleport_to_placement(project_id: str, request: PlacementActionRequest) -> dict[str, Any]:
+    placement = _require_registry_placement(project_id)
+    spawn = placement.get("spawn") or placement.get("paste")
+    if not spawn:
+        raise HTTPException(status_code=409, detail="placement has no spawn or paste coordinate")
+    player = request.player or "@p"
+    command = f"tp {player} {spawn['x']} {spawn['y']} {spawn['z']}"
+    return {"project_id": project_id, "command": f"/{command}", "response": _rcon_command(command)}
+
+
+@app.post("/api/placements/{project_id}/archive", dependencies=[Depends(_require_api_key)])
+def archive_placement(project_id: str) -> dict[str, Any]:
+    archived = archive_project_placement(project_id, reason="manual_archive")
+    if not archived:
+        raise HTTPException(status_code=404, detail="active placement not found")
+    return {"project_id": project_id, "placement": archived}
+
+
+@app.post("/api/placements/{project_id}/clear", dependencies=[Depends(_require_api_key)])
+def clear_placement(project_id: str, request: PlacementActionRequest) -> dict[str, Any]:
+    if request.confirm != "CLEAR_AREA":
+        raise HTTPException(status_code=400, detail='confirm must be "CLEAR_AREA"')
+    placement = _require_registry_placement(project_id)
+    bounds = placement.get("bounds")
+    if not bounds:
+        raise HTTPException(status_code=409, detail="placement has no bounds")
+    volume = _bounds_volume(bounds)
+    if volume > 5_000_000:
+        raise HTTPException(status_code=409, detail=f"area too large to clear safely: {volume} blocks")
+    command = (
+        f"fill {bounds['min_x']} {bounds['min_y']} {bounds['min_z']} "
+        f"{bounds['max_x']} {bounds['max_y']} {bounds['max_z']} air replace"
+    )
+    response = _rcon_command(command)
+    cleared = mark_project_placement_cleared(project_id)
+    return {"project_id": project_id, "blocks": volume, "command": f"/{command}", "response": response, "placement": cleared}
 
 
 @app.websocket("/ws/projects/{project_id}")
@@ -880,6 +931,34 @@ def _set_spawnpoint(placement: dict[str, Any]) -> list[str]:
         return [f"/{command}", response]
     except Exception as exc:  # noqa: BLE001
         return [f"/{command}", f"setworldspawn failed: {exc!r}"]
+
+
+def _rcon_command(command: str) -> str:
+    rcon = MinecraftRcon(
+        RconConfig(
+            host=settings.rcon_host,
+            port=settings.rcon_port,
+            password=settings.rcon_password,
+        )
+    )
+    return rcon.command(command)
+
+
+def _require_registry_placement(project_id: str) -> dict[str, Any]:
+    placement = get_project_placement(project_id)
+    if not placement:
+        raise HTTPException(status_code=404, detail="placement not found")
+    if placement.get("active") is False:
+        raise HTTPException(status_code=409, detail="placement is archived")
+    return placement
+
+
+def _bounds_volume(bounds: dict[str, int]) -> int:
+    return (
+        max(0, bounds["max_x"] - bounds["min_x"] + 1)
+        * max(0, bounds["max_y"] - bounds["min_y"] + 1)
+        * max(0, bounds["max_z"] - bounds["min_z"] + 1)
+    )
 
 
 def _last_user_message(messages: list[dict[str, Any]]) -> str | None:

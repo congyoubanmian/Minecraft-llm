@@ -9,7 +9,14 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 import backend.placement.registry as registry_module
-from backend.placement.registry import PlacementRegistry, archive_project_placement, rebuild_placement_registry, upsert_project_placement
+from backend.main import _bounds_volume
+from backend.placement.registry import (
+    PlacementRegistry,
+    archive_project_placement,
+    mark_project_placement_cleared,
+    rebuild_placement_registry,
+    upsert_project_placement,
+)
 
 
 def sample_placement(x: int = 10) -> dict:
@@ -46,6 +53,10 @@ def main() -> None:
             assert payload["placements"][0]["active"] is False
             assert payload["placements"][0]["archive_reason"] == "test"
 
+            cleared = mark_project_placement_cleared("demo")
+            assert cleared["pasted"] is False
+            assert "cleared_at" in cleared
+
             rebuilt = rebuild_placement_registry(
                 [
                     {
@@ -61,6 +72,7 @@ def main() -> None:
             assert len(rebuilt["placements"]) == 1
             assert rebuilt["placements"][0]["project_id"] == "from_state"
             assert rebuilt["placements"][0]["pasted"] is True
+            assert _bounds_volume(rebuilt["placements"][0]["bounds"]) == 5120
         finally:
             registry_module.REGISTRY_PATH = original
 
