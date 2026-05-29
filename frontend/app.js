@@ -17,6 +17,8 @@ createApp({
       worldAction: "",
       moduleAction: "",
       moduleLogAction: "",
+      modulePlan: null,
+      modulePlanLoading: false,
       library: {
         materials: {},
         components: {},
@@ -191,6 +193,7 @@ createApp({
         this.preview = null;
         this.previewMode = "surface";
         this.selectedBlueprintModule = null;
+        this.modulePlan = null;
         this.chatInput = "";
         this.$nextTick(() => {
           this.ensurePreviewRenderer();
@@ -205,6 +208,7 @@ createApp({
       this.preview = null;
       this.previewMode = "surface";
       this.selectedBlueprintModule = null;
+      this.modulePlan = null;
       this.clearPreview();
       this.destroyPreviewRenderer();
       this.loadProjects();
@@ -397,6 +401,7 @@ createApp({
       this.preview = null;
       this.previewMode = "surface";
       this.selectedBlueprintModule = null;
+      this.modulePlan = null;
       this.clearPreview();
 
       const form = new FormData();
@@ -602,11 +607,61 @@ createApp({
     },
     async selectBlueprintModule(module) {
       this.selectedBlueprintModule = module;
-      await this.loadPreview(this.previewMode);
+      await Promise.all([this.loadPreview(this.previewMode), this.loadModulePlan(module)]);
     },
     async clearBlueprintModule() {
       this.selectedBlueprintModule = null;
+      this.modulePlan = null;
       await this.loadPreview(this.previewMode);
+    },
+    async loadModulePlan(module = this.selectedBlueprintModule) {
+      if (!this.project?.id || !module?.name || !module?.bbox || !this.project?.placement) {
+        this.modulePlan = null;
+        return;
+      }
+      this.modulePlanLoading = true;
+      try {
+        const response = await this.apiFetch(
+          `/api/projects/${this.project.id}/modules/${encodeURIComponent(module.name)}/operation-plan?ts=${Date.now()}`
+        );
+        if (!response.ok) throw new Error(await response.text());
+        const plan = await response.json();
+        if (this.selectedBlueprintModule?.name === module.name) this.modulePlan = plan;
+      } catch (error) {
+        console.error(error);
+        if (this.selectedBlueprintModule?.name === module.name) this.modulePlan = null;
+      } finally {
+        this.modulePlanLoading = false;
+      }
+    },
+    formatWorldBounds(bounds) {
+      if (!bounds) return "-";
+      return `${bounds.min_x}, ${bounds.min_y}, ${bounds.min_z} -> ${bounds.max_x}, ${bounds.max_y}, ${bounds.max_z}`;
+    },
+    formatPoint(point) {
+      if (!point) return "-";
+      return `${point.x}, ${point.y}, ${point.z}`;
+    },
+    moduleConfirmText(module, action) {
+      const name = module?.name || "模块";
+      const plan = this.modulePlan?.module?.name === name ? this.modulePlan : null;
+      if (!plan) {
+        const fallback = {
+          paste: `粘贴模块 ${name} 到 Minecraft？这会覆盖该模块所在区域。`,
+          clear: `清空 Minecraft 中的模块区域 ${name}？`,
+          replace: `替换 Minecraft 中的模块 ${name}？这会先清空该模块区域再粘贴。`,
+        };
+        return fallback[action] || `执行模块操作 ${name}？`;
+      }
+      const lines = [
+        `${this.moduleActionLabel(action)}模块 ${name}？`,
+        `范围：${this.formatWorldBounds(plan.world_bounds)}`,
+        `影响方块：${plan.clear?.blocks ?? "-"} / ${plan.clear?.limit ?? "-"}`,
+      ];
+      if (action === "paste") lines.push(`粘贴点：${this.formatPoint(plan.paste)}`);
+      if (action === "replace") lines.push("步骤：先清空再粘贴");
+      if (plan.clear && !plan.clear.safe) lines.push("警告：该模块超过安全清空上限，后端会拒绝执行清空/替换。");
+      return lines.join("\n");
     },
     async teleportBlueprintModule(module) {
       if (!this.project?.id || !module?.name) return;
@@ -626,7 +681,7 @@ createApp({
     },
     async pasteBlueprintModule(module) {
       if (!this.project?.id || !module?.name) return;
-      if (!confirm(`粘贴模块 ${module.name} 到 Minecraft？这会覆盖该模块所在区域。`)) return;
+      if (!confirm(this.moduleConfirmText(module, "paste"))) return;
       this.moduleAction = `paste:${module.name}`;
       try {
         const response = await this.apiFetch(`/api/projects/${this.project.id}/modules/${encodeURIComponent(module.name)}/paste`, {
@@ -645,7 +700,7 @@ createApp({
     },
     async clearBlueprintModuleArea(module) {
       if (!this.project?.id || !module?.name) return;
-      if (!confirm(`清空 Minecraft 中的模块区域 ${module.name}？`)) return;
+      if (!confirm(this.moduleConfirmText(module, "clear"))) return;
       this.moduleAction = `clear:${module.name}`;
       try {
         const response = await this.apiFetch(`/api/projects/${this.project.id}/modules/${encodeURIComponent(module.name)}/clear`, {
@@ -664,7 +719,7 @@ createApp({
     },
     async replaceBlueprintModule(module) {
       if (!this.project?.id || !module?.name) return;
-      if (!confirm(`替换 Minecraft 中的模块 ${module.name}？这会先清空该模块区域再粘贴。`)) return;
+      if (!confirm(this.moduleConfirmText(module, "replace"))) return;
       this.moduleAction = `replace:${module.name}`;
       try {
         const response = await this.apiFetch(`/api/projects/${this.project.id}/modules/${encodeURIComponent(module.name)}/replace`, {

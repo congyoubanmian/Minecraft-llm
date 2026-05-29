@@ -451,6 +451,38 @@
                   </div>
                 </article>
               </div>
+              <div v-if="selectedBlueprintModule" class="module-plan">
+                <div>
+                  <strong>执行预览</strong>
+                  <span>{{ modulePlanLoading ? "加载中" : selectedBlueprintModule.name }}</span>
+                </div>
+                <dl v-if="modulePlan">
+                  <div>
+                    <dt>世界范围</dt>
+                    <dd>{{ formatWorldBounds(modulePlan.world_bounds) }}</dd>
+                  </div>
+                  <div>
+                    <dt>影响方块</dt>
+                    <dd>{{ modulePlan.clear.blocks }} / {{ modulePlan.clear.limit }}</dd>
+                  </div>
+                  <div>
+                    <dt>粘贴点</dt>
+                    <dd>{{ formatPoint(modulePlan.paste) }}</dd>
+                  </div>
+                  <div>
+                    <dt>传送点</dt>
+                    <dd>{{ formatPoint(modulePlan.teleport) }}</dd>
+                  </div>
+                  <div>
+                    <dt>清空命令</dt>
+                    <dd><code>{{ modulePlan.clear.command }}</code></dd>
+                  </div>
+                </dl>
+                <p v-else>{{ modulePlanLoading ? "正在计算模块坐标与命令" : "暂无执行计划，需先粘贴项目并生成模块边界。" }}</p>
+                <p v-if="modulePlan && !modulePlan.clear.safe" class="danger-note">
+                  该模块超过清空安全上限，清空和替换会被后端拒绝。
+                </p>
+              </div>
             </div>
 
             <div v-if="blueprintInterfaces.length" class="blueprint-section">

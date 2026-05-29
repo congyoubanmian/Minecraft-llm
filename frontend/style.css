@@ -818,6 +818,68 @@ pre {
   gap: 12px;
 }
 
+.module-plan {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid #d6e0db;
+  border-radius: 7px;
+  background: #f8faf9;
+}
+
+.module-plan > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.module-plan strong {
+  font-size: 13px;
+}
+
+.module-plan span,
+.module-plan p,
+.module-plan dt,
+.module-plan dd {
+  color: #58645f;
+  font-size: 12px;
+}
+
+.module-plan p {
+  margin: 0;
+}
+
+.module-plan dl {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+
+.module-plan dl div {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 8px;
+}
+
+.module-plan dt,
+.module-plan dd {
+  margin: 0;
+}
+
+.module-plan code {
+  overflow-wrap: anywhere;
+  border-radius: 6px;
+  padding: 4px 6px;
+  background: #eef2f0;
+  color: #23312b;
+}
+
+.module-plan .danger-note {
+  color: #9e2f1f;
+  font-weight: 700;
+}
+
 .module-rcon-list {
   display: grid;
   gap: 8px;

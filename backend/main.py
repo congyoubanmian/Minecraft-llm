@@ -48,6 +48,7 @@ async def _lifespan(_app: FastAPI):
 
 
 app = FastAPI(title="Minecraft AI Builder", lifespan=_lifespan)
+MODULE_CLEAR_BLOCK_LIMIT = 1_000_000
 
 _cors_origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
 
@@ -226,6 +227,12 @@ def teleport_to_project_module(project_id: str, module_name: str, request: Place
         "command": f"/{command}",
         "response": _rcon_command(command),
     }
+
+
+@app.get("/api/projects/{project_id}/modules/{module_name}/operation-plan")
+def get_project_module_operation_plan(project_id: str, module_name: str) -> dict[str, Any]:
+    state, target = _module_operation_context(project_id, module_name)
+    return _module_operation_plan(project_id, state, module_name, target)
 
 
 @app.post("/api/projects/{project_id}/modules/{module_name}/paste", dependencies=[Depends(_require_api_key)])
@@ -745,17 +752,59 @@ def _module_operation_context(project_id: str, module_name: str) -> tuple[dict[s
     return state, _module_world_target(placement, module)
 
 
-def _clear_module_area(target: dict[str, Any]) -> dict[str, Any]:
+def _clear_module_plan(target: dict[str, Any]) -> dict[str, Any]:
     bounds = target["world_bounds"]
     volume = _bounds_volume(bounds)
-    if volume > 1_000_000:
-        raise HTTPException(status_code=409, detail=f"module area too large to clear safely: {volume} blocks")
     command = (
         f"fill {bounds['min_x']} {bounds['min_y']} {bounds['min_z']} "
         f"{bounds['max_x']} {bounds['max_y']} {bounds['max_z']} air replace"
     )
-    response = _rcon_command(command)
-    return {"blocks": volume, "command": f"/{command}", "response": response}
+    return {
+        "blocks": volume,
+        "command": f"/{command}",
+        "limit": MODULE_CLEAR_BLOCK_LIMIT,
+        "safe": volume <= MODULE_CLEAR_BLOCK_LIMIT,
+    }
+
+
+def _module_operation_plan(
+    project_id: str,
+    state: dict[str, Any],
+    module_name: str,
+    target: dict[str, Any],
+) -> dict[str, Any]:
+    clear = _clear_module_plan(target)
+    paste = {
+        "x": target["world_bounds"]["min_x"],
+        "y": target["world_bounds"]["min_y"],
+        "z": target["world_bounds"]["min_z"],
+    }
+    schematic_path: str | None = None
+    try:
+        schematic_path = str(_module_schematic_path(project_id, state, module_name, output_dir=settings.schematic_dir))
+    except HTTPException:
+        schematic_path = None
+    return {
+        "project_id": project_id,
+        "module": target,
+        "schematic_path": schematic_path,
+        "world_bounds": target["world_bounds"],
+        "teleport": target["teleport"],
+        "clear": clear,
+        "paste": paste,
+        "replace": {
+            "steps": ["clear", "paste"],
+            "safe": clear["safe"],
+        },
+    }
+
+
+def _clear_module_area(target: dict[str, Any]) -> dict[str, Any]:
+    plan = _clear_module_plan(target)
+    if not plan["safe"]:
+        raise HTTPException(status_code=409, detail=f"module area too large to clear safely: {plan['blocks']} blocks")
+    response = _rcon_command(plan["command"].lstrip("/"))
+    return {"blocks": plan["blocks"], "command": plan["command"], "response": response}
 
 
 def _paste_module_schematic(schematic_path: Path, target: dict[str, Any]) -> list[str]:
