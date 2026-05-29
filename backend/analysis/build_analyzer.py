@@ -4,7 +4,7 @@ from collections import Counter
 from typing import Any
 
 from backend.blocks import BlockList
-from backend.dsl.schema import BuildPlan, ComponentPart
+from backend.dsl.schema import BuildPlan, ComponentPart, DesignInterface, DesignModule, DesignSpec
 from backend.library import load_components, load_templates
 
 
@@ -42,7 +42,7 @@ def _component_categories(component_counts: Counter[str]) -> dict[str, int]:
 
 
 def _infer_template(plan: BuildPlan, materials: dict[str, int], categories: dict[str, int]) -> str | None:
-    analysis_text = " ".join(_flatten_text(plan.analysis or {})).lower()
+    analysis_text = " ".join(_flatten_text(plan.analysis_dict())).lower()
     templates = load_templates().get("templates", {})
 
     keyword_scores: dict[str, int] = {
@@ -94,6 +94,7 @@ def _warnings(
 ) -> list[str]:
     warnings: list[str] = []
     sx, sy, sz = plan.size
+    total_blocks = sum(materials.values())
 
     if template in {"pagoda_stack", "temple_hall", "jiangnan_water_town"} and ratios["glass"] > 0.18:
         warnings.append("古建/水乡模板玻璃比例偏高，建议减少幕墙玻璃，改用小窗、木框、瓦面。")
@@ -101,7 +102,7 @@ def _warnings(
         warnings.append("现代高层灯光比例偏低，建议给办公楼层、连桥、入口重复布置 sea_lantern 或 redstone_lamp。")
     if template == "pagoda_stack" and not component_counts.get("pagoda_tier"):
         warnings.append("疑似宝塔但没有使用 pagoda_tier，八角层级可能不稳定。")
-    if any(token in " ".join(_flatten_text(plan.analysis or {})).lower() for token in ("广州塔", "小蛮腰", "canton tower", "guangzhou tower")):
+    if any(token in " ".join(_flatten_text(plan.analysis_dict())).lower() for token in ("广州塔", "小蛮腰", "canton tower", "guangzhou tower")):
         if template != "twisted_lattice_tower":
             warnings.append("广州塔/小蛮腰应使用 twisted_lattice_tower 模板，当前模板可能会跑成宝塔或普通高楼。")
         if sy / max(1, max(sx, sz)) < 2.5:
@@ -116,26 +117,46 @@ def _warnings(
         warnings.append("当前主要依赖 primitive parts，可考虑抽出重复窗格、楼层、屋檐或桥段组件复用。")
     if not module_report.get("present") or not module_report.get("module_count"):
         warnings.append("缺少设计规约模块列表，复杂建筑建议先定义 grid、modules、bbox、interfaces，再转 Minecraft parts。")
+    warnings.extend(_performance_warnings(total_blocks, module_report.get("performance_budget")))
     warnings.extend(module_report.get("warnings", []))
     return warnings
 
 
+def _performance_warnings(total_blocks: int, performance_budget: dict[str, Any] | None) -> list[str]:
+    if not performance_budget:
+        return []
+    warnings: list[str] = []
+    max_blocks = performance_budget.get("max_blocks")
+    if isinstance(max_blocks, int) and total_blocks > max_blocks:
+        warnings.append(f"方块数 {total_blocks} 超过 performance_budget.max_blocks={max_blocks}，建议降低细节密度或拆分项目。")
+    max_preview_blocks = performance_budget.get("max_preview_blocks")
+    if isinstance(max_preview_blocks, int) and total_blocks > max_preview_blocks:
+        warnings.append(f"完整预览方块数超过 {max_preview_blocks}，前端应使用抽样或外表面 LOD。")
+    max_tick_commands = performance_budget.get("max_tick_commands")
+    animated = bool(performance_budget.get("animated"))
+    if animated and isinstance(max_tick_commands, int) and max_tick_commands > 600:
+        warnings.append("动态效果 tick 命令预算偏高，低配电脑或手机端可能卡顿，建议改静态灯光或局部动画。")
+    if animated and max_tick_commands in (None, 0):
+        warnings.append("标记为 animated 但没有设置 max_tick_commands，无法评估动态灯光性能。")
+    return warnings
+
+
 def _module_report(plan: BuildPlan) -> dict[str, Any]:
-    analysis = plan.analysis or {}
-    design_spec = analysis.get("design_spec") if isinstance(analysis, dict) else None
-    if not isinstance(design_spec, dict):
+    design_spec = plan.analysis.design_spec if plan.analysis else None
+    if design_spec is None:
         return {
             "present": False,
             "module_count": 0,
             "interface_count": 0,
             "modules": [],
+            "performance_budget": None,
             "warnings": [],
             "stitch_ready": False,
         }
 
-    modules = design_spec.get("modules") if isinstance(design_spec.get("modules"), list) else []
-    interfaces = design_spec.get("interfaces") if isinstance(design_spec.get("interfaces"), list) else []
-    module_items = [_normalize_module(module, index) for index, module in enumerate(modules) if isinstance(module, dict)]
+    modules = design_spec.modules
+    interfaces = design_spec.interfaces
+    module_items = [_normalize_module(module, index) for index, module in enumerate(modules)]
     module_names = [module["name"] for module in module_items]
     warnings = _module_warnings(plan.size, module_items, interfaces)
     missing_bbox = [
@@ -146,12 +167,18 @@ def _module_report(plan: BuildPlan) -> dict[str, Any]:
 
     return {
         "present": True,
-        "building_type": design_spec.get("building_type"),
+        "building_type": design_spec.building_type,
+        "scale_intent": design_spec.scale_intent,
+        "grid": design_spec.grid,
         "module_count": len(module_items),
         "interface_count": len(interfaces),
         "missing_bbox": missing_bbox,
         "duplicate_names": _duplicates(module_names),
         "modules": module_items,
+        "interfaces": [_interface_dump(interface) for interface in interfaces],
+        "material_schedule": design_spec.material_schedule,
+        "quality_checks": design_spec.quality_checks,
+        "performance_budget": _performance_budget_dump(design_spec),
         "stage_order": _stage_order(module_items),
         "coverage": _module_coverage(plan.size, module_items),
         "warnings": warnings,
@@ -159,27 +186,28 @@ def _module_report(plan: BuildPlan) -> dict[str, Any]:
     }
 
 
-def _normalize_module(module: dict[str, Any], index: int) -> dict[str, Any]:
-    name = str(module.get("name") or f"module_{index}")
-    role = str(module.get("role") or "unknown")
-    bbox = _parse_bbox(module.get("bbox"))
+def _normalize_module(module: DesignModule, index: int) -> dict[str, Any]:
+    name = module.name or f"module_{index}"
+    role = module.role
+    bbox = _parse_bbox(module.bbox)
     return {
         "name": name,
         "role": role,
         "bbox": bbox,
-        "materials": module.get("materials", []),
-        "interfaces": module.get("interfaces", {}),
+        "materials": module.materials,
+        "interfaces": module.interfaces,
+        "notes": module.notes,
         "volume": _bbox_volume(bbox) if bbox else 0,
     }
 
 
 def _parse_bbox(value: Any) -> list[list[int]] | None:
-    if not isinstance(value, list) or len(value) != 2:
+    if not isinstance(value, (list, tuple)) or len(value) != 2:
         return None
     first, second = value
     if not (
-        isinstance(first, list)
-        and isinstance(second, list)
+        isinstance(first, (list, tuple))
+        and isinstance(second, (list, tuple))
         and len(first) == 3
         and len(second) == 3
         and all(isinstance(item, int) for item in first + second)
@@ -190,7 +218,7 @@ def _parse_bbox(value: Any) -> list[list[int]] | None:
     return [[min(x1, x2), min(y1, y2), min(z1, z2)], [max(x1, x2), max(y1, y2), max(z1, z2)]]
 
 
-def _module_warnings(size: tuple[int, int, int], modules: list[dict[str, Any]], interfaces: list[Any]) -> list[str]:
+def _module_warnings(size: tuple[int, int, int], modules: list[dict[str, Any]], interfaces: list[DesignInterface]) -> list[str]:
     warnings: list[str] = []
     names = {module["name"] for module in modules}
     duplicate_names = _duplicates([module["name"] for module in modules])
@@ -220,16 +248,25 @@ def _module_warnings(size: tuple[int, int, int], modules: list[dict[str, Any]], 
                 break
 
     for index, raw in enumerate(interfaces):
-        if not isinstance(raw, dict):
-            warnings.append(f"接口 #{index + 1} 不是对象，无法校验。")
+        a = raw.module_a
+        b = raw.module_b
+        if a.startswith("legacy_interface_") and b.startswith("legacy_interface_"):
             continue
-        a = raw.get("module_a") or raw.get("a")
-        b = raw.get("module_b") or raw.get("b")
         if a and a not in names:
             warnings.append(f"接口 #{index + 1} 引用了不存在的模块 {a}。")
         if b and b not in names:
             warnings.append(f"接口 #{index + 1} 引用了不存在的模块 {b}。")
     return warnings
+
+
+def _interface_dump(interface: DesignInterface) -> dict[str, Any]:
+    return interface.model_dump(mode="json")
+
+
+def _performance_budget_dump(design_spec: DesignSpec) -> dict[str, Any] | None:
+    if design_spec.performance_budget is None:
+        return None
+    return design_spec.performance_budget.model_dump(mode="json")
 
 
 def _module_coverage(size: tuple[int, int, int], modules: list[dict[str, Any]]) -> dict[str, float]:

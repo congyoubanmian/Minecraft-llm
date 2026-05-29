@@ -185,7 +185,7 @@ def main() -> None:
         "created_at": now(),
         "updated_at": now(),
         "image_path": None,
-        "analysis": plan.analysis,
+        "analysis": plan.analysis_dict(),
         "messages": [
             {
                 "role": "user",
@@ -194,7 +194,7 @@ def main() -> None:
             },
             {"role": "assistant", "content": "已生成八角约束版 schematic 和网页预览。", "created_at": now()},
         ],
-        "plan": plan.model_dump(by_alias=True),
+        "plan": plan.model_dump(by_alias=True, mode="json"),
         "plan_path": str(project_dir / "plan.json"),
         "schematic_path": str(schematic_path),
         "preview_path": str(preview_path),

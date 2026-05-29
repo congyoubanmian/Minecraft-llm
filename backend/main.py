@@ -456,7 +456,7 @@ def _run_build_task(task_id: str, image_path: Path) -> None:
 
         task["status"] = "planning"
         plan = plan_build(summary, name=f"build_{task_id}", image_path=image_path)
-        task["plan"] = plan.model_dump(by_alias=True)
+        task["plan"] = plan.model_dump(by_alias=True, mode="json")
         task["plan_path"] = str(settings.generated_plan_dir / f"build_{task_id}.json")
 
         task["status"] = "generating_schematic"
@@ -513,7 +513,7 @@ def _run_project_generation(project_id: str) -> None:
             current_plan=state.get("plan"),
             image_path=image_path,
         )
-        state["plan"] = plan.model_dump(by_alias=True)
+        state["plan"] = plan.model_dump(by_alias=True, mode="json")
         if not state.get("placement"):
             state["placement"] = _allocate_placement(project_id, plan)
         plan_path = project_path / "plan.json"

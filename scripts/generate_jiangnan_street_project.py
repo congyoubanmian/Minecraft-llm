@@ -261,7 +261,7 @@ def main() -> None:
             "updated_at": now(),
             "completed_at": now(),
             "error": None,
-            "plan": plan.model_dump(by_alias=True),
+            "plan": plan.model_dump(by_alias=True, mode="json"),
             "plan_path": str(project_dir / "plan.json"),
             "schematic_path": str(schematic_path),
             "preview_path": str(preview_path),

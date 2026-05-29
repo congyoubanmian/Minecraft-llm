@@ -2,10 +2,118 @@ from __future__ import annotations
 
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 Vec3 = tuple[int, int, int]
+BBox = tuple[Vec3, Vec3]
+
+
+class FlexibleModel(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+
+class DesignModule(FlexibleModel):
+    name: str = Field(pattern=r"^[a-zA-Z0-9_-]+$")
+    role: Literal[
+        "foundation",
+        "mass",
+        "structure",
+        "void",
+        "facade",
+        "roof",
+        "interior",
+        "lighting",
+        "detail",
+        "landscape",
+        "circulation",
+        "services",
+        "architecture",
+        "entry",
+        "unknown",
+    ] = "unknown"
+    bbox: BBox | None = None
+    materials: list[str] = Field(default_factory=list)
+    interfaces: dict[str, str] = Field(default_factory=dict)
+    notes: list[str] = Field(default_factory=list)
+
+
+class DesignInterface(FlexibleModel):
+    module_a: str
+    face_a: Literal["top", "bottom", "north", "south", "east", "west", "inside", "outside", "center", "any"] = "any"
+    module_b: str
+    face_b: Literal["top", "bottom", "north", "south", "east", "west", "inside", "outside", "center", "any"] = "any"
+    kind: Literal[
+        "support",
+        "overlap",
+        "overlap_one_block",
+        "adjacent",
+        "touch",
+        "opening",
+        "circulation",
+        "visual",
+        "service",
+        "entry",
+        "bridge_connection",
+        "other",
+    ] = "other"
+    note: str = ""
+
+
+class PerformanceBudget(FlexibleModel):
+    max_blocks: int | None = Field(default=None, ge=1)
+    max_preview_blocks: int | None = Field(default=None, ge=1)
+    max_tick_commands: int | None = Field(default=None, ge=0)
+    animated: bool = False
+    suggested_view_distance: int | None = Field(default=None, ge=2, le=64)
+    min_server_memory_mb: int | None = Field(default=None, ge=512)
+    notes: list[str] = Field(default_factory=list)
+
+
+class DesignSpec(FlexibleModel):
+    building_type: str
+    scale_intent: str
+    grid: list[str] = Field(default_factory=list)
+    modules: list[DesignModule] = Field(default_factory=list)
+    interfaces: list[DesignInterface] = Field(default_factory=list)
+    material_schedule: list[str] = Field(default_factory=list)
+    quality_checks: list[str] = Field(default_factory=list)
+    performance_budget: PerformanceBudget | None = None
+
+    @field_validator("interfaces", mode="before")
+    @classmethod
+    def coerce_legacy_interfaces(cls, value: Any) -> Any:
+        if not isinstance(value, list):
+            return value
+        coerced: list[Any] = []
+        for index, item in enumerate(value):
+            if isinstance(item, str):
+                coerced.append(
+                    {
+                        "module_a": f"legacy_interface_{index}",
+                        "face_a": "any",
+                        "module_b": f"legacy_interface_{index}",
+                        "face_b": "any",
+                        "kind": "other",
+                        "note": item,
+                    }
+                )
+            else:
+                coerced.append(item)
+        return coerced
+
+
+class BuildAnalysis(FlexibleModel):
+    viewpoint: str | None = None
+    selected_template: str | None = None
+    component_strategy: list[str] = Field(default_factory=list)
+    design_spec: DesignSpec | None = None
+    massing: list[str] = Field(default_factory=list)
+    facade: list[str] = Field(default_factory=list)
+    roof: list[str] = Field(default_factory=list)
+    materials: list[str] = Field(default_factory=list)
+    details: list[str] = Field(default_factory=list)
+    assumptions: list[str] = Field(default_factory=list)
 
 
 class BoxPart(BaseModel):
@@ -215,10 +323,15 @@ class BuildPlan(BaseModel):
     origin: Vec3 = (0, 64, 0)
     palette: dict[str, str]
     parts: list[BuildPart] = Field(default_factory=list)
-    analysis: dict[str, Any] | None = None
+    analysis: BuildAnalysis | None = None
 
     def block_id(self, key_or_block: str) -> str:
         block = self.palette.get(key_or_block, key_or_block)
         if ":" not in block:
             block = f"minecraft:{block}"
         return block
+
+    def analysis_dict(self) -> dict[str, Any]:
+        if self.analysis is None:
+            return {}
+        return self.analysis.model_dump(mode="json")

@@ -150,9 +150,11 @@ The JSON must match this shape:
 	      "modules": [
 	        {{
 	          "name": "module id",
-	          "role": "foundation/mass/facade/roof/interior/etc",
+	          "role": "foundation/mass/structure/void/facade/roof/interior/lighting/detail/landscape/circulation/services/architecture/entry",
 	          "bbox": [[0, 0, 0], [10, 10, 10]],
-	          "interfaces": {{"top": "expected connection"}}
+	          "materials": ["role=palette_key"],
+	          "interfaces": {{"top": "expected connection"}},
+	          "notes": ["short construction note"]
 	        }}
 	      ],
 	      "interfaces": [
@@ -166,7 +168,16 @@ The JSON must match this shape:
 	        }}
 	      ],
 	      "material_schedule": ["role=block with reason"],
-	      "quality_checks": ["checks to verify recognizability"]
+	      "quality_checks": ["checks to verify recognizability"],
+	      "performance_budget": {{
+	        "max_blocks": 120000,
+	        "max_preview_blocks": 120000,
+	        "max_tick_commands": 0,
+	        "animated": false,
+	        "suggested_view_distance": 12,
+	        "min_server_memory_mb": 2048,
+	        "notes": ["prefer static lights unless animation is explicitly requested"]
+	      }}
 	    }},
 	    "massing": ["major volumes and proportions"],
     "facade": ["symmetry, bays, floors, entrances, balconies"],
@@ -371,8 +382,9 @@ Rules:
 	  needed form from primitives or another better component.
 	- Include "selected_template" and "component_strategy" in analysis so later turns
 	  can understand why the design used or avoided specific components.
-	- Include analysis.design_spec with module bboxes and interfaces before parts.
-	  Treat this as the construction drawing: parts must follow those dimensions.
+	- Include analysis.design_spec with module bboxes, interfaces, material_schedule,
+	  quality_checks, and performance_budget before parts. Treat this as the
+	  construction drawing: parts must follow those dimensions.
 	- For every important module connection, include a design_spec.interfaces entry
 	  using module_a, face_a, module_b, face_b, kind, and note. Interface module
 	  names must exactly match design_spec.modules names.
@@ -434,8 +446,9 @@ such as [72..96, 180..260, 72..96], with height at least 2.5x max(width, depth).
 	- Preserve useful details from the current plan unless the user asks to replace them.
 	- Output a coherent, buildable Minecraft structure, not a raw coordinate dump.
 	- Work in two stages inside analysis: first update analysis.design_spec with
-	  building_type, grid, modules, bboxes, interfaces, material_schedule, and
-	  quality_checks; then generate parts from that design spec.
+	  building_type, scale_intent, grid, modules, bboxes, interfaces,
+	  material_schedule, quality_checks, and performance_budget; then generate
+	  parts from that design spec.
 	- For complex or large projects, split conceptually by modules but keep one
 	  final BuildPlan JSON. Every module must share the same coordinates and exact
 	  interface faces so future split-LLM generation can be stitched safely.
@@ -466,7 +479,16 @@ Required output shape:
 	      "modules": [],
 	      "interfaces": [],
 	      "material_schedule": [],
-	      "quality_checks": []
+	      "quality_checks": [],
+	      "performance_budget": {{
+	        "max_blocks": 120000,
+	        "max_preview_blocks": 120000,
+	        "max_tick_commands": 0,
+	        "animated": false,
+	        "suggested_view_distance": 12,
+	        "min_server_memory_mb": 2048,
+	        "notes": []
+	      }}
 	    }},
 	    "intent": [],
     "massing": [],

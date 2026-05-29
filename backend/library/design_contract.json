@@ -16,11 +16,12 @@
       "interfaces": "connection faces between modules, e.g. tower_left.top == skybridge.left_support",
       "material_schedule": "role-to-block choices with reasons",
       "minecraft_translation": "how real design elements become box/window/stairs/slab/component parts",
-      "quality_checks": "checks to run after generation, such as octagonal footprint, clear void, walkable bridge deck, repeated lighting"
+      "quality_checks": "checks to run after generation, such as octagonal footprint, clear void, walkable bridge deck, repeated lighting",
+      "performance_budget": "max block count, preview block count, tick-command budget, animation flag, suggested view distance, and minimum server memory"
     },
     "module_schema": {
       "name": "short stable module id",
-      "role": "foundation|mass|structure|void|facade|roof|interior|lighting|detail|landscape",
+      "role": "foundation|mass|structure|void|facade|roof|interior|lighting|detail|landscape|circulation|services|architecture|entry",
       "bbox": [[0, 0, 0], [10, 10, 10]],
       "materials": ["palette keys or minecraft block ids"],
       "interfaces": {
@@ -37,8 +38,17 @@
       "face_a": "north|south|east|west|top|bottom",
       "module_b": "second module name",
       "face_b": "north|south|east|west|top|bottom",
-      "kind": "touch|overlap_one_block|support|opening|bridge_connection",
+      "kind": "support|overlap|overlap_one_block|adjacent|touch|opening|circulation|visual|service|entry|bridge_connection|other",
       "note": "short explanation of the required cut-face alignment"
+    },
+    "performance_budget_schema": {
+      "max_blocks": 120000,
+      "max_preview_blocks": 120000,
+      "max_tick_commands": 0,
+      "animated": false,
+      "suggested_view_distance": 12,
+      "min_server_memory_mb": 2048,
+      "notes": ["prefer static lights unless animation is explicitly requested"]
     },
     "split_generation_rules": [
       "Split only by modules with explicit bboxes and shared interface faces.",

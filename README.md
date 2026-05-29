@@ -262,11 +262,23 @@ LLM 最终生成的是一个 JSON DSL：
         {
           "name": "main_tower",
           "role": "mass",
-          "bbox": [[12, 12, 12], [84, 176, 84]]
+          "bbox": [[12, 12, 12], [84, 176, 84]],
+          "materials": ["body=smooth_quartz", "roof=oxidized_cut_copper"],
+          "interfaces": {"bottom": "stone_base.top"},
+          "notes": ["octagonal stacked tower body"]
         }
       ],
       "material_schedule": ["body=smooth_quartz", "roof=oxidized_cut_copper"],
-      "quality_checks": ["八角轮廓清晰", "每层都有飞檐"]
+      "quality_checks": ["八角轮廓清晰", "每层都有飞檐"],
+      "performance_budget": {
+        "max_blocks": 120000,
+        "max_preview_blocks": 120000,
+        "max_tick_commands": 0,
+        "animated": false,
+        "suggested_view_distance": 12,
+        "min_server_memory_mb": 2048,
+        "notes": ["默认使用静态灯光"]
+      }
     },
     "intent": ["简短结构化设计说明"]
   },
@@ -410,6 +422,7 @@ modules             地基、主体、空洞、立面、屋顶、室内、灯光
 interfaces          模块之间的接口面
 material_schedule   材料表
 quality_checks      生成后要检查的要点
+performance_budget  方块数、预览数、动画命令数、视距和内存预算
 ```
 
 模块示例：
