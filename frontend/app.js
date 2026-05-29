@@ -785,6 +785,26 @@ createApp({
         this.moduleAction = "";
       }
     },
+    async deleteModuleSnapshot(module, snapshot) {
+      if (!this.project?.id || !module?.name || !snapshot?.path) return;
+      if (!confirm(`删除模块 ${module.name} 的快照？\n${this.snapshotTime(snapshot)}`)) return;
+      this.moduleAction = `delete-snapshot:${module.name}`;
+      try {
+        const response = await this.apiFetch(`/api/projects/${this.project.id}/module-snapshots`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ confirm: "DELETE_MODULE_SNAPSHOT", snapshot_path: snapshot.path }),
+        });
+        if (!response.ok) throw new Error(await response.text());
+        await response.json();
+        await this.fetchProject(this.project.id);
+        await this.loadModulePlan(module);
+      } catch (error) {
+        alert(`删除快照失败：${error instanceof Error ? error.message : String(error)}`);
+      } finally {
+        this.moduleAction = "";
+      }
+    },
     async refreshModuleOperations() {
       if (!this.project?.id) return;
       this.moduleLogAction = "refresh";

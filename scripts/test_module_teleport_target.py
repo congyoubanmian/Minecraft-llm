@@ -15,6 +15,7 @@ from backend.main import (
     _bounds_volume,
     _clear_module_area,
     _clear_module_plan,
+    _delete_module_snapshot,
     _latest_module_snapshot,
     _module_snapshot_by_path,
     _module_operation_plan,
@@ -102,6 +103,14 @@ def main() -> None:
             assert _module_snapshot_by_path(snapshot_state, "skybridge") == snapshot
             assert _module_snapshot_by_path(snapshot_state, "skybridge", snapshot["path"]) == snapshot
             assert _module_snapshot_by_path(snapshot_state, "skybridge", "/tmp/missing.schem") is None
+            delete_state = {"module_snapshots": [snapshot]}
+            deleted = _delete_module_snapshot(delete_state, snapshot["path"])
+            assert deleted is not None
+            assert deleted["snapshot"] == snapshot
+            assert deleted["file_removed"] is True
+            assert delete_state["module_snapshots"] == []
+            assert not Path(snapshot["path"]).exists()
+            assert _delete_module_snapshot(delete_state, snapshot["path"]) is None
 
             class FakeFaweController:
                 def save_region(self, schematic_path, bounds):

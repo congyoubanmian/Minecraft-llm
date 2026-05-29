@@ -154,6 +154,11 @@ class PlacementActionRequest(BaseModel):
     snapshot_path: str | None = None
 
 
+class ModuleSnapshotDeleteRequest(BaseModel):
+    confirm: str
+    snapshot_path: str
+
+
 @app.get("/api/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
@@ -561,6 +566,23 @@ def get_project_module_snapshots(project_id: str, module: str | None = None) -> 
     }
 
 
+@app.delete("/api/projects/{project_id}/module-snapshots", dependencies=[Depends(_require_api_key)])
+def delete_project_module_snapshot(project_id: str, request: ModuleSnapshotDeleteRequest) -> dict[str, Any]:
+    if request.confirm != "DELETE_MODULE_SNAPSHOT":
+        raise HTTPException(status_code=400, detail='confirm must be "DELETE_MODULE_SNAPSHOT"')
+    state = _load_project(project_id)
+    removed = _delete_module_snapshot(state, request.snapshot_path)
+    if not removed:
+        raise HTTPException(status_code=404, detail="module snapshot not found")
+    state["updated_at"] = _now()
+    _save_project(project_id, state)
+    return {
+        "project_id": project_id,
+        "snapshot": removed["snapshot"],
+        "file_removed": removed["file_removed"],
+    }
+
+
 @app.delete("/api/projects/{project_id}/module-operations", dependencies=[Depends(_require_api_key)])
 def clear_project_module_operations(project_id: str) -> dict[str, Any]:
     state = _load_project(project_id)
@@ -936,6 +958,30 @@ def _module_snapshot_by_path(
         if snapshot.get("path") == snapshot_path:
             return snapshot
     return None
+
+
+def _delete_module_snapshot(state: dict[str, Any], snapshot_path: str) -> dict[str, Any] | None:
+    snapshots = state.get("module_snapshots") or []
+    for index, snapshot in enumerate(snapshots):
+        if snapshot.get("path") != snapshot_path:
+            continue
+        removed_snapshot = snapshots.pop(index)
+        state["module_snapshots"] = snapshots
+        file_removed = False
+        path = Path(snapshot_path)
+        if path.exists() and _is_path_inside(path, settings.schematic_dir):
+            path.unlink()
+            file_removed = True
+        return {"snapshot": removed_snapshot, "file_removed": file_removed}
+    return None
+
+
+def _is_path_inside(path: Path, parent: Path) -> bool:
+    try:
+        path.resolve().relative_to(parent.resolve())
+        return True
+    except ValueError:
+        return False
 
 
 def _module_snapshots(state: dict[str, Any], module_name: str | None = None) -> list[dict[str, Any]]:

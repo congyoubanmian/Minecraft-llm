@@ -898,6 +898,12 @@ pre {
   gap: 8px;
 }
 
+.module-snapshot-list div div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .module-snapshot-list span {
   overflow-wrap: anywhere;
 }
