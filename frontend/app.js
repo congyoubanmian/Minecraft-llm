@@ -692,6 +692,11 @@ createApp({
       };
       return labels[source] || "";
     },
+    moduleSnapshotDownloadUrl(snapshot) {
+      if (!this.project?.id || !snapshot?.path) return "#";
+      const query = new URLSearchParams({ snapshot_path: snapshot.path });
+      return `/api/projects/${this.project.id}/module-snapshots/download?${query.toString()}`;
+    },
     async teleportBlueprintModule(module) {
       if (!this.project?.id || !module?.name) return;
       this.moduleAction = `teleport:${module.name}`;

@@ -18,6 +18,7 @@ from backend.main import (
     _delete_module_snapshot,
     _latest_module_snapshot,
     _module_snapshot_by_path,
+    _snapshot_by_path,
     _module_operation_plan,
     _module_world_target,
     _record_module_operation,
@@ -103,6 +104,8 @@ def main() -> None:
             assert _module_snapshot_by_path(snapshot_state, "skybridge") == snapshot
             assert _module_snapshot_by_path(snapshot_state, "skybridge", snapshot["path"]) == snapshot
             assert _module_snapshot_by_path(snapshot_state, "skybridge", "/tmp/missing.schem") is None
+            assert _snapshot_by_path(snapshot_state, snapshot["path"]) == snapshot
+            assert _snapshot_by_path(snapshot_state, "/tmp/missing.schem") is None
             delete_state = {"module_snapshots": [snapshot]}
             deleted = _delete_module_snapshot(delete_state, snapshot["path"])
             assert deleted is not None

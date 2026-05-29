@@ -15,6 +15,7 @@ from backend.main import (
     ModuleSnapshotDeleteRequest,
     clear_project_module_operations,
     delete_project_module_snapshot,
+    download_project_module_snapshot,
     get_project_module_operations,
     get_project_module_snapshots,
 )
@@ -66,6 +67,10 @@ def main() -> None:
         assert core_snapshots["snapshot_count"] == 2
         assert core_snapshots["snapshots"][0]["source"] == "world"
         assert core_snapshots["snapshots"][1]["source"] == "generated"
+
+        download = download_project_module_snapshot(project_id, snapshot_path=str(snapshot_file))
+        assert Path(download.path) == snapshot_file
+        assert download.filename == snapshot_file.name
 
         deleted = delete_project_module_snapshot(
             project_id,

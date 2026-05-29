@@ -566,6 +566,18 @@ def get_project_module_snapshots(project_id: str, module: str | None = None) -> 
     }
 
 
+@app.get("/api/projects/{project_id}/module-snapshots/download")
+def download_project_module_snapshot(project_id: str, snapshot_path: str) -> FileResponse:
+    state = _load_project(project_id)
+    snapshot = _snapshot_by_path(state, snapshot_path)
+    if not snapshot:
+        raise HTTPException(status_code=404, detail="module snapshot not found")
+    path = Path(snapshot_path)
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="module snapshot file not found")
+    return FileResponse(path, filename=path.name)
+
+
 @app.delete("/api/projects/{project_id}/module-snapshots", dependencies=[Depends(_require_api_key)])
 def delete_project_module_snapshot(project_id: str, request: ModuleSnapshotDeleteRequest) -> dict[str, Any]:
     if request.confirm != "DELETE_MODULE_SNAPSHOT":
@@ -955,6 +967,13 @@ def _module_snapshot_by_path(
     if not snapshot_path:
         return _latest_module_snapshot(state, module_name)
     for snapshot in _module_snapshots(state, module_name):
+        if snapshot.get("path") == snapshot_path:
+            return snapshot
+    return None
+
+
+def _snapshot_by_path(state: dict[str, Any], snapshot_path: str) -> dict[str, Any] | None:
+    for snapshot in state.get("module_snapshots") or []:
         if snapshot.get("path") == snapshot_path:
             return snapshot
     return None

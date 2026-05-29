@@ -495,6 +495,13 @@
                   <div v-for="snapshot in modulePlan.snapshots" :key="snapshot.path || snapshot.created_at">
                     <span>{{ snapshotTime(snapshot) }}</span>
                     <div>
+                      <a
+                        v-if="snapshot.path"
+                        class="text-button"
+                        :href="moduleSnapshotDownloadUrl(snapshot)"
+                      >
+                        下载
+                      </a>
                       <button
                         type="button"
                         class="text-button"
