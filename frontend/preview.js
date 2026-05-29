@@ -168,7 +168,8 @@ window.McPreview = {
       this.clearPreview();
 
       const blocksByType = new Map();
-      for (const [x, y, z, block] of this.preview.blocks || []) {
+      const previewBlocks = this.filteredPreviewBlocks();
+      for (const [x, y, z, block] of previewBlocks) {
         if (!blocksByType.has(block)) blocksByType.set(block, []);
         blocksByType.get(block).push([x, y, z]);
       }
@@ -212,7 +213,7 @@ window.McPreview = {
       const scale = Math.max(3, Math.min(11, base * 1.25));
       const originX = width / 2;
       const originY = Math.max(80, height * 0.58);
-      const blocks = this.sampleCanvasBlocks(this.preview.blocks || []);
+      const blocks = this.sampleCanvasBlocks(this.filteredPreviewBlocks());
 
       blocks.sort((a, b) => {
         const da = a[0] + a[2] + a[1] * 0.15;
@@ -232,7 +233,22 @@ window.McPreview = {
       ctx.globalAlpha = 1;
       ctx.fillStyle = "#405047";
       ctx.font = "12px system-ui, sans-serif";
-      ctx.fillText("WebGL 不可用，当前为 Canvas 2D 等距预览", 14, 24);
+      const module = this.selectedBlueprintModule?.name ? ` · ${this.selectedBlueprintModule.name}` : "";
+      ctx.fillText(`WebGL 不可用，当前为 Canvas 2D 等距预览${module}`, 14, 24);
+    },
+    filteredPreviewBlocks() {
+      const blocks = this.preview?.blocks || [];
+      const bbox = this.selectedBlueprintModule?.bbox;
+      if (!bbox) return blocks;
+      const [min, max] = bbox;
+      return blocks.filter(([x, y, z]) => (
+        x >= min[0] &&
+        y >= min[1] &&
+        z >= min[2] &&
+        x <= max[0] &&
+        y <= max[1] &&
+        z <= max[2]
+      ));
     },
     sampleCanvasBlocks(blocks) {
       const limit = 18000;

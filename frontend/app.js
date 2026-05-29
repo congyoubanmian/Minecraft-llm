@@ -28,6 +28,7 @@ createApp({
       project: null,
       preview: null,
       previewMode: "surface",
+      selectedBlueprintModule: null,
       placementForm: {
         x: null,
         y: null,
@@ -92,8 +93,9 @@ createApp({
       const sampled = this.preview.sampled ? "，已抽样" : "";
       const sourceCount = this.preview.preview_source_count || this.preview.preview_count || 0;
       const previewKind = this.preview.mode === "surface" ? `外表面 ${sourceCount}` : `完整 ${this.preview.block_count || 0}`;
+      const module = this.selectedBlueprintModule ? `，模块 ${this.selectedBlueprintModule.name}` : "";
       const mode = this.renderMode === "webgl" ? "WebGL 3D" : "Canvas 2D";
-      return `${size}，${previewKind} 个方块，当前加载 ${this.preview.preview_count}${sampled}，${mode}`;
+      return `${size}，${previewKind} 个方块，当前加载 ${this.preview.preview_count}${sampled}${module}，${mode}`;
     },
   },
   mounted() {
@@ -155,6 +157,7 @@ createApp({
         this.project = null;
         this.preview = null;
         this.previewMode = "surface";
+        this.selectedBlueprintModule = null;
         this.chatInput = "";
         this.$nextTick(() => {
           this.ensurePreviewRenderer();
@@ -168,6 +171,7 @@ createApp({
       this.project = null;
       this.preview = null;
       this.previewMode = "surface";
+      this.selectedBlueprintModule = null;
       this.clearPreview();
       this.destroyPreviewRenderer();
       this.loadProjects();
@@ -359,6 +363,7 @@ createApp({
       this.project = null;
       this.preview = null;
       this.previewMode = "surface";
+      this.selectedBlueprintModule = null;
       this.clearPreview();
 
       const form = new FormData();
@@ -559,6 +564,17 @@ createApp({
     sizeText(size) {
       if (!size) return "-";
       return Array.isArray(size) ? size.join(" x ") : "-";
+    },
+    selectBlueprintModule(module) {
+      this.selectedBlueprintModule = module;
+      this.renderPreview();
+    },
+    clearBlueprintModule() {
+      this.selectedBlueprintModule = null;
+      this.renderPreview();
+    },
+    isSelectedBlueprintModule(module) {
+      return Boolean(this.selectedBlueprintModule && module?.name === this.selectedBlueprintModule.name);
     },
     roleText(role) {
       const labels = {

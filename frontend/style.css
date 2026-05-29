@@ -756,6 +756,11 @@ pre {
   background: #ffffff;
 }
 
+.module-item.selected {
+  border-color: #285c78;
+  box-shadow: inset 0 0 0 1px #285c78;
+}
+
 .stage-item strong,
 .module-item strong {
   font-size: 13px;
@@ -779,6 +784,23 @@ pre {
 
 .module-item p {
   margin: 0;
+}
+
+.module-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: #58645f;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.module-toolbar .text-button,
+.module-item .text-button {
+  min-height: 28px;
+  justify-self: start;
+  padding: 0;
 }
 
 .interface-list {

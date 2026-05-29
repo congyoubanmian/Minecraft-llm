@@ -388,13 +388,26 @@
 
             <div class="blueprint-section">
               <h3>模块</h3>
+              <div class="module-toolbar">
+                <span>{{ selectedBlueprintModule ? `正在查看 ${selectedBlueprintModule.name}` : "正在查看全部模块" }}</span>
+                <button type="button" class="text-button" :disabled="!selectedBlueprintModule" @click="clearBlueprintModule">
+                  全部
+                </button>
+              </div>
               <div class="module-list">
-                <article v-for="module in blueprintModules.slice(0, 10)" :key="module.name" class="module-item">
+                <article
+                  v-for="module in blueprintModules.slice(0, 10)"
+                  :key="module.name"
+                  :class="['module-item', { selected: isSelectedBlueprintModule(module) }]"
+                >
                   <div>
                     <strong>{{ module.name }}</strong>
                     <span>{{ roleText(module.role) }} · {{ sizeText(module.size) }}</span>
                   </div>
                   <p>{{ (module.materials || []).slice(0, 3).join("；") || bboxText(module.bbox) }}</p>
+                  <button type="button" class="text-button" :disabled="!module.bbox" @click="selectBlueprintModule(module)">
+                    查看
+                  </button>
                 </article>
               </div>
             </div>
