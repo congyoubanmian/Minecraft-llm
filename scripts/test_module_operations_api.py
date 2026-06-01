@@ -123,6 +123,30 @@ def main() -> None:
         assert cleanup["removed_snapshots"][0]["id"] == "snapshot-core-missing"
         assert cleanup["snapshot_summary"]["missing_count"] == 0
 
+        second_missing_snapshot_file = main_module.settings.schematic_dir / "second_missing_snapshot.schem"
+        state = json.loads((project_dir / "state.json").read_text(encoding="utf-8"))
+        state["module_snapshots"].append(
+            {
+                "id": "snapshot-roof-missing",
+                "module": "roof",
+                "created_at": "2026-01-01T00:04:00+00:00",
+                "source": "generated",
+                "path": str(second_missing_snapshot_file),
+            }
+        )
+        _save_project(project_id, state)
+        cleanup_all = cleanup_project_module_snapshots(
+            project_id,
+            ModuleSnapshotCleanupRequest(confirm="CLEANUP_MISSING_MODULE_SNAPSHOTS"),
+        )
+        assert cleanup_all["module"] is None
+        assert cleanup_all["removed_count"] == 1
+        assert cleanup_all["remaining_count"] == 3
+        assert cleanup_all["removed_snapshots"][0]["id"] == "snapshot-roof-missing"
+        assert cleanup_all["snapshot_summary"]["count"] == 3
+        assert cleanup_all["snapshot_summary"]["available_count"] == 1
+        assert cleanup_all["snapshot_summary"]["missing_count"] == 0
+
         download = download_project_module_snapshot(project_id, snapshot_id="snapshot-core-generated")
         assert Path(download.path) == snapshot_file
         assert download.filename == snapshot_file.name
