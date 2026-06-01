@@ -942,8 +942,9 @@ createApp({
           }),
         });
         if (!response.ok) throw new Error(await response.text());
-        await response.json();
-        await this.fetchProject(this.project.id);
+        const payload = await response.json();
+        this.applyProjectSnapshotSummary(this.project.id, payload.snapshot_summary);
+        this.removeProjectSnapshots(this.project.id, payload.removed_snapshots);
         await this.loadModulePlan(module);
       } catch (error) {
         alert(`清理缺失快照失败：${error instanceof Error ? error.message : String(error)}`);

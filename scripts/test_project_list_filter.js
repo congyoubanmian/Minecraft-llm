@@ -13,6 +13,9 @@ const sandbox = {
   confirm() {
     return true;
   },
+  alert(message) {
+    throw new Error(message);
+  },
   localStorage: {
     value: "",
     getItem(key) {
@@ -35,6 +38,7 @@ if (!capturedOptions) {
 const data = capturedOptions.data();
 const methods = capturedOptions.methods;
 const computed = capturedOptions.computed;
+const cleanupBodies = [];
 const cleanupResponses = {
   "big-old": {
     removed_snapshots: [{ id: "missing-big" }],
@@ -67,7 +71,8 @@ const context = {
     }
     const projectId = match[1];
     const body = JSON.parse(options.body);
-    if (body.confirm !== "CLEANUP_MISSING_MODULE_SNAPSHOTS" || body.module !== null) {
+    cleanupBodies.push(body);
+    if (body.confirm !== "CLEANUP_MISSING_MODULE_SNAPSHOTS") {
       throw new Error(`unexpected cleanup body ${options.body}`);
     }
     if (!cleanupResponses[projectId]) {
@@ -125,6 +130,7 @@ context.project = {
     { id: "missing-big", path: "/tmp/missing-big.schem", file: { exists: false } },
   ],
 };
+context.loadModulePlan = async () => {};
 Object.defineProperty(context, "visibleProjects", {
   get() {
     return computed.visibleProjects.call(context);
@@ -265,6 +271,24 @@ methods.cleanupProjectMissingSnapshots.call(context, context.projects[2]).then((
   }
   if (methods.visibleSnapshotStorageText.call(context) !== "") {
     throw new Error("expected empty storage summary after cleanup in missing snapshot filter");
+  }
+  context.project = {
+    ...context.projects[2],
+    snapshot_summary: { count: 2, available_count: 1, missing_count: 1, module_count: 1, bytes: 8192 },
+    module_snapshots: [
+      { id: "valid-big", module: "core", path: "/tmp/valid-big.schem", file: { exists: true } },
+      { id: "missing-big", module: "core", path: "/tmp/missing-big.schem", file: { exists: false } },
+    ],
+  };
+  context.projects = context.projects.map((item) => (item.id === "big-old" ? context.project : item));
+  return methods.cleanupMissingModuleSnapshots.call(context, { name: "core" });
+}).then(() => {
+  const lastBody = cleanupBodies[cleanupBodies.length - 1];
+  if (lastBody.module !== "core") {
+    throw new Error(`expected module cleanup body to target core, got ${lastBody.module}`);
+  }
+  if (context.project.snapshot_summary.missing_count !== 0 || context.project.module_snapshots.length !== 1) {
+    throw new Error("module cleanup did not update current project summary and snapshots");
   }
   console.log({ project_list_filter: "ok" });
 });
