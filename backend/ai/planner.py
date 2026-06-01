@@ -22,6 +22,7 @@ def plan_from_conversation(
     analysis: dict | None,
     messages: list[dict[str, str]],
     current_plan: dict | None = None,
+    diagnostics: dict | None = None,
     image_path: Path | None = None,
 ) -> BuildPlan:
     if settings.planner_mode.lower() == "static":
@@ -35,6 +36,7 @@ def plan_from_conversation(
         analysis=analysis or {},
         messages=messages,
         current_plan=current_plan,
+        diagnostics=diagnostics,
     )
 
     return _run_codex(prompt, name, output_path, image_path, error_label="Codex conversation planner failed")
@@ -428,8 +430,10 @@ def _build_conversation_prompt(
     analysis: dict,
     messages: list[dict[str, str]],
     current_plan: dict | None,
+    diagnostics: dict | None = None,
 ) -> str:
     library_context = get_library_context()
+    diagnostic_context = _conversation_diagnostic_context(diagnostics or {})
     return f"""
 You are modifying a Minecraft building plan through a multi-turn design chat.
 
@@ -483,6 +487,9 @@ such as [72..96, 180..260, 72..96], with height at least 2.5x max(width, depth).
 	  names must exactly match design_spec.modules names.
 	- If the previous plan used a too-specific component family, switch templates and
 	  explain that in analysis.changes.
+	- If current diagnostics are present, fix their warnings, interface gaps, missing
+	  module bboxes, stage execution problems, and performance issues before adding
+	  new visual detail.
 	- Use enough explicit parts for recognizable massing, facade, roof, entrances,
   windows, trim, columns, steps, and ornaments.
 - Do not use more than 4096 entries in any single "blocks" part.
@@ -532,9 +539,43 @@ Image/vision analysis:
 Conversation messages:
 {json.dumps(messages, ensure_ascii=False, indent=2)}
 
+Current diagnostics to consider:
+{json.dumps(diagnostic_context, ensure_ascii=False, indent=2)}
+
 Current plan, if any:
 {json.dumps(current_plan or {}, ensure_ascii=False, indent=2)}
 """.strip()
+
+
+def _conversation_diagnostic_context(diagnostics: dict) -> dict:
+    if not diagnostics:
+        return {}
+    blueprint = diagnostics.get("design_blueprint") or {}
+    design_spec = diagnostics.get("design_spec") or {}
+    return {
+        "template_guess": diagnostics.get("template_guess"),
+        "warnings": (diagnostics.get("warnings") or [])[:12],
+        "material_ratios": diagnostics.get("material_ratios") or {},
+        "design_spec": {
+            "present": design_spec.get("present"),
+            "stitch_ready": design_spec.get("stitch_ready"),
+            "module_count": design_spec.get("module_count"),
+            "missing_bbox": design_spec.get("missing_bbox") or [],
+            "duplicate_names": design_spec.get("duplicate_names") or [],
+            "coverage": design_spec.get("coverage") or {},
+        },
+        "interface_issues": [
+            item
+            for item in (blueprint.get("interface_checks") or design_spec.get("interface_checks") or [])
+            if not item.get("ok")
+        ][:8],
+        "stage_issues": [
+            item
+            for item in (blueprint.get("stage_checks") or design_spec.get("stage_checks") or [])
+            if not item.get("executable")
+        ][:8],
+        "risks": (blueprint.get("risks") or [])[:8],
+    }
 
 
 def _build_repair_prompt(

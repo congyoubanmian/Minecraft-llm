@@ -1346,6 +1346,7 @@ def _run_project_generation(project_id: str) -> None:
             analysis=state.get("analysis"),
             messages=state.get("messages", []),
             current_plan=state.get("plan"),
+            diagnostics=state.get("analysis_report") or state.get("preflight_analysis_report"),
             image_path=image_path,
         )
         plan, preflight_report = _repair_plan_if_needed(project_id, state, plan, image_path)
