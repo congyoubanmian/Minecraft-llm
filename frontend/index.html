@@ -318,7 +318,18 @@
             </div>
             <div>
               <dt>Snapshots</dt>
-              <dd :class="{ 'warning-text': projectMissingSnapshotCount(project) }">{{ projectSnapshotText(project || {}) }}</dd>
+              <dd :class="{ 'warning-text': projectMissingSnapshotCount(project) }">
+                {{ projectSnapshotText(project || {}) }}
+                <button
+                  v-if="projectMissingSnapshotCount(project)"
+                  type="button"
+                  class="text-button inline-fact-button danger-text-button"
+                  :disabled="projectListAction"
+                  @click="cleanupProjectMissingSnapshots(project)"
+                >
+                  {{ projectListAction === `cleanup-snapshots:${project.id}` ? "清理中" : "清理缺失" }}
+                </button>
+              </dd>
             </div>
             <div>
               <dt>Paste</dt>

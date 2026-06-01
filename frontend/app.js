@@ -540,6 +540,9 @@ createApp({
       this.projects = this.projects.map((project) =>
         project.id === projectId ? { ...project, snapshot_summary: snapshotSummary } : project,
       );
+      if (this.project?.id === projectId) {
+        this.project = { ...this.project, snapshot_summary: snapshotSummary };
+      }
     },
     async cancelGeneration() {
       if (!this.project?.id || !this.busy) return;

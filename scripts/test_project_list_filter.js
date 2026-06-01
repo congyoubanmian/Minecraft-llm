@@ -111,6 +111,7 @@ const context = {
     },
   ],
 };
+context.project = { ...context.projects[2] };
 Object.defineProperty(context, "visibleProjects", {
   get() {
     return computed.visibleProjects.call(context);
@@ -214,6 +215,9 @@ methods.cleanupProjectMissingSnapshots.call(context, context.projects[2]).then((
   const updated = context.projects.find((item) => item.id === "big-old");
   if (updated.snapshot_summary.missing_count !== 0 || updated.snapshot_summary.bytes !== 256) {
     throw new Error("project cleanup did not update snapshot summary");
+  }
+  if (context.project.snapshot_summary.missing_count !== 0 || context.project.snapshot_summary.bytes !== 256) {
+    throw new Error("project cleanup did not update current project snapshot summary");
   }
   const untouched = context.projects.find((item) => item.id === "new-mid");
   if (untouched.snapshot_summary.bytes !== 4096) {

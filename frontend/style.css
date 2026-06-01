@@ -565,6 +565,15 @@ button:disabled {
   font-weight: 800;
 }
 
+.inline-fact-button {
+  display: inline-flex;
+  width: auto;
+  min-height: 24px;
+  margin: 0 0 0 8px;
+  padding: 0 7px;
+  vertical-align: middle;
+}
+
 .project-card-footer {
   display: flex;
   justify-content: flex-end;
