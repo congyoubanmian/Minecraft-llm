@@ -1043,6 +1043,12 @@ createApp({
       if (filter === "missing_snapshots") return this.projectMissingSnapshotCount(item) > 0;
       return item.status === filter;
     },
+    emptyProjectListText() {
+      if (this.projectStatusFilter === "missing_snapshots" && !this.projectSearch.trim()) {
+        return "没有缺失快照的项目。";
+      }
+      return "没有匹配的项目。";
+    },
     compareProjects(left, right, sortKey) {
       const byUpdated = () => this.projectTimeValue(right) - this.projectTimeValue(left);
       const compareText = (a, b) => String(a || "").localeCompare(String(b || ""), "zh-CN");

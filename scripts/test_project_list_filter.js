@@ -181,5 +181,14 @@ methods.cleanupProjectMissingSnapshots.call(context, context.projects[2]).then((
   if (untouched.snapshot_summary.bytes !== 4096) {
     throw new Error("project cleanup changed the wrong project");
   }
+  context.projectSearch = "";
+  context.projectStatusFilter = "missing_snapshots";
+  const afterCleanupVisible = computed.visibleProjects.call(context);
+  if (afterCleanupVisible.length !== 0) {
+    throw new Error(`expected no projects after missing snapshot cleanup, got ${afterCleanupVisible.length}`);
+  }
+  if (methods.emptyProjectListText.call(context) !== "没有缺失快照的项目。") {
+    throw new Error("expected missing snapshot empty state text");
+  }
   console.log({ project_list_filter: "ok" });
 });

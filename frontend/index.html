@@ -114,7 +114,7 @@
 
           <div v-if="projectListLoading" class="empty-list">正在加载项目</div>
           <div v-else-if="!projects.length" class="empty-list">暂无项目，先创建一个。</div>
-          <div v-else-if="!visibleProjects.length" class="empty-list">没有匹配的项目。</div>
+          <div v-else-if="!visibleProjects.length" class="empty-list">{{ emptyProjectListText() }}</div>
           <div v-else class="project-grid">
             <article
               v-for="item in visibleProjects"
