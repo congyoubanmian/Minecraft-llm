@@ -422,9 +422,9 @@ button:disabled {
 
 .project-list-controls {
   flex: 1 1 460px;
-  max-width: 560px;
+  max-width: 720px;
   display: grid;
-  grid-template-columns: minmax(180px, 1fr) minmax(130px, 170px);
+  grid-template-columns: minmax(180px, 1fr) minmax(120px, 150px) minmax(130px, 170px);
   gap: 8px;
 }
 

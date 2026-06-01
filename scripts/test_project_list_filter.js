@@ -10,6 +10,16 @@ const sandbox = {
       return { mount() {} };
     },
   },
+  localStorage: {
+    value: "",
+    getItem(key) {
+      return key === "mc_builder_project_list_prefs" ? this.value : null;
+    },
+    setItem(key, value) {
+      if (key === "mc_builder_project_list_prefs") this.value = value;
+    },
+  },
+  console,
   window: { McPreview: {}, McHelpers: {} },
 };
 vm.createContext(sandbox);
@@ -43,6 +53,8 @@ const context = {
       last_message: "rainbow led tower",
       preview: { size: [30, 120, 30], block_count: 7000 },
       snapshot_summary: { bytes: 4096 },
+      analysis_report: { design_blueprint: { present: true } },
+      has_schematic: true,
     },
     {
       id: "big-old",
@@ -63,12 +75,26 @@ if (visible.length !== 1 || visible[0].id !== "new-mid") {
 }
 
 context.projectSearch = "";
+context.projectStatusFilter = "all";
 context.projectSort = "updated_desc";
 visible = computed.visibleProjects.call(context);
 if (visible.map((item) => item.id).join(",") !== "new-mid,big-old,old-small") {
   throw new Error("updated sort order mismatch");
 }
 
+context.projectStatusFilter = "failed";
+visible = computed.visibleProjects.call(context);
+if (visible.length !== 1 || visible[0].id !== "big-old") {
+  throw new Error(`expected failed filter to return big-old, got ${visible.map((item) => item.id).join(",")}`);
+}
+
+context.projectStatusFilter = "with_blueprint";
+visible = computed.visibleProjects.call(context);
+if (visible.length !== 1 || visible[0].id !== "new-mid") {
+  throw new Error(`expected blueprint filter to return new-mid, got ${visible.map((item) => item.id).join(",")}`);
+}
+
+context.projectStatusFilter = "all";
 context.projectSort = "volume_desc";
 visible = computed.visibleProjects.call(context);
 if (visible[0].id !== "big-old") {
@@ -79,6 +105,17 @@ context.projectSort = "snapshots_desc";
 visible = computed.visibleProjects.call(context);
 if (visible[0].id !== "big-old") {
   throw new Error(`expected largest snapshot storage first, got ${visible[0].id}`);
+}
+
+context.projectSearch = "tower";
+context.projectStatusFilter = "with_schematic";
+context.projectSort = "name_asc";
+methods.saveProjectListPrefs.call(context);
+
+const restored = { ...data, ...methods };
+methods.loadProjectListPrefs.call(restored);
+if (restored.projectSearch !== "tower" || restored.projectStatusFilter !== "with_schematic" || restored.projectSort !== "name_asc") {
+  throw new Error("project list prefs did not round-trip through localStorage");
 }
 
 console.log({ project_list_filter: "ok" });

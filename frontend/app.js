@@ -2,6 +2,8 @@ const { createApp } = Vue;
 
 const BUSY_STATUSES = ["queued", "analyzing", "planning", "generating_schematic", "pasting"];
 const TERMINAL_STATUSES = ["done", "failed", "cancelled"];
+const PROJECT_STATUS_FILTERS = ["all", "done", "busy", "failed", "cancelled", "with_blueprint", "with_schematic"];
+const PROJECT_SORTS = ["updated_desc", "name_asc", "blocks_desc", "volume_desc", "snapshots_desc"];
 
 createApp({
   mixins: [window.McPreview, window.McHelpers],
@@ -11,6 +13,7 @@ createApp({
       route: "list",
       projects: [],
       projectSearch: "",
+      projectStatusFilter: "all",
       projectSort: "updated_desc",
       projectListLoading: false,
       world: null,
@@ -126,9 +129,11 @@ createApp({
     },
     visibleProjects() {
       const query = this.projectSearch.trim().toLowerCase();
-      const filtered = query
+      const status = this.projectStatusFilter;
+      const searched = query
         ? this.projects.filter((item) => this.projectSearchText(item).includes(query))
         : [...this.projects];
+      const filtered = status === "all" ? searched : searched.filter((item) => this.projectMatchesStatusFilter(item, status));
       return filtered.sort((left, right) => this.compareProjects(left, right, this.projectSort));
     },
     previewMeta() {
@@ -143,6 +148,7 @@ createApp({
     },
   },
   mounted() {
+    this.loadProjectListPrefs();
     this.checkHealth();
     this.loadLibrary();
     window.addEventListener("hashchange", this.syncRoute);
@@ -987,6 +993,12 @@ createApp({
         .join(" ")
         .toLowerCase();
     },
+    projectMatchesStatusFilter(item, filter) {
+      if (filter === "busy") return BUSY_STATUSES.includes(item.status);
+      if (filter === "with_blueprint") return Boolean(item.analysis_report?.design_blueprint?.present);
+      if (filter === "with_schematic") return Boolean(item.has_schematic);
+      return item.status === filter;
+    },
     compareProjects(left, right, sortKey) {
       const byUpdated = () => this.projectTimeValue(right) - this.projectTimeValue(left);
       const compareText = (a, b) => String(a || "").localeCompare(String(b || ""), "zh-CN");
@@ -999,6 +1011,32 @@ createApp({
         snapshots_desc: () => this.projectSnapshotBytes(right) - this.projectSnapshotBytes(left) || tieBreak,
       };
       return (sorters[sortKey] || sorters.updated_desc)();
+    },
+    loadProjectListPrefs() {
+      try {
+        const raw = localStorage.getItem("mc_builder_project_list_prefs");
+        if (!raw) return;
+        const prefs = JSON.parse(raw);
+        if (typeof prefs.search === "string") this.projectSearch = prefs.search;
+        if (PROJECT_STATUS_FILTERS.includes(prefs.status)) this.projectStatusFilter = prefs.status;
+        if (PROJECT_SORTS.includes(prefs.sort)) this.projectSort = prefs.sort;
+      } catch (error) {
+        console.warn("Failed to load project list prefs", error);
+      }
+    },
+    saveProjectListPrefs() {
+      try {
+        localStorage.setItem(
+          "mc_builder_project_list_prefs",
+          JSON.stringify({
+            search: this.projectSearch,
+            status: this.projectStatusFilter,
+            sort: this.projectSort,
+          }),
+        );
+      } catch (error) {
+        console.warn("Failed to save project list prefs", error);
+      }
     },
     projectSnapshotText(item) {
       const summary = item.snapshot_summary;

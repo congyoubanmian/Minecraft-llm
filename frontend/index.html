@@ -84,10 +84,20 @@
               <input
                 type="search"
                 v-model="projectSearch"
+                @input="saveProjectListPrefs"
                 placeholder="搜索项目、状态、描述"
                 aria-label="搜索项目"
               />
-              <select v-model="projectSort" aria-label="项目排序">
+              <select v-model="projectStatusFilter" @change="saveProjectListPrefs" aria-label="项目状态筛选">
+                <option value="all">全部状态</option>
+                <option value="done">已完成</option>
+                <option value="busy">生成中</option>
+                <option value="failed">失败</option>
+                <option value="cancelled">已取消</option>
+                <option value="with_blueprint">有蓝图</option>
+                <option value="with_schematic">有 Schematic</option>
+              </select>
+              <select v-model="projectSort" @change="saveProjectListPrefs" aria-label="项目排序">
                 <option value="updated_desc">最近更新</option>
                 <option value="name_asc">名称 A-Z</option>
                 <option value="blocks_desc">方块最多</option>
