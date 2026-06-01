@@ -388,7 +388,17 @@
           <h2>图片分析</h2>
           <pre>{{ formatJson(project?.analysis || {}) }}</pre>
 
-          <h2>生成诊断</h2>
+          <div class="section-heading">
+            <h2>生成诊断</h2>
+            <button
+              type="button"
+              class="text-button"
+              :disabled="!project?.plan || busy || analysisAction"
+              @click="refreshAnalysisReport"
+            >
+              {{ analysisAction === "refresh" ? "刷新中" : "刷新诊断" }}
+            </button>
+          </div>
           <dl v-if="analysisReport" class="facts compact-facts">
             <div>
               <dt>Template</dt>

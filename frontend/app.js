@@ -32,6 +32,7 @@ createApp({
       projectListAction: "",
       moduleAction: "",
       moduleLogAction: "",
+      analysisAction: "",
       modulePlan: null,
       modulePlanLoading: false,
       library: {
@@ -645,6 +646,21 @@ createApp({
         await this.loadPreview();
       }
       this.$nextTick(this.scrollChat);
+    },
+    async refreshAnalysisReport() {
+      if (!this.project?.id || !this.project?.plan || this.busy) return;
+      this.analysisAction = "refresh";
+      try {
+        const response = await this.apiFetch(`/api/projects/${this.project.id}/analysis-report/refresh`, { method: "POST" });
+        if (!response.ok) throw new Error(await response.text());
+        const payload = await response.json();
+        this.project.analysis_report = payload.analysis_report;
+        this.project.analysis_report_path = payload.analysis_report_path;
+      } catch (error) {
+        alert(`刷新诊断失败：${error instanceof Error ? error.message : String(error)}`);
+      } finally {
+        this.analysisAction = "";
+      }
     },
     async setPreviewMode(mode) {
       if (this.previewMode === mode) return;

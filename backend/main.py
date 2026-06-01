@@ -562,6 +562,25 @@ def get_project_module_operations(project_id: str) -> dict[str, Any]:
     }
 
 
+@app.post("/api/projects/{project_id}/analysis-report/refresh", dependencies=[Depends(_require_api_key)])
+def refresh_project_analysis_report(project_id: str) -> dict[str, Any]:
+    state = _load_project(project_id)
+    plan_data = state.get("plan")
+    if not plan_data:
+        raise HTTPException(status_code=409, detail="project has no generated plan")
+    plan = BuildPlan.model_validate(plan_data)
+    analysis_report_path, analysis_report = _refresh_analysis_report(plan, _project_path(project_id))
+    state["analysis_report_path"] = str(analysis_report_path)
+    state["analysis_report"] = analysis_report
+    state["updated_at"] = _now()
+    _save_project(project_id, state)
+    return {
+        "project_id": project_id,
+        "analysis_report_path": str(analysis_report_path),
+        "analysis_report": analysis_report,
+    }
+
+
 @app.get("/api/projects/{project_id}/module-snapshots")
 def get_project_module_snapshots(project_id: str, module: str | None = None) -> dict[str, Any]:
     state = _load_project(project_id)
@@ -1407,10 +1426,17 @@ def _write_outputs(plan: BuildPlan, schematic_dir: Path, preview_dir: Path | Non
     output_dir = preview_dir or schematic_dir
     blocks = render_plan_to_blocks(plan)
     schematic_path, preview_path, surface_preview_path, material_path = generate_outputs(plan, schematic_dir, output_dir, blocks=blocks)
-    analysis_report = analyze_build(plan, blocks)
+    analysis_report_path, analysis_report = _refresh_analysis_report(plan, output_dir, blocks=blocks)
+    return schematic_path, preview_path, surface_preview_path, material_path, analysis_report_path, analysis_report
+
+
+def _refresh_analysis_report(plan: BuildPlan, output_dir: Path, blocks: Any | None = None) -> tuple[Path, dict[str, Any]]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    rendered_blocks = blocks if blocks is not None else render_plan_to_blocks(plan)
+    analysis_report = analyze_build(plan, rendered_blocks)
     analysis_report_path = output_dir / f"{plan.name}.analysis.json"
     analysis_report_path.write_text(json.dumps(analysis_report, ensure_ascii=False, indent=2), encoding="utf-8")
-    return schematic_path, preview_path, surface_preview_path, material_path, analysis_report_path, analysis_report
+    return analysis_report_path, analysis_report
 
 
 def _repair_plan_if_needed(

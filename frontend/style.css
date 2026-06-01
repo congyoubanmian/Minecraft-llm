@@ -283,6 +283,18 @@ button:disabled {
   margin-bottom: 0;
 }
 
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.section-heading h2 {
+  margin-bottom: 0;
+}
+
 .text-button {
   min-height: 30px;
   padding: 0 9px;
