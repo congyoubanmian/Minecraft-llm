@@ -414,6 +414,10 @@ createApp({
       const current = this[target].trim();
       this[target] = current ? `${current}\n${text}` : text;
     },
+    insertDiagnosticRepairPrompt() {
+      const text = this.buildDiagnosticRepairPrompt(this.analysisReport);
+      if (text) this.insertPromptText(text);
+    },
     onFileChange(event) {
       const [file] = event.target.files;
       this.file = file || null;

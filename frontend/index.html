@@ -398,6 +398,14 @@
             >
               {{ analysisAction === "refresh" ? "刷新中" : "刷新诊断" }}
             </button>
+            <button
+              type="button"
+              class="text-button"
+              :disabled="!analysisReport || busy"
+              @click="insertDiagnosticRepairPrompt"
+            >
+              写入修复要求
+            </button>
           </div>
           <dl v-if="analysisReport" class="facts compact-facts">
             <div>
