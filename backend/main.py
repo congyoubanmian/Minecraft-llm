@@ -1455,13 +1455,19 @@ def _repair_plan_if_needed(
         )
         repaired_blocks = render_plan_to_blocks(repaired)
         repaired_report = analyze_build(repaired, repaired_blocks)
+        accepted, reason = _repair_acceptance(current_report, repaired_report)
         state["repair_history"][-1].update(
             {
                 "completed_at": _now(),
                 "output_warnings": repaired_report.get("warnings", []),
-                "accepted": True,
+                "input_score": _diagnostic_score(current_report),
+                "output_score": _diagnostic_score(repaired_report),
+                "accepted": accepted,
+                "reason": reason,
             }
         )
+        if not accepted:
+            break
         current = repaired
         current_report = repaired_report
         if not _should_repair(current_report.get("warnings", [])):
@@ -1489,6 +1495,42 @@ def _should_repair(warnings: list[str]) -> bool:
         "中央空洞",
     )
     return any(any(token in warning for token in repair_tokens) for warning in warnings)
+
+
+def _repair_acceptance(before: dict[str, Any], after: dict[str, Any]) -> tuple[bool, str]:
+    before_score = _diagnostic_score(before)
+    after_score = _diagnostic_score(after)
+    if after_score["blocking"] > before_score["blocking"]:
+        return False, "rejected: blocking diagnostics increased"
+    if after_score["score"] > before_score["score"]:
+        return False, "rejected: diagnostic score worsened"
+    if after_score["score"] < before_score["score"]:
+        return True, "accepted: diagnostics improved"
+    return True, "accepted: diagnostics did not worsen"
+
+
+def _diagnostic_score(report: dict[str, Any]) -> dict[str, int]:
+    warnings = report.get("warnings") or []
+    module_report = report.get("design_spec") or {}
+    blueprint = report.get("design_blueprint") or {}
+    interface_checks = blueprint.get("interface_checks") or module_report.get("interface_checks") or []
+    stage_checks = blueprint.get("stage_checks") or module_report.get("stage_checks") or []
+
+    warning_count = len(warnings)
+    blocking = 0
+    blocking += 0 if module_report.get("stitch_ready") else 1
+    blocking += len(module_report.get("missing_bbox") or [])
+    blocking += len(module_report.get("duplicate_names") or [])
+    blocking += sum(1 for check in interface_checks if not check.get("ok"))
+    blocking += sum(1 for check in stage_checks if not check.get("executable"))
+
+    repair_warning_count = sum(1 for warning in warnings if _should_repair([warning]))
+    return {
+        "score": blocking * 10 + repair_warning_count * 3 + warning_count,
+        "blocking": blocking,
+        "repair_warnings": repair_warning_count,
+        "warnings": warning_count,
+    }
 
 
 def _ensure_project_placement(project_id: str, state: dict[str, Any]) -> dict[str, Any]:

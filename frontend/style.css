@@ -756,6 +756,52 @@ pre {
   line-height: 1.45;
 }
 
+.repair-history {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.repair-history h3 {
+  margin: 0;
+  font-size: 13px;
+}
+
+.repair-item {
+  display: grid;
+  gap: 5px;
+  padding: 9px;
+  border: 1px solid #e1e7e3;
+  border-radius: 7px;
+  background: #ffffff;
+}
+
+.repair-item.accepted {
+  border-color: #b8d9c2;
+  background: #f3fbf5;
+}
+
+.repair-item.rejected {
+  border-color: #f0d79a;
+  background: #fffaf0;
+}
+
+.repair-item div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.repair-item strong {
+  font-size: 13px;
+}
+
+.repair-item span,
+.repair-item small {
+  color: #58645f;
+  font-size: 12px;
+}
+
 .blueprint-panel {
   display: grid;
   gap: 12px;

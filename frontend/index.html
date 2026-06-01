@@ -420,6 +420,24 @@
           </ul>
           <pre v-else>{{ formatJson(analysisReport || {}) }}</pre>
 
+          <div v-if="project?.repair_history?.length" class="repair-history">
+            <h3>自动修复</h3>
+            <article
+              v-for="repair in project.repair_history"
+              :key="repair.attempt"
+              :class="['repair-item', repair.accepted ? 'accepted' : 'rejected']"
+            >
+              <div>
+                <strong>第 {{ repair.attempt }} 次</strong>
+                <span>{{ repair.accepted ? "已采纳" : "未采纳" }} · {{ repair.reason || "-" }}</span>
+              </div>
+              <small>
+                {{ repair.input_score?.score ?? "-" }} -> {{ repair.output_score?.score ?? "-" }}
+                · warnings {{ repair.input_score?.warnings ?? "-" }} -> {{ repair.output_score?.warnings ?? "-" }}
+              </small>
+            </article>
+          </div>
+
           <section v-if="designBlueprint?.present" class="blueprint-panel">
             <div class="blueprint-header">
               <h2>设计蓝图</h2>
