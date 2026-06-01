@@ -456,6 +456,20 @@
               </div>
             </div>
 
+            <div v-if="designBlueprint.stage_checks?.length" class="blueprint-section">
+              <h3>阶段检查</h3>
+              <div class="check-list">
+                <article
+                  v-for="check in designBlueprint.stage_checks.slice(0, 8)"
+                  :key="check.role"
+                  :class="['check-item', check.executable ? 'ready' : 'check']"
+                >
+                  <strong>{{ roleText(check.role) }}</strong>
+                  <span>{{ check.executable ? "可单独施工" : "需补 bbox" }} · {{ check.module_count }} 模块 · {{ bboxText(check.bbox) }}</span>
+                </article>
+              </div>
+            </div>
+
             <div class="blueprint-section">
               <h3>模块</h3>
               <div class="module-toolbar">
@@ -619,6 +633,20 @@
                   {{ edge.from }}.{{ edge.from_face }} -> {{ edge.to }}.{{ edge.to_face }} · {{ edge.kind }}
                 </li>
               </ul>
+            </div>
+
+            <div v-if="designBlueprint.interface_checks?.length" class="blueprint-section">
+              <h3>接口检查</h3>
+              <div class="check-list">
+                <article
+                  v-for="check in designBlueprint.interface_checks.slice(0, 8)"
+                  :key="`${check.index}-${check.from}-${check.to}`"
+                  :class="['check-item', check.ok ? 'ready' : 'check']"
+                >
+                  <strong>{{ check.from }} -> {{ check.to }}</strong>
+                  <span>{{ check.ok ? "已对齐" : "需调整" }} · {{ check.kind }} · {{ check.message }}</span>
+                </article>
+              </div>
             </div>
 
             <div class="blueprint-section">

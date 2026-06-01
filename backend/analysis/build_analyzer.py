@@ -160,7 +160,9 @@ def _module_report(plan: BuildPlan) -> dict[str, Any]:
     interfaces = design_spec.interfaces
     module_items = [_normalize_module(module, index) for index, module in enumerate(modules)]
     module_names = [module["name"] for module in module_items]
-    warnings = _module_warnings(plan.size, module_items, interfaces)
+    interface_checks = _interface_checks(module_items, interfaces)
+    stage_checks = _stage_checks(module_items)
+    warnings = _module_warnings(plan.size, module_items, interfaces, interface_checks, stage_checks)
     missing_bbox = [
         module["name"]
         for module in module_items
@@ -178,10 +180,12 @@ def _module_report(plan: BuildPlan) -> dict[str, Any]:
         "duplicate_names": _duplicates(module_names),
         "modules": module_items,
         "interfaces": [_interface_dump(interface) for interface in interfaces],
+        "interface_checks": interface_checks,
         "material_schedule": design_spec.material_schedule,
         "quality_checks": design_spec.quality_checks,
         "performance_budget": _performance_budget_dump(design_spec),
         "stage_order": _stage_order(module_items),
+        "stage_checks": stage_checks,
         "coverage": _module_coverage(plan.size, module_items),
         "warnings": warnings,
         "stitch_ready": bool(module_items) and not missing_bbox and not warnings,
@@ -220,9 +224,14 @@ def _parse_bbox(value: Any) -> list[list[int]] | None:
     return [[min(x1, x2), min(y1, y2), min(z1, z2)], [max(x1, x2), max(y1, y2), max(z1, z2)]]
 
 
-def _module_warnings(size: tuple[int, int, int], modules: list[dict[str, Any]], interfaces: list[DesignInterface]) -> list[str]:
+def _module_warnings(
+    size: tuple[int, int, int],
+    modules: list[dict[str, Any]],
+    interfaces: list[DesignInterface],
+    interface_checks: list[dict[str, Any]],
+    stage_checks: list[dict[str, Any]],
+) -> list[str]:
     warnings: list[str] = []
-    names = {module["name"] for module in modules}
     duplicate_names = _duplicates([module["name"] for module in modules])
     if duplicate_names:
         warnings.append(f"模块名称重复：{', '.join(duplicate_names)}。分部生成时模块名必须稳定唯一。")
@@ -249,15 +258,12 @@ def _module_warnings(size: tuple[int, int, int], modules: list[dict[str, Any]], 
                 warnings.append("void/air 清空阶段应早于 facade/interior/lighting/detail，避免清掉后续细节。")
                 break
 
-    for index, raw in enumerate(interfaces):
-        a = raw.module_a
-        b = raw.module_b
-        if a.startswith("legacy_interface_") and b.startswith("legacy_interface_"):
-            continue
-        if a and a not in names:
-            warnings.append(f"接口 #{index + 1} 引用了不存在的模块 {a}。")
-        if b and b not in names:
-            warnings.append(f"接口 #{index + 1} 引用了不存在的模块 {b}。")
+    for check in interface_checks:
+        if not check.get("ok"):
+            warnings.append(check["message"])
+    for check in stage_checks:
+        if not check.get("executable"):
+            warnings.append(check["message"])
     return warnings
 
 
@@ -295,9 +301,11 @@ def _design_blueprint(
         "stages": stages,
         "modules": [_blueprint_module(module) for module in modules],
         "interfaces": [_blueprint_interface(interface) for interface in interfaces],
+        "interface_checks": module_report.get("interface_checks") or [],
         "material_schedule": module_report.get("material_schedule") or [],
         "quality_checks": module_report.get("quality_checks") or [],
         "performance_budget": module_report.get("performance_budget"),
+        "stage_checks": module_report.get("stage_checks") or [],
         "coverage": module_report.get("coverage") or {},
         "top_materials": list(materials.items())[:12],
         "risks": warnings[:12],
@@ -346,6 +354,36 @@ def _blueprint_stages(modules: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return stages
 
 
+def _stage_checks(modules: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    stages = _blueprint_stages(modules)
+    checks: list[dict[str, Any]] = []
+    for stage in stages:
+        missing = [
+            module["name"]
+            for module in modules
+            if module.get("role") == stage["role"] and not module.get("bbox")
+        ]
+        executable = not missing and stage.get("bbox") is not None
+        message = (
+            f"阶段 {stage['role']} 可按模块 bbox 单独施工。"
+            if executable
+            else f"阶段 {stage['role']} 有模块缺少 bbox，无法稳定单独清空/粘贴。"
+        )
+        checks.append(
+            {
+                "role": stage["role"],
+                "module_count": stage["module_count"],
+                "modules": stage["modules"],
+                "bbox": stage["bbox"],
+                "volume": stage["volume"],
+                "executable": executable,
+                "missing_bbox": missing,
+                "message": message,
+            }
+        )
+    return checks
+
+
 def _blueprint_module(module: dict[str, Any]) -> dict[str, Any]:
     bbox = module.get("bbox")
     return {
@@ -369,6 +407,98 @@ def _blueprint_interface(interface: dict[str, Any]) -> dict[str, Any]:
         "kind": interface.get("kind"),
         "note": interface.get("note", ""),
     }
+
+
+def _interface_checks(modules: list[dict[str, Any]], interfaces: list[DesignInterface]) -> list[dict[str, Any]]:
+    by_name = {module["name"]: module for module in modules}
+    checks: list[dict[str, Any]] = []
+    for index, interface in enumerate(interfaces):
+        left = by_name.get(interface.module_a)
+        right = by_name.get(interface.module_b)
+        left_bbox = left.get("bbox") if left else None
+        right_bbox = right.get("bbox") if right else None
+        status = "ok"
+        message = f"接口 {interface.module_a}.{interface.face_a} -> {interface.module_b}.{interface.face_b} 可对齐。"
+
+        if interface.module_a.startswith("legacy_interface_") and interface.module_b.startswith("legacy_interface_"):
+            status = "legacy"
+            message = "旧版文本接口无法做 bbox 对齐检查。"
+        elif left is None or right is None:
+            status = "missing_module"
+            missing = interface.module_a if left is None else interface.module_b
+            message = f"接口 #{index + 1} 引用了不存在的模块 {missing}。"
+        elif left_bbox is None or right_bbox is None:
+            status = "missing_bbox"
+            missing = interface.module_a if left_bbox is None else interface.module_b
+            message = f"接口 #{index + 1} 的模块 {missing} 缺少 bbox，无法检查切口。"
+        elif not _interface_faces_align(left_bbox, interface.face_a, right_bbox, interface.face_b):
+            status = "gap"
+            message = f"接口 {interface.module_a}.{interface.face_a} 与 {interface.module_b}.{interface.face_b} 的 bbox 没有按声明面接触或一格重叠。"
+
+        checks.append(
+            {
+                "index": index + 1,
+                "from": interface.module_a,
+                "from_face": interface.face_a,
+                "to": interface.module_b,
+                "to_face": interface.face_b,
+                "kind": interface.kind,
+                "status": status,
+                "ok": status in {"ok", "legacy"},
+                "message": message,
+            }
+        )
+    return checks
+
+
+def _interface_faces_align(
+    left_bbox: list[list[int]],
+    left_face: str,
+    right_bbox: list[list[int]],
+    right_face: str,
+) -> bool:
+    if left_face in {"any", "inside", "outside", "center"} or right_face in {"any", "inside", "outside", "center"}:
+        return _bboxes_touch_or_overlap(left_bbox, right_bbox)
+
+    axis_by_face = {
+        "west": 0,
+        "east": 0,
+        "bottom": 1,
+        "top": 1,
+        "north": 2,
+        "south": 2,
+    }
+    left_axis = axis_by_face.get(left_face)
+    right_axis = axis_by_face.get(right_face)
+    if left_axis is None or right_axis is None or left_axis != right_axis:
+        return _bboxes_touch_or_overlap(left_bbox, right_bbox)
+
+    left_coord = _face_coordinate(left_bbox, left_face)
+    right_coord = _face_coordinate(right_bbox, right_face)
+    if left_coord is None or right_coord is None or abs(left_coord - right_coord) > 1:
+        return False
+
+    other_axes = [axis for axis in (0, 1, 2) if axis != left_axis]
+    return all(_ranges_touch_or_overlap(_bbox_axis_range(left_bbox, axis), _bbox_axis_range(right_bbox, axis)) for axis in other_axes)
+
+
+def _face_coordinate(bbox: list[list[int]], face: str) -> int | None:
+    low, high = bbox
+    if face in {"west", "bottom", "north"}:
+        axis = {"west": 0, "bottom": 1, "north": 2}[face]
+        return low[axis]
+    if face in {"east", "top", "south"}:
+        axis = {"east": 0, "top": 1, "south": 2}[face]
+        return high[axis]
+    return None
+
+
+def _bbox_axis_range(bbox: list[list[int]], axis: int) -> tuple[int, int]:
+    return bbox[0][axis], bbox[1][axis]
+
+
+def _ranges_touch_or_overlap(left: tuple[int, int], right: tuple[int, int]) -> bool:
+    return left[0] <= right[1] + 1 and left[1] + 1 >= right[0]
 
 
 def _combined_bbox(boxes: list[list[list[int]]]) -> list[list[int]] | None:

@@ -82,7 +82,53 @@ def main() -> None:
     assert report["design_blueprint"]["stage_count"] == 2
     assert report["design_blueprint"]["modules"][0]["size"] == [16, 1, 16]
     assert report["design_blueprint"]["interfaces"][0]["from"] == "base"
+    assert report["design_blueprint"]["interface_checks"][0]["ok"] is True
+    assert report["design_blueprint"]["stage_checks"][0]["executable"] is True
     assert any("performance_budget.max_blocks" in warning for warning in report["warnings"])
+
+    broken_plan = BuildPlan.model_validate(
+        {
+            "name": "design_spec_interface_gap",
+            "size": [20, 10, 20],
+            "origin": [0, 64, 0],
+            "palette": {"wall": "white_concrete"},
+            "analysis": {
+                "design_spec": {
+                    "building_type": "custom",
+                    "scale_intent": "interface gap validation",
+                    "modules": [
+                        {
+                            "name": "left",
+                            "role": "mass",
+                            "bbox": [[0, 0, 0], [4, 4, 4]],
+                        },
+                        {
+                            "name": "right",
+                            "role": "mass",
+                            "bbox": [[10, 0, 0], [14, 4, 4]],
+                        },
+                    ],
+                    "interfaces": [
+                        {
+                            "module_a": "left",
+                            "face_a": "east",
+                            "module_b": "right",
+                            "face_b": "west",
+                            "kind": "touch",
+                        }
+                    ],
+                }
+            },
+            "parts": [
+                {"type": "box", "from": [0, 0, 0], "to": [4, 4, 4], "block": "wall"},
+                {"type": "box", "from": [10, 0, 0], "to": [14, 4, 4], "block": "wall"},
+            ],
+        }
+    )
+    broken_report = analyze_build(broken_plan, render_plan_to_blocks(broken_plan))
+    assert broken_report["design_spec"]["stitch_ready"] is False
+    assert broken_report["design_blueprint"]["interface_checks"][0]["status"] == "gap"
+    assert any("没有按声明面接触或一格重叠" in warning for warning in broken_report["warnings"])
     print({"blocks": len(blocks), "warnings": report["warnings"]})
 
 

@@ -806,13 +806,15 @@ pre {
 }
 
 .stage-list,
-.module-list {
+.module-list,
+.check-list {
   display: grid;
   gap: 8px;
 }
 
 .stage-item,
-.module-item {
+.module-item,
+.check-item {
   display: grid;
   gap: 4px;
   padding: 9px;
@@ -826,13 +828,25 @@ pre {
   box-shadow: inset 0 0 0 1px #285c78;
 }
 
+.check-item.ready {
+  border-color: #b8d9c2;
+  background: #f3fbf5;
+}
+
+.check-item.check {
+  border-color: #f0d79a;
+  background: #fffaf0;
+}
+
 .stage-item strong,
-.module-item strong {
+.module-item strong,
+.check-item strong {
   font-size: 13px;
 }
 
 .stage-item span,
 .module-item span,
+.check-item span,
 .module-item p,
 .interface-list {
   color: #58645f;
