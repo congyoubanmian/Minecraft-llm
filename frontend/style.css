@@ -420,6 +420,11 @@ button:disabled {
   border-bottom: 1px solid #d8dfda;
 }
 
+.list-warning {
+  color: #9e2f1f;
+  font-weight: 800;
+}
+
 .project-list-controls {
   flex: 1 1 460px;
   max-width: 960px;

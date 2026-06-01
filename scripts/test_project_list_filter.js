@@ -151,6 +151,9 @@ if (visible.map((item) => item.id).join(",") !== "big-old,old-small") {
 if (methods.visibleMissingSnapshotProjectCount.call(context) !== 2 || methods.visibleMissingSnapshotCount.call(context) !== 3) {
   throw new Error("expected visible missing snapshot counts to include both matching projects");
 }
+if (methods.visibleMissingSnapshotText.call(context) !== "2 个项目 · 3 条缺失快照") {
+  throw new Error(`expected visible missing snapshot summary, got ${methods.visibleMissingSnapshotText.call(context)}`);
+}
 
 context.projectStatusFilter = "all";
 context.projectSort = "volume_desc";
@@ -230,6 +233,9 @@ methods.cleanupProjectMissingSnapshots.call(context, context.projects[2]).then((
   }
   if (methods.emptyProjectListText.call(context) !== "没有缺失快照的项目。") {
     throw new Error("expected missing snapshot empty state text");
+  }
+  if (methods.visibleMissingSnapshotText.call(context) !== "") {
+    throw new Error("expected empty missing snapshot summary after cleanup");
   }
   console.log({ project_list_filter: "ok" });
 });

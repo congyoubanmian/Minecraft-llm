@@ -1044,6 +1044,12 @@ createApp({
     visibleMissingSnapshotCount() {
       return this.visibleProjects.reduce((sum, item) => sum + this.projectMissingSnapshotCount(item), 0);
     },
+    visibleMissingSnapshotText() {
+      const projectCount = this.visibleMissingSnapshotProjectCount();
+      const snapshotCount = this.visibleMissingSnapshotCount();
+      if (!projectCount || !snapshotCount) return "";
+      return `${projectCount} 个项目 · ${snapshotCount} 条缺失快照`;
+    },
     projectTimeValue(item) {
       const value = item.updated_at || item.created_at || "";
       const time = new Date(value).getTime();

@@ -79,6 +79,7 @@
             <div>
               <h2>项目列表</h2>
               <p>{{ visibleProjects.length }} / {{ projects.length }} 个项目</p>
+              <p v-if="visibleMissingSnapshotText()" class="list-warning">{{ visibleMissingSnapshotText() }}</p>
             </div>
             <div class="project-list-controls">
               <input
