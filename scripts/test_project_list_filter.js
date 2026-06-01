@@ -123,6 +123,12 @@ if (visible.length !== 1 || visible[0].id !== "new-mid") {
   throw new Error(`expected blueprint filter to return new-mid, got ${visible.map((item) => item.id).join(",")}`);
 }
 
+context.projectStatusFilter = "missing_snapshots";
+visible = computed.visibleProjects.call(context);
+if (visible.length !== 1 || visible[0].id !== "big-old") {
+  throw new Error(`expected missing snapshots filter to return big-old, got ${visible.map((item) => item.id).join(",")}`);
+}
+
 context.projectStatusFilter = "all";
 context.projectSort = "volume_desc";
 visible = computed.visibleProjects.call(context);
@@ -145,13 +151,13 @@ if (methods.projectMissingSnapshotCount.call(context, context.projects[2]) !== 2
 }
 
 context.projectSearch = "tower";
-context.projectStatusFilter = "with_schematic";
+context.projectStatusFilter = "missing_snapshots";
 context.projectSort = "name_asc";
 methods.saveProjectListPrefs.call(context);
 
 const restored = { ...data, ...methods };
 methods.loadProjectListPrefs.call(restored);
-if (restored.projectSearch !== "tower" || restored.projectStatusFilter !== "with_schematic" || restored.projectSort !== "name_asc") {
+if (restored.projectSearch !== "tower" || restored.projectStatusFilter !== "missing_snapshots" || restored.projectSort !== "name_asc") {
   throw new Error("project list prefs did not round-trip through localStorage");
 }
 

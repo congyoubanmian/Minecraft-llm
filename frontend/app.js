@@ -2,7 +2,16 @@ const { createApp } = Vue;
 
 const BUSY_STATUSES = ["queued", "analyzing", "planning", "generating_schematic", "pasting"];
 const TERMINAL_STATUSES = ["done", "failed", "cancelled"];
-const PROJECT_STATUS_FILTERS = ["all", "done", "busy", "failed", "cancelled", "with_blueprint", "with_schematic"];
+const PROJECT_STATUS_FILTERS = [
+  "all",
+  "done",
+  "busy",
+  "failed",
+  "cancelled",
+  "with_blueprint",
+  "with_schematic",
+  "missing_snapshots",
+];
 const PROJECT_SORTS = ["updated_desc", "name_asc", "blocks_desc", "volume_desc", "snapshots_desc"];
 
 createApp({
@@ -1031,6 +1040,7 @@ createApp({
       if (filter === "busy") return BUSY_STATUSES.includes(item.status);
       if (filter === "with_blueprint") return Boolean(item.analysis_report?.design_blueprint?.present);
       if (filter === "with_schematic") return Boolean(item.has_schematic);
+      if (filter === "missing_snapshots") return this.projectMissingSnapshotCount(item) > 0;
       return item.status === filter;
     },
     compareProjects(left, right, sortKey) {
