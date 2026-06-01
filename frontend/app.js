@@ -12,7 +12,7 @@ const PROJECT_STATUS_FILTERS = [
   "with_schematic",
   "missing_snapshots",
 ];
-const PROJECT_SORTS = ["updated_desc", "name_asc", "blocks_desc", "volume_desc", "snapshots_desc"];
+const PROJECT_SORTS = ["updated_desc", "name_asc", "blocks_desc", "volume_desc", "snapshots_desc", "missing_desc"];
 
 createApp({
   mixins: [window.McPreview, window.McHelpers],
@@ -1085,6 +1085,7 @@ createApp({
         blocks_desc: () => this.projectBlockCount(right) - this.projectBlockCount(left) || tieBreak,
         volume_desc: () => this.projectVolume(right) - this.projectVolume(left) || tieBreak,
         snapshots_desc: () => this.projectSnapshotBytes(right) - this.projectSnapshotBytes(left) || tieBreak,
+        missing_desc: () => this.projectMissingSnapshotCount(right) - this.projectMissingSnapshotCount(left) || tieBreak,
       };
       return (sorters[sortKey] || sorters.updated_desc)();
     },

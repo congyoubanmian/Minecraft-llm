@@ -165,6 +165,12 @@ if (visible[0].id !== "big-old") {
   throw new Error(`expected largest snapshot storage first, got ${visible[0].id}`);
 }
 
+context.projectSort = "missing_desc";
+visible = computed.visibleProjects.call(context);
+if (visible.map((item) => item.id).join(",") !== "big-old,old-small,new-mid") {
+  throw new Error(`expected missing snapshot sort order, got ${visible.map((item) => item.id).join(",")}`);
+}
+
 const snapshotText = methods.projectSnapshotText.call(context, context.projects[2]);
 if (!snapshotText.includes("缺失 2")) {
   throw new Error(`expected missing snapshot count in text, got ${snapshotText}`);
@@ -175,12 +181,12 @@ if (methods.projectMissingSnapshotCount.call(context, context.projects[2]) !== 2
 
 context.projectSearch = "tower";
 context.projectStatusFilter = "missing_snapshots";
-context.projectSort = "name_asc";
+context.projectSort = "missing_desc";
 methods.saveProjectListPrefs.call(context);
 
 const restored = { ...data, ...methods };
 methods.loadProjectListPrefs.call(restored);
-if (restored.projectSearch !== "tower" || restored.projectStatusFilter !== "missing_snapshots" || restored.projectSort !== "name_asc") {
+if (restored.projectSearch !== "tower" || restored.projectStatusFilter !== "missing_snapshots" || restored.projectSort !== "missing_desc") {
   throw new Error("project list prefs did not round-trip through localStorage");
 }
 
