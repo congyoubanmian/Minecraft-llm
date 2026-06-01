@@ -160,6 +160,9 @@ def main() -> None:
             ModuleSnapshotDeleteRequest(confirm="DELETE_MODULE_SNAPSHOT", snapshot_id="snapshot-core-generated"),
         )
         assert deleted["file_removed"] is True
+        assert deleted["removed_snapshots"][0]["id"] == "snapshot-core-generated"
+        assert deleted["snapshot_summary"]["count"] == 2
+        assert deleted["snapshot_summary"]["available_count"] == 0
         assert not snapshot_file.exists()
 
         after_delete = get_project_module_snapshots(project_id)

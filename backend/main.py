@@ -603,7 +603,9 @@ def delete_project_module_snapshot(project_id: str, request: ModuleSnapshotDelet
     return {
         "project_id": project_id,
         "snapshot": removed["snapshot"],
+        "removed_snapshots": [removed["snapshot"]],
         "file_removed": removed["file_removed"],
+        "snapshot_summary": _snapshot_summary(state),
     }
 
 
