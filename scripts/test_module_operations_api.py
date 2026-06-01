@@ -168,6 +168,10 @@ def main() -> None:
         cleared = clear_project_module_operations(project_id)
         assert cleared["removed_operations"] == 1
         assert cleared["removed_rcon"] == 1
+        project_after_clear = get_project(project_id)
+        assert project_after_clear["snapshot_summary"]["count"] == 2
+        assert project_after_clear["snapshot_summary"]["available_count"] == 0
+        assert project_after_clear["snapshot_summary"]["missing_count"] == 0
 
         new_state = json.loads((project_dir / "state.json").read_text(encoding="utf-8"))
         assert new_state["module_operations"] == []
