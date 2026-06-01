@@ -147,7 +147,7 @@
                 </div>
                 <div>
                   <dt>Snapshots</dt>
-                  <dd>{{ projectSnapshotText(item) }}</dd>
+                  <dd :class="{ 'warning-text': projectMissingSnapshotCount(item) }">{{ projectSnapshotText(item) }}</dd>
                 </div>
                 <div>
                   <dt>Updated</dt>

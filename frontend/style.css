@@ -546,6 +546,10 @@ button:disabled {
   font-weight: 700;
 }
 
+.project-card-facts .warning-text {
+  color: #9e2f1f;
+}
+
 .chat-log {
   min-height: 170px;
   max-height: 280px;

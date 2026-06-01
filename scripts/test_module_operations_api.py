@@ -22,6 +22,7 @@ from backend.main import (
     cleanup_project_module_snapshots,
     list_projects,
     ModuleSnapshotCleanupRequest,
+    _save_project,
 )
 
 
@@ -54,7 +55,7 @@ def main() -> None:
                 {"module": "core", "created_at": "2026-01-01T00:02:00+00:00", "source": "world"},
             ],
         }
-        (project_dir / "state.json").write_text(json.dumps(state), encoding="utf-8")
+        _save_project(project_id, state)
 
         payload = get_project_module_operations(project_id)
         assert payload["project_id"] == project_id
@@ -70,6 +71,7 @@ def main() -> None:
         project_summary = next(item for item in projects_payload["projects"] if item["id"] == project_id)
         assert project_summary["snapshot_summary"]["count"] == 3
         assert project_summary["snapshot_summary"]["available_count"] == 1
+        assert project_summary["snapshot_summary"]["missing_count"] == 0
         assert project_summary["snapshot_summary"]["module_count"] == 2
         assert project_summary["snapshot_summary"]["bytes"] == len(b"snapshot")
 
@@ -107,7 +109,10 @@ def main() -> None:
                 "path": str(missing_snapshot_file),
             }
         )
-        (project_dir / "state.json").write_text(json.dumps(state), encoding="utf-8")
+        _save_project(project_id, state)
+        projects_payload = list_projects()
+        project_summary = next(item for item in projects_payload["projects"] if item["id"] == project_id)
+        assert project_summary["snapshot_summary"]["missing_count"] == 1
 
         cleanup = cleanup_project_module_snapshots(
             project_id,
@@ -116,6 +121,7 @@ def main() -> None:
         assert cleanup["removed_count"] == 1
         assert cleanup["remaining_count"] == 3
         assert cleanup["removed_snapshots"][0]["id"] == "snapshot-core-missing"
+        assert cleanup["snapshot_summary"]["missing_count"] == 0
 
         download = download_project_module_snapshot(project_id, snapshot_id="snapshot-core-generated")
         assert Path(download.path) == snapshot_file

@@ -975,6 +975,9 @@ createApp({
     projectSnapshotBytes(item) {
       return Number(item.snapshot_summary?.bytes || 0);
     },
+    projectMissingSnapshotCount(item) {
+      return Number(item.snapshot_summary?.missing_count || 0);
+    },
     projectTimeValue(item) {
       const value = item.updated_at || item.created_at || "";
       const time = new Date(value).getTime();
@@ -1049,7 +1052,8 @@ createApp({
       if (!summary?.count) return "0";
       const latest = summary.latest_created_at ? ` · ${this.formatTime(summary.latest_created_at)}` : "";
       const bytes = summary.bytes ? ` · ${this.formatBytes(summary.bytes)}` : "";
-      return `${summary.available_count || 0}/${summary.count} 可用 · ${summary.module_count || 0} 模块${bytes}${latest}`;
+      const missing = summary.missing_count ? ` · 缺失 ${summary.missing_count}` : "";
+      return `${summary.available_count || 0}/${summary.count} 可用 · ${summary.module_count || 0} 模块${missing}${bytes}${latest}`;
     },
   },
 }).mount("#app");

@@ -35,6 +35,9 @@ const computed = capturedOptions.computed;
 const context = {
   ...data,
   ...methods,
+  formatBytes(value) {
+    return `${value} B`;
+  },
   projects: [
     {
       id: "old-small",
@@ -63,7 +66,7 @@ const context = {
       updated_at: "2026-01-02T00:00:00+00:00",
       last_message: "large gate",
       preview: { size: [80, 80, 80], block_count: 3000 },
-      snapshot_summary: { bytes: 8192 },
+      snapshot_summary: { count: 3, available_count: 1, missing_count: 2, module_count: 2, bytes: 8192 },
     },
   ],
 };
@@ -105,6 +108,14 @@ context.projectSort = "snapshots_desc";
 visible = computed.visibleProjects.call(context);
 if (visible[0].id !== "big-old") {
   throw new Error(`expected largest snapshot storage first, got ${visible[0].id}`);
+}
+
+const snapshotText = methods.projectSnapshotText.call(context, context.projects[2]);
+if (!snapshotText.includes("缺失 2")) {
+  throw new Error(`expected missing snapshot count in text, got ${snapshotText}`);
+}
+if (methods.projectMissingSnapshotCount.call(context, context.projects[2]) !== 2) {
+  throw new Error("expected missing snapshot count helper to return 2");
 }
 
 context.projectSearch = "tower";
