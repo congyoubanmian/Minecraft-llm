@@ -184,6 +184,9 @@ if (!snapshotText.includes("缺失 2")) {
 if (methods.projectMissingSnapshotCount.call(context, context.projects[2]) !== 2) {
   throw new Error("expected missing snapshot count helper to return 2");
 }
+if (methods.projectSnapshotText.call(context, {}) !== "0") {
+  throw new Error("expected empty project snapshot text to be 0");
+}
 
 context.projectSearch = "tower";
 context.projectStatusFilter = "missing_snapshots";

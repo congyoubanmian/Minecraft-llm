@@ -64,8 +64,12 @@ def main() -> None:
 
         project_payload = get_project(project_id)
         assert project_payload["module_snapshots"][0]["file"]["exists"] is True
+        assert project_payload["snapshot_summary"]["count"] == 3
+        assert project_payload["snapshot_summary"]["available_count"] == 1
+        assert project_payload["snapshot_summary"]["missing_count"] == 0
         disk_state = json.loads((project_dir / "state.json").read_text(encoding="utf-8"))
         assert "file" not in disk_state["module_snapshots"][0]
+        assert "snapshot_summary" not in disk_state
 
         projects_payload = list_projects()
         project_summary = next(item for item in projects_payload["projects"] if item["id"] == project_id)

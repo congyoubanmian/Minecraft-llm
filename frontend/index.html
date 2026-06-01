@@ -317,6 +317,10 @@
               <dd>{{ preview?.preview_count || 0 }} / {{ preview?.block_count || 0 }}</dd>
             </div>
             <div>
+              <dt>Snapshots</dt>
+              <dd :class="{ 'warning-text': projectMissingSnapshotCount(project) }">{{ projectSnapshotText(project || {}) }}</dd>
+            </div>
+            <div>
               <dt>Paste</dt>
               <dd>{{ placementText("paste") }}</dd>
             </div>

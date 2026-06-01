@@ -560,6 +560,11 @@ button:disabled {
   color: #9e2f1f;
 }
 
+.facts .warning-text {
+  color: #9e2f1f;
+  font-weight: 800;
+}
+
 .project-card-footer {
   display: flex;
   justify-content: flex-end;

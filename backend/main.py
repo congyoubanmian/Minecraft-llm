@@ -1124,6 +1124,7 @@ def _project_response(state: dict[str, Any]) -> dict[str, Any]:
     payload = dict(state)
     if "module_snapshots" in payload:
         payload["module_snapshots"] = [_snapshot_with_file_status(snapshot) for snapshot in payload.get("module_snapshots") or []]
+    payload["snapshot_summary"] = _snapshot_summary(state)
     return payload
 
 
