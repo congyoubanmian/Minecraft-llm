@@ -118,4 +118,15 @@ if (restored.projectSearch !== "tower" || restored.projectStatusFilter !== "with
   throw new Error("project list prefs did not round-trip through localStorage");
 }
 
+methods.resetProjectListFilters.call(restored);
+if (restored.projectSearch !== "" || restored.projectStatusFilter !== "all" || restored.projectSort !== "updated_desc") {
+  throw new Error("project list reset did not restore defaults");
+}
+
+const resetAgain = { ...data, ...methods };
+methods.loadProjectListPrefs.call(resetAgain);
+if (resetAgain.projectSearch !== "" || resetAgain.projectStatusFilter !== "all" || resetAgain.projectSort !== "updated_desc") {
+  throw new Error("project list reset did not persist defaults");
+}
+
 console.log({ project_list_filter: "ok" });

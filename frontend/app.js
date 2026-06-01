@@ -1038,6 +1038,12 @@ createApp({
         console.warn("Failed to save project list prefs", error);
       }
     },
+    resetProjectListFilters() {
+      this.projectSearch = "";
+      this.projectStatusFilter = "all";
+      this.projectSort = "updated_desc";
+      this.saveProjectListPrefs();
+    },
     projectSnapshotText(item) {
       const summary = item.snapshot_summary;
       if (!summary?.count) return "0";

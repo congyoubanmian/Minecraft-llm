@@ -104,6 +104,9 @@
                 <option value="volume_desc">体积最大</option>
                 <option value="snapshots_desc">快照占用</option>
               </select>
+              <button type="button" class="secondary-button project-filter-reset" @click="resetProjectListFilters">
+                重置
+              </button>
             </div>
             <button type="button" class="secondary-button" @click="loadProjects">刷新</button>
           </div>
