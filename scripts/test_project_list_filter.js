@@ -37,18 +37,24 @@ const methods = capturedOptions.methods;
 const computed = capturedOptions.computed;
 const cleanupResponses = {
   "big-old": {
-    count: 1,
-    available_count: 1,
-    missing_count: 0,
-    module_count: 1,
-    bytes: 256,
+    removed_snapshots: [{ id: "missing-big" }],
+    snapshot_summary: {
+      count: 1,
+      available_count: 1,
+      missing_count: 0,
+      module_count: 1,
+      bytes: 256,
+    },
   },
   "old-small": {
-    count: 2,
-    available_count: 2,
-    missing_count: 0,
-    module_count: 1,
-    bytes: 512,
+    removed_snapshots: [{ id: "missing-small" }],
+    snapshot_summary: {
+      count: 2,
+      available_count: 2,
+      missing_count: 0,
+      module_count: 1,
+      bytes: 512,
+    },
   },
 };
 const context = {
@@ -71,7 +77,8 @@ const context = {
       ok: true,
       async json() {
         return {
-          snapshot_summary: cleanupResponses[projectId],
+          removed_snapshots: cleanupResponses[projectId].removed_snapshots,
+          snapshot_summary: cleanupResponses[projectId].snapshot_summary,
         };
       },
     };
@@ -111,7 +118,13 @@ const context = {
     },
   ],
 };
-context.project = { ...context.projects[2] };
+context.project = {
+  ...context.projects[2],
+  module_snapshots: [
+    { id: "valid-big", path: "/tmp/valid-big.schem", file: { exists: true } },
+    { id: "missing-big", path: "/tmp/missing-big.schem", file: { exists: false } },
+  ],
+};
 Object.defineProperty(context, "visibleProjects", {
   get() {
     return computed.visibleProjects.call(context);
@@ -218,6 +231,9 @@ methods.cleanupProjectMissingSnapshots.call(context, context.projects[2]).then((
   }
   if (context.project.snapshot_summary.missing_count !== 0 || context.project.snapshot_summary.bytes !== 256) {
     throw new Error("project cleanup did not update current project snapshot summary");
+  }
+  if (context.project.module_snapshots.map((snapshot) => snapshot.id).join(",") !== "valid-big") {
+    throw new Error("project cleanup did not remove deleted snapshot records from current project");
   }
   const untouched = context.projects.find((item) => item.id === "new-mid");
   if (untouched.snapshot_summary.bytes !== 4096) {

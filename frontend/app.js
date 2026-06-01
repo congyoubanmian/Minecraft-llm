@@ -500,6 +500,7 @@ createApp({
       try {
         const payload = await this.cleanupProjectSnapshotRecords(projectId);
         this.applyProjectSnapshotSummary(projectId, payload.snapshot_summary);
+        this.removeProjectSnapshots(projectId, payload.removed_snapshots);
       } catch (error) {
         alert(`清理缺失快照失败：${error instanceof Error ? error.message : String(error)}`);
       } finally {
@@ -516,6 +517,7 @@ createApp({
         for (const item of targets) {
           const payload = await this.cleanupProjectSnapshotRecords(item.id);
           this.applyProjectSnapshotSummary(item.id, payload.snapshot_summary);
+          this.removeProjectSnapshots(item.id, payload.removed_snapshots);
         }
       } catch (error) {
         alert(`批量清理缺失快照失败：${error instanceof Error ? error.message : String(error)}`);
@@ -543,6 +545,16 @@ createApp({
       if (this.project?.id === projectId) {
         this.project = { ...this.project, snapshot_summary: snapshotSummary };
       }
+    },
+    removeProjectSnapshots(projectId, removedSnapshots = []) {
+      if (!this.project?.id || this.project.id !== projectId || !removedSnapshots?.length) return;
+      const removedRefs = new Set(removedSnapshots.map((snapshot) => snapshot.id || snapshot.path).filter(Boolean));
+      if (!removedRefs.size) return;
+      const snapshots = (this.project.module_snapshots || []).filter((snapshot) => {
+        const ref = snapshot.id || snapshot.path;
+        return !ref || !removedRefs.has(ref);
+      });
+      this.project = { ...this.project, module_snapshots: snapshots };
     },
     async cancelGeneration() {
       if (!this.project?.id || !this.busy) return;
