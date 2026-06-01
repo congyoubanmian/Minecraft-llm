@@ -425,6 +425,11 @@ button:disabled {
   font-weight: 800;
 }
 
+.list-muted {
+  color: #66736d;
+  font-weight: 800;
+}
+
 .project-list-controls {
   flex: 1 1 460px;
   max-width: 960px;

@@ -1050,6 +1050,11 @@ createApp({
       if (!projectCount || !snapshotCount) return "";
       return `${projectCount} 个项目 · ${snapshotCount} 条缺失快照`;
     },
+    visibleSnapshotStorageText() {
+      const bytes = this.visibleProjects.reduce((sum, item) => sum + this.projectSnapshotBytes(item), 0);
+      if (!bytes) return "";
+      return `快照占用 ${this.formatBytes(bytes)}`;
+    },
     projectTimeValue(item) {
       const value = item.updated_at || item.created_at || "";
       const time = new Date(value).getTime();

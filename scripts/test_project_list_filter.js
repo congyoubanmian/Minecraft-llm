@@ -154,6 +154,9 @@ if (methods.visibleMissingSnapshotProjectCount.call(context) !== 2 || methods.vi
 if (methods.visibleMissingSnapshotText.call(context) !== "2 个项目 · 3 条缺失快照") {
   throw new Error(`expected visible missing snapshot summary, got ${methods.visibleMissingSnapshotText.call(context)}`);
 }
+if (methods.visibleSnapshotStorageText.call(context) !== "快照占用 9216 B") {
+  throw new Error(`expected visible snapshot storage summary, got ${methods.visibleSnapshotStorageText.call(context)}`);
+}
 
 context.projectStatusFilter = "all";
 context.projectSort = "volume_desc";
@@ -236,6 +239,9 @@ methods.cleanupProjectMissingSnapshots.call(context, context.projects[2]).then((
   }
   if (methods.visibleMissingSnapshotText.call(context) !== "") {
     throw new Error("expected empty missing snapshot summary after cleanup");
+  }
+  if (methods.visibleSnapshotStorageText.call(context) !== "") {
+    throw new Error("expected empty storage summary after cleanup in missing snapshot filter");
   }
   console.log({ project_list_filter: "ok" });
 });
