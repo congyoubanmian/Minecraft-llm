@@ -10,6 +10,9 @@ const sandbox = {
       return { mount() {} };
     },
   },
+  confirm() {
+    return true;
+  },
   localStorage: {
     value: "",
     getItem(key) {
@@ -35,6 +38,29 @@ const computed = capturedOptions.computed;
 const context = {
   ...data,
   ...methods,
+  async apiFetch(url, options) {
+    if (url !== "/api/projects/big-old/module-snapshots/cleanup") {
+      throw new Error(`unexpected api url ${url}`);
+    }
+    const body = JSON.parse(options.body);
+    if (body.confirm !== "CLEANUP_MISSING_MODULE_SNAPSHOTS" || body.module !== null) {
+      throw new Error(`unexpected cleanup body ${options.body}`);
+    }
+    return {
+      ok: true,
+      async json() {
+        return {
+          snapshot_summary: {
+            count: 1,
+            available_count: 1,
+            missing_count: 0,
+            module_count: 1,
+            bytes: 256,
+          },
+        };
+      },
+    };
+  },
   formatBytes(value) {
     return `${value} B`;
   },
@@ -140,4 +166,14 @@ if (resetAgain.projectSearch !== "" || resetAgain.projectStatusFilter !== "all" 
   throw new Error("project list reset did not persist defaults");
 }
 
-console.log({ project_list_filter: "ok" });
+methods.cleanupProjectMissingSnapshots.call(context, context.projects[2]).then(() => {
+  const updated = context.projects.find((item) => item.id === "big-old");
+  if (updated.snapshot_summary.missing_count !== 0 || updated.snapshot_summary.bytes !== 256) {
+    throw new Error("project cleanup did not update snapshot summary");
+  }
+  const untouched = context.projects.find((item) => item.id === "new-mid");
+  if (untouched.snapshot_summary.bytes !== 4096) {
+    throw new Error("project cleanup changed the wrong project");
+  }
+  console.log({ project_list_filter: "ok" });
+});

@@ -154,6 +154,16 @@
                   <dd>{{ formatTime(item.updated_at || item.created_at) }}</dd>
                 </div>
               </dl>
+              <div v-if="projectMissingSnapshotCount(item)" class="project-card-footer">
+                <button
+                  type="button"
+                  class="text-button danger-text-button"
+                  :disabled="projectListAction"
+                  @click.stop="cleanupProjectMissingSnapshots(item)"
+                >
+                  {{ projectListAction === `cleanup-snapshots:${item.id}` ? "清理中" : `清理缺失快照 ${projectMissingSnapshotCount(item)}` }}
+                </button>
+              </div>
             </article>
           </div>
         </section>

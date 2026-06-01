@@ -20,6 +20,7 @@ createApp({
       placements: [],
       worldLoading: false,
       worldAction: "",
+      projectListAction: "",
       moduleAction: "",
       moduleLogAction: "",
       modulePlan: null,
@@ -480,6 +481,36 @@ createApp({
       } catch (error) {
         alert(`删除失败：${error instanceof Error ? error.message : String(error)}`);
       }
+    },
+    async cleanupProjectMissingSnapshots(item) {
+      const projectId = item?.id;
+      const missingCount = this.projectMissingSnapshotCount(item);
+      if (!projectId || !missingCount) return;
+      if (!confirm(`清理项目 ${item.name || projectId} 的 ${missingCount} 条缺失快照记录？`)) return;
+      this.projectListAction = `cleanup-snapshots:${projectId}`;
+      try {
+        const response = await this.apiFetch(`/api/projects/${projectId}/module-snapshots/cleanup`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            confirm: "CLEANUP_MISSING_MODULE_SNAPSHOTS",
+            module: null,
+          }),
+        });
+        if (!response.ok) throw new Error(await response.text());
+        const payload = await response.json();
+        this.applyProjectSnapshotSummary(projectId, payload.snapshot_summary);
+      } catch (error) {
+        alert(`清理缺失快照失败：${error instanceof Error ? error.message : String(error)}`);
+      } finally {
+        this.projectListAction = "";
+      }
+    },
+    applyProjectSnapshotSummary(projectId, snapshotSummary) {
+      if (!projectId || !snapshotSummary) return;
+      this.projects = this.projects.map((project) =>
+        project.id === projectId ? { ...project, snapshot_summary: snapshotSummary } : project,
+      );
     },
     async cancelGeneration() {
       if (!this.project?.id || !this.busy) return;

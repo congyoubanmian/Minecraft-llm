@@ -550,6 +550,18 @@ button:disabled {
   color: #9e2f1f;
 }
 
+.project-card-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #d8dfda;
+}
+
+.project-card-footer .text-button {
+  margin-top: 0;
+}
+
 .chat-log {
   min-height: 170px;
   max-height: 280px;
