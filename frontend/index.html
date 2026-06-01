@@ -108,6 +108,14 @@
               <button type="button" class="secondary-button project-filter-reset" @click="resetProjectListFilters">
                 重置
               </button>
+              <button
+                type="button"
+                class="danger-button project-filter-reset"
+                :disabled="projectListAction || !visibleMissingSnapshotCount()"
+                @click="cleanupVisibleMissingSnapshots"
+              >
+                {{ projectListAction === "cleanup-visible-snapshots" ? "清理中" : `清理缺失 ${visibleMissingSnapshotCount()}` }}
+              </button>
             </div>
             <button type="button" class="secondary-button" @click="loadProjects">刷新</button>
           </div>

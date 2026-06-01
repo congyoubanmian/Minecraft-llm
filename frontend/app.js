@@ -498,22 +498,42 @@ createApp({
       if (!confirm(`清理项目 ${item.name || projectId} 的 ${missingCount} 条缺失快照记录？`)) return;
       this.projectListAction = `cleanup-snapshots:${projectId}`;
       try {
-        const response = await this.apiFetch(`/api/projects/${projectId}/module-snapshots/cleanup`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            confirm: "CLEANUP_MISSING_MODULE_SNAPSHOTS",
-            module: null,
-          }),
-        });
-        if (!response.ok) throw new Error(await response.text());
-        const payload = await response.json();
+        const payload = await this.cleanupProjectSnapshotRecords(projectId);
         this.applyProjectSnapshotSummary(projectId, payload.snapshot_summary);
       } catch (error) {
         alert(`清理缺失快照失败：${error instanceof Error ? error.message : String(error)}`);
       } finally {
         this.projectListAction = "";
       }
+    },
+    async cleanupVisibleMissingSnapshots() {
+      const targets = this.visibleProjects.filter((item) => this.projectMissingSnapshotCount(item));
+      const totalMissing = targets.reduce((sum, item) => sum + this.projectMissingSnapshotCount(item), 0);
+      if (!targets.length || !totalMissing) return;
+      if (!confirm(`清理当前列表 ${targets.length} 个项目的 ${totalMissing} 条缺失快照记录？`)) return;
+      this.projectListAction = "cleanup-visible-snapshots";
+      try {
+        for (const item of targets) {
+          const payload = await this.cleanupProjectSnapshotRecords(item.id);
+          this.applyProjectSnapshotSummary(item.id, payload.snapshot_summary);
+        }
+      } catch (error) {
+        alert(`批量清理缺失快照失败：${error instanceof Error ? error.message : String(error)}`);
+      } finally {
+        this.projectListAction = "";
+      }
+    },
+    async cleanupProjectSnapshotRecords(projectId) {
+      const response = await this.apiFetch(`/api/projects/${projectId}/module-snapshots/cleanup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          confirm: "CLEANUP_MISSING_MODULE_SNAPSHOTS",
+          module: null,
+        }),
+      });
+      if (!response.ok) throw new Error(await response.text());
+      return response.json();
     },
     applyProjectSnapshotSummary(projectId, snapshotSummary) {
       if (!projectId || !snapshotSummary) return;
@@ -1017,6 +1037,12 @@ createApp({
     },
     projectMissingSnapshotCount(item) {
       return Number(item.snapshot_summary?.missing_count || 0);
+    },
+    visibleMissingSnapshotProjectCount() {
+      return this.visibleProjects.filter((item) => this.projectMissingSnapshotCount(item)).length;
+    },
+    visibleMissingSnapshotCount() {
+      return this.visibleProjects.reduce((sum, item) => sum + this.projectMissingSnapshotCount(item), 0);
     },
     projectTimeValue(item) {
       const value = item.updated_at || item.created_at || "";

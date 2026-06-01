@@ -35,28 +35,43 @@ if (!capturedOptions) {
 const data = capturedOptions.data();
 const methods = capturedOptions.methods;
 const computed = capturedOptions.computed;
+const cleanupResponses = {
+  "big-old": {
+    count: 1,
+    available_count: 1,
+    missing_count: 0,
+    module_count: 1,
+    bytes: 256,
+  },
+  "old-small": {
+    count: 2,
+    available_count: 2,
+    missing_count: 0,
+    module_count: 1,
+    bytes: 512,
+  },
+};
 const context = {
   ...data,
   ...methods,
   async apiFetch(url, options) {
-    if (url !== "/api/projects/big-old/module-snapshots/cleanup") {
+    const match = url.match(/^\/api\/projects\/([^/]+)\/module-snapshots\/cleanup$/);
+    if (!match) {
       throw new Error(`unexpected api url ${url}`);
     }
+    const projectId = match[1];
     const body = JSON.parse(options.body);
     if (body.confirm !== "CLEANUP_MISSING_MODULE_SNAPSHOTS" || body.module !== null) {
       throw new Error(`unexpected cleanup body ${options.body}`);
+    }
+    if (!cleanupResponses[projectId]) {
+      throw new Error(`unexpected cleanup project ${projectId}`);
     }
     return {
       ok: true,
       async json() {
         return {
-          snapshot_summary: {
-            count: 1,
-            available_count: 1,
-            missing_count: 0,
-            module_count: 1,
-            bytes: 256,
-          },
+          snapshot_summary: cleanupResponses[projectId],
         };
       },
     };
@@ -72,7 +87,7 @@ const context = {
       updated_at: "2026-01-01T00:00:00+00:00",
       last_message: "low bridge",
       preview: { size: [10, 8, 10], block_count: 200 },
-      snapshot_summary: { bytes: 1024 },
+      snapshot_summary: { count: 2, available_count: 1, missing_count: 1, module_count: 1, bytes: 1024 },
     },
     {
       id: "new-mid",
@@ -96,6 +111,11 @@ const context = {
     },
   ],
 };
+Object.defineProperty(context, "visibleProjects", {
+  get() {
+    return computed.visibleProjects.call(context);
+  },
+});
 
 context.projectSearch = "rainbow";
 let visible = computed.visibleProjects.call(context);
@@ -125,8 +145,11 @@ if (visible.length !== 1 || visible[0].id !== "new-mid") {
 
 context.projectStatusFilter = "missing_snapshots";
 visible = computed.visibleProjects.call(context);
-if (visible.length !== 1 || visible[0].id !== "big-old") {
-  throw new Error(`expected missing snapshots filter to return big-old, got ${visible.map((item) => item.id).join(",")}`);
+if (visible.map((item) => item.id).join(",") !== "big-old,old-small") {
+  throw new Error(`expected missing snapshots filter to return big-old and old-small, got ${visible.map((item) => item.id).join(",")}`);
+}
+if (methods.visibleMissingSnapshotProjectCount.call(context) !== 2 || methods.visibleMissingSnapshotCount.call(context) !== 3) {
+  throw new Error("expected visible missing snapshot counts to include both matching projects");
 }
 
 context.projectStatusFilter = "all";
@@ -184,8 +207,20 @@ methods.cleanupProjectMissingSnapshots.call(context, context.projects[2]).then((
   context.projectSearch = "";
   context.projectStatusFilter = "missing_snapshots";
   const afterCleanupVisible = computed.visibleProjects.call(context);
-  if (afterCleanupVisible.length !== 0) {
-    throw new Error(`expected no projects after missing snapshot cleanup, got ${afterCleanupVisible.length}`);
+  if (afterCleanupVisible.length !== 1 || afterCleanupVisible[0].id !== "old-small") {
+    throw new Error(`expected old-small after single cleanup, got ${afterCleanupVisible.map((item) => item.id).join(",")}`);
+  }
+  return methods.cleanupVisibleMissingSnapshots.call(context);
+}).then(() => {
+  const oldSmall = context.projects.find((item) => item.id === "old-small");
+  if (oldSmall.snapshot_summary.missing_count !== 0 || oldSmall.snapshot_summary.bytes !== 512) {
+    throw new Error("visible cleanup did not update remaining missing snapshot project");
+  }
+  context.projectSearch = "";
+  context.projectStatusFilter = "missing_snapshots";
+  const afterVisibleCleanup = computed.visibleProjects.call(context);
+  if (afterVisibleCleanup.length !== 0) {
+    throw new Error(`expected no projects after visible cleanup, got ${afterVisibleCleanup.length}`);
   }
   if (methods.emptyProjectListText.call(context) !== "没有缺失快照的项目。") {
     throw new Error("expected missing snapshot empty state text");
