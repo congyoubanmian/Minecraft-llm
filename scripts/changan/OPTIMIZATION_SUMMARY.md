@@ -133,7 +133,28 @@
 - `backups/world_backup_20260719_pre_optimization`
 - `backups/world_backup_20260719_post_optimization`
 
-## 七、后续可选的优化（未实施）
+## 七、3D 深化模块（新增）
+
+发挥 Minecraft 三维空间优势的强化模块，与基础模块并存（命名 `*_3d.py`），
+在基础模块之后运行以叠加立体细节：
+
+- `lib.py` 新增 6 个 3D 原语：`add_staircase`（直线阶梯）、
+  `add_spiral_stair`（塔内螺旋梯）、`add_cantilevered_floor`（悬挑楼板/平座）、
+  `add_arch_bridge`（多拱桥）、`add_underground_room`（地下空间）、
+  `add_dougong_cluster`（斗拱层）。
+- `palace_hanyuan_3d.py`（544 fills）：转折龙尾道阶梯、飞廊悬挑、
+  檐下斗拱层、三层阁楼、殿底地下宝库。
+- `pagoda_giant_3d.py`（281 fills）：塔下地宫与舍利金塔、下行台阶、
+  每层内部螺旋梯、平座回廊与栏杆、檐角斗拱与风铃、分节塔刹（覆钵/相轮/宝珠）、
+  院碑亭与参道灯柱。
+- `qujiang_pool_3d.py`（360 fills）：曲江池多层跌水、湖心岛画舫、
+  悬挑水榭、曲桥、水下石阶、环湖栈道。
+
+三个模块均已接入 `build_all.py` 与 `run_all_phases.py`（landmarks 阶段），
+组合总量由 90,262 提升至 91,447 fills。地下部分使用负 y 坐标，
+不与地面建筑冲突。
+
+## 八、后续可选的优化（未实施）
 
 以下项因改动面较大，本次**未做**，如需可继续：
 

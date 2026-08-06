@@ -509,6 +509,185 @@ def add_pond_with_island(
 
 
 # ---------------------------------------------------------------------------
+# 3D building primitives.
+# ---------------------------------------------------------------------------
+def add_staircase(
+    fills: list[Fill],
+    label: str,
+    x1: int, z1: int,
+    x2: int, z2: int,
+    y1: int, y2: int,
+    direction: str,
+    block: str = Materials.SMOOTH,
+) -> None:
+    """Add a straight staircase between two points at different heights.
+
+    direction: 'north' | 'south' | 'east' | 'west' - the upward travel direction.
+    The staircase runs from (x1,z1) at y1 to (x2,z2) at y2.
+    """
+    if direction in ("north", "south"):
+        width = abs(x2 - x1)
+        steps = max(1, abs(z2 - z1))
+        height = y2 - y1
+        step_h = max(1, height // steps) if steps else 1
+        for i in range(steps):
+            z = min(z1, z2) + i if direction == "north" else max(z1, z2) - i
+            y = y1 + (i * step_h)
+            add_fill(fills, f"{label} step {i}", (min(x1, x2), y, z), (max(x1, x2), y, z), block)
+    else:
+        width = abs(z2 - z1)
+        steps = max(1, abs(x2 - x1))
+        height = y2 - y1
+        step_h = max(1, height // steps) if steps else 1
+        for i in range(steps):
+            x = min(x1, x2) + i if direction == "east" else max(x1, x2) - i
+            y = y1 + (i * step_h)
+            add_fill(fills, f"{label} step {i}", (x, y, min(z1, z2)), (x, y, max(z1, z2)), block)
+
+
+def add_spiral_stair(
+    fills: list[Fill],
+    label: str,
+    cx: int, cz: int,
+    radius: int,
+    y1: int, y2: int,
+    block: str = Materials.SMOOTH,
+) -> None:
+    """Add a square spiral staircase inside a tower.
+
+    Four straight runs arranged around a square, climbing y1 -> y2.
+    """
+    total_rise = y2 - y1
+    runs = 8
+    rise_per_run = max(1, total_rise // runs)
+    for i in range(runs):
+        y = y1 + i * rise_per_run
+        side = i % 4
+        if side == 0:  # north side, climb east->west
+            add_fill(fills, f"{label} spiral {i}", (cx - radius, y, cz - radius), (cx + radius, y, cz - radius), block)
+        elif side == 1:  # west side, climb north->south
+            add_fill(fills, f"{label} spiral {i}", (cx - radius, y, cz - radius), (cx - radius, y, cz + radius), block)
+        elif side == 2:  # south side, climb west->east
+            add_fill(fills, f"{label} spiral {i}", (cx - radius, y, cz + radius), (cx + radius, y, cz + radius), block)
+        else:  # east side, climb south->north
+            add_fill(fills, f"{label} spiral {i}", (cx + radius, y, cz - radius), (cx + radius, y, cz + radius), block)
+
+
+def add_cantilevered_floor(
+    fills: list[Fill],
+    label: str,
+    x1: int, z1: int,
+    x2: int, z2: int,
+    y: int,
+    overhang: int,
+    block: str = Materials.WOOD,
+    support_block: str = Materials.LOG,
+) -> None:
+    """Add a floor slab that overhangs its supporting columns.
+
+    The floor spans (x1,z1)-(x2,z2) at height y, with an extra overhang on all sides.
+    Supports are placed at the inset corners and midpoints.
+    """
+    # Overhanging floor plate
+    add_fill(
+        fills, f"{label} slab",
+        (x1 - overhang, y, z1 - overhang),
+        (x2 + overhang, y, z2 + overhang),
+        block,
+    )
+    # Corner supports
+    for sx in (x1, x2):
+        for sz in (z1, z2):
+            add_fill(fills, f"{label} support {sx},{sz}", (sx, y - 1, sz), (sx, y - 1, sz), support_block)
+
+
+def add_arch_bridge(
+    fills: list[Fill],
+    label: str,
+    x1: int, z1: int,
+    x2: int, z2: int,
+    y: int,
+    span: int,
+    height: int,
+    block: str = Materials.STONE,
+) -> None:
+    """Add a multi-arch stone bridge with deck, piers, and railings.
+
+    The bridge runs from (x1,z1) to (x2,z2) at deck height y.
+    span: approximate length of each arch bay.
+    height: arch rise below the deck.
+    """
+    if x1 == x2:
+        # Bridge runs north-south
+        length = abs(z2 - z1)
+        min_z, max_z = sorted((z1, z2))
+        # Deck
+        add_fill(fills, f"{label} deck", (x1 - 3, y, min_z), (x1 + 3, y, max_z), block)
+        # Railings
+        add_fill(fills, f"{label} rail w", (x1 - 4, y + 1, min_z), (x1 - 4, y + 2, max_z), block)
+        add_fill(fills, f"{label} rail e", (x1 + 4, y + 1, min_z), (x1 + 4, y + 2, max_z), block)
+        # Piers
+        for z in range(min_z + span, max_z - span + 1, span * 2):
+            add_fill(fills, f"{label} pier {z}", (x1 - 2, y - height, z - 2), (x1 + 2, y - 1, z + 2), block)
+            # Arch void beneath (approximate with air pockets)
+            add_fill(fills, f"{label} arch {z}", (x1 - 1, y - height + 1, z - 3), (x1 + 1, y - 1, z + 3), Materials.AIR)
+    else:
+        # Bridge runs east-west
+        min_x, max_x = sorted((x1, x2))
+        add_fill(fills, f"{label} deck", (min_x, y, z1 - 3), (max_x, y, z1 + 3), block)
+        add_fill(fills, f"{label} rail n", (min_x, y + 1, z1 - 4), (max_x, y + 2, z1 - 4), block)
+        add_fill(fills, f"{label} rail s", (min_x, y + 1, z1 + 4), (max_x, y + 2, z1 + 4), block)
+        for x in range(min_x + span, max_x - span + 1, span * 2):
+            add_fill(fills, f"{label} pier {x}", (x - 2, y - height, z1 - 2), (x + 2, y - 1, z1 + 2), block)
+            add_fill(fills, f"{label} arch {x}", (x - 3, y - height + 1, z1 - 1), (x + 3, y - 1, z1 + 1), Materials.AIR)
+
+
+def add_underground_room(
+    fills: list[Fill],
+    label: str,
+    x1: int, z1: int,
+    x2: int, z2: int,
+    y_floor: int,
+    y_ceiling: int,
+    block: str = Materials.STONE,
+) -> None:
+    """Carve an underground room with floor, ceiling, and walls.
+
+    The room interior is hollowed out between y_floor and y_ceiling.
+    """
+    # Clear interior
+    add_fill(fills, f"{label} hollow", (x1 + 1, y_floor, z1 + 1), (x2 - 1, y_ceiling, z2 - 1), Materials.AIR)
+    # Floor
+    add_fill(fills, f"{label} floor", (x1, y_floor - 1, z1), (x2, y_floor - 1, z2), block)
+    # Ceiling
+    add_fill(fills, f"{label} ceiling", (x1, y_ceiling + 1, z1), (x2, y_ceiling + 1, z2), block)
+    # Walls
+    add_outline(fills, f"{label} walls", x1, z1, x2, z2, y_floor, y_ceiling, block, thickness=1)
+
+
+def add_dougong_cluster(
+    fills: list[Fill],
+    label: str,
+    x: int, z: int,
+    y: int,
+    tiers: int = 3,
+    block: str = Materials.WOOD,
+) -> None:
+    """Add a compact multi-tier dougong bracket cluster.
+
+    Each tier projects further outward, creating a stepped pyramid effect.
+    """
+    for t in range(tiers):
+        size = 1 + t * 2
+        add_fill(
+            fills, f"{label} tier {t}",
+            (x - size, y + t * 2, z - size),
+            (x + size, y + t * 2 + 1, z + size),
+            block,
+        )
+
+
+# ---------------------------------------------------------------------------
 # Execution helpers.
 # ---------------------------------------------------------------------------
 class _RconClient:

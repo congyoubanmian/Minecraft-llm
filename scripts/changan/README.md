@@ -72,7 +72,10 @@ volumes into safe 32768-block `/fill` chunks.
 | `mountain_zhongnan.py` | 终南山远景山脉 | 952 |
 | `terrain_longshou.py` | 龙首原地形抬升（大明宫、太极宫高地） | 425 |
 | `flowers_gardens.py` | 牡丹、荷花、菊花、梅花等花园 | 4187 |
-| `build_all.py` | 组合以上所有模块 | 64542 |
+| `palace_hanyuan_3d.py` | 含元殿 3D 强化：转折龙尾道阶梯、飞廊悬挑、斗拱层、三层阁楼、地下宝库 | 544 |
+| `pagoda_giant_3d.py` | 大雁塔 3D 强化：地宫舍利塔、层内螺旋梯、平座回廊、斗拱、分节塔刹、碑亭 | 281 |
+| `qujiang_pool_3d.py` | 曲江池 3D 景区：多层跌水、湖心岛画舫、悬挑水榭、曲桥、环湖栈道 | 360 |
+| `build_all.py` | 组合以上所有模块 | 91447 |
 
 ## Tiling / layering strategy
 
@@ -140,3 +143,9 @@ Every module accepts:
 5. Add the module to `build_all.py`'s `MODULES` dict.
 
 See `palace_hanyuan_dian.py` for a complete example.
+
+For 3D work, `lib.py` also provides vertical-space primitives:
+`add_staircase` (straight stair), `add_spiral_stair` (in-tower spiral),
+`add_cantilevered_floor` (overhanging gallery), `add_arch_bridge`,
+`add_underground_room` (crypt/basement), `add_dougong_cluster` (bracket
+sets). See `palace_hanyuan_3d.py` and `pagoda_giant_3d.py` for usage.
