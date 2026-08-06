@@ -83,7 +83,11 @@ volumes into safe 32768-block `/fill` chunks.
 | `grotto_buddha_3d.py` | 崖壁佛龛：三层十五窟、坐佛金背光、悬挑木栈道、石阶连通、供养庭院 | 248 |
 | `waterwheel_mill_3d.py` | 永安渠水磨坊：立式扫描线圆环水轮、轮叶轮辐、磨坊二层、引水渠码头 | 166 |
 | `wall_dilou_3d.py` | 城墙双层敌楼：悬楼挑台、射孔、内部阶梯、斗拱屋顶、烽火台 | 352 |
-| `build_all.py` | 组合以上所有模块 | 96941 |
+| `penglai_island_3d.py` | 太液池蓬莱仙岛：三层台地仙岛、三层楼阁悬廊、螺旋梯、多拱桥、方丈瀛洲双岛 | 493 |
+| `underground_drain_3d.py` | 朱雀大街地下暗渠：砖拱主干渠、沉淀井室、检修井、支渠、下行台阶 | 285 |
+| `zhaigong_3d.py` | 圜丘斋宫：双层斋戒殿、铜人亭、侧殿连廊、井亭花园、参道灯柱 | 323 |
+| `bell_drum_3d.py` | 钟鼓楼重建：三层檐塔、吊钟木架撞木、十二面更鼓、内部转折梯 | 350 |
+| `build_all.py` | 组合以上所有模块 | 98392 |
 
 ## Tiling / layering strategy
 

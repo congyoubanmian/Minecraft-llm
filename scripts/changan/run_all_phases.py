@@ -14,6 +14,7 @@ if str(ROOT) not in sys.path:
 from scripts.changan import (
     academy_guozijian,
     ancestral_temple_altar,
+    bell_drum_3d,
     bell_drum_towers,
     bridge_stone_arch,
     canal_waterway,
@@ -54,6 +55,7 @@ from scripts.changan import (
     pagoda_giant,
     pagoda_giant_3d,
     pagoda_small,
+    penglai_island_3d,
     polo_stadium_3d,
     qujiang_pool_3d,
     road_paving,
@@ -73,6 +75,7 @@ from scripts.changan import (
     temple_xuandu,
     terrain_longshou,
     tomb_spirit_way,
+    underground_drain_3d,
     wall_battlement_moat,
     wall_corner_tower,
     wall_dilou_3d,
@@ -80,6 +83,7 @@ from scripts.changan import (
     water_gates,
     waterwheel_mill_3d,
     window_lattice,
+    zhaigong_3d,
     seasonal_vegetation,
 )
 from scripts.changan.lib import (
@@ -161,6 +165,7 @@ PHASES: dict[str, list[tuple[str, Callable[[list[Fill]], None]]]] = {
         ("polo_stadium_3d", polo_stadium_3d.build_polo_stadium_3d),
         ("entertainment_spectators", entertainment_spectators.build_entertainment_spectators),
         ("bell_drum_towers", bell_drum_towers.build_bell_drum_towers),
+        ("bell_drum_3d", bell_drum_3d.build_bell_drum_3d),
         ("bridge_stone_arch", bridge_stone_arch.build_all_bridges),
         ("moat_bridge_railings", moat_bridge_railings.build_moat_bridge_railings),
         ("canal_waterway", canal_waterway.build_canals),
@@ -179,6 +184,9 @@ PHASES: dict[str, list[tuple[str, Callable[[list[Fill]], None]]]] = {
         ("grotto_buddha_3d", grotto_buddha_3d.build_grotto_buddha_3d),
         ("waterwheel_mill_3d", waterwheel_mill_3d.build_waterwheel_mill_3d),
         ("wall_dilou_3d", wall_dilou_3d.build_wall_dilou_3d),
+        ("penglai_island_3d", penglai_island_3d.build_penglai_island_3d),
+        ("underground_drain_3d", underground_drain_3d.build_underground_drain_3d),
+        ("zhaigong_3d", zhaigong_3d.build_zhaigong_3d),
     ],
     "details": [
         ("window_lattice", window_lattice.build_window_lattices),

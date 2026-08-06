@@ -12,6 +12,7 @@ if str(ROOT) not in sys.path:
 from scripts.changan import (
     academy_guozijian,
     ancestral_temple_altar,
+    bell_drum_3d,
     bell_drum_towers,
     bridge_stone_arch,
     canal_waterway,
@@ -52,6 +53,7 @@ from scripts.changan import (
     pagoda_giant,
     pagoda_giant_3d,
     pagoda_small,
+    penglai_island_3d,
     polo_stadium_3d,
     qujiang_pool_3d,
     road_paving,
@@ -71,6 +73,7 @@ from scripts.changan import (
     temple_xuandu,
     terrain_longshou,
     tomb_spirit_way,
+    underground_drain_3d,
     wall_battlement_moat,
     wall_corner_tower,
     wall_dilou_3d,
@@ -78,6 +81,7 @@ from scripts.changan import (
     water_gates,
     waterwheel_mill_3d,
     window_lattice,
+    zhaigong_3d,
     seasonal_vegetation,
 )
 from scripts.changan.lib import Fill, run_builder
@@ -122,6 +126,10 @@ MODULES = {
     "grotto_buddha_3d": grotto_buddha_3d.build_grotto_buddha_3d,
     "waterwheel_mill_3d": waterwheel_mill_3d.build_waterwheel_mill_3d,
     "wall_dilou_3d": wall_dilou_3d.build_wall_dilou_3d,
+    "penglai_island_3d": penglai_island_3d.build_penglai_island_3d,
+    "underground_drain_3d": underground_drain_3d.build_underground_drain_3d,
+    "zhaigong_3d": zhaigong_3d.build_zhaigong_3d,
+    "bell_drum_3d": bell_drum_3d.build_bell_drum_3d,
     "temple_qinglong": temple_qinglong.build_qinglong_temple,
     "temple_daxingshan": temple_daxingshan.build_daxingshan_temple,
     "temple_dayan": temple_dayan.build_dayan_temple,
