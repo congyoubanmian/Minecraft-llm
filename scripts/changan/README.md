@@ -75,7 +75,11 @@ volumes into safe 32768-block `/fill` chunks.
 | `palace_hanyuan_3d.py` | 含元殿 3D 强化：转折龙尾道阶梯、飞廊悬挑、斗拱层、三层阁楼、地下宝库 | 544 |
 | `pagoda_giant_3d.py` | 大雁塔 3D 强化：地宫舍利塔、层内螺旋梯、平座回廊、斗拱、分节塔刹、碑亭 | 281 |
 | `qujiang_pool_3d.py` | 曲江池 3D 景区：多层跌水、湖心岛画舫、悬挑水榭、曲桥、环湖栈道 | 360 |
-| `build_all.py` | 组合以上所有模块 | 91447 |
+| `palace_linde_3d.py` | 麟德殿：三殿串联、三层台基、东西亭双层楼阁、飞廊复道、宴会露台 | 1874 |
+| `mingtang_altar_3d.py` | 圜丘天坛：三层圆形坛（扫描线圆盘）、四向登坛阶梯、双重壝墙棂星门、燔柴炉 | 1016 |
+| `observatory_3d.py` | 司天台：四收分高台、外挂螺旋梯、浑天仪三环、地下星图室 | 136 |
+| `polo_stadium_3d.py` | 马球场：六层阶梯看台、彩楼悬挑观礼台、台下地下马厩、球门灯柱 | 1231 |
+| `build_all.py` | 组合以上所有模块 | 95704 |
 
 ## Tiling / layering strategy
 
