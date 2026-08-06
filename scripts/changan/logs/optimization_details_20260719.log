@@ -1,0 +1,39 @@
+{
+  "phase": "details",
+  "total_fills": 21429,
+  "module_counts": {
+    "window_lattice": 12534,
+    "roof_ornaments": 3195,
+    "street_props": 1483,
+    "drainage_ditches": 840,
+    "flowers_gardens": 1838,
+    "temple_incense_banners": 212,
+    "palace_plaques_murals": 52,
+    "street_wells_millstones": 1275
+  },
+  "execute": true,
+  "validation": {
+    "oversized": 0,
+    "invalid_height": 0
+  }
+}
+{
+  "phase": "selected",
+  "total_fills": 21429,
+  "selected_fills": 21429,
+  "start": 0
+}
+{"load_regions": 1256, "start_region": 0, "selected_regions": 1256, "execution_pieces": 24719}
+{"done": 2000, "total": 24719, "region": 6, "regions": 1256, "label": "hanyuan_s mullion 3328", "sample": "12328 76 14180 12328 124 14180 minecraft:dark_oak_planks", "result": "Successfully filled 49 block(s)"}
+{"done": 4000, "total": 24719, "region": 14, "regions": 1256, "label": "xuanzheng_s glass 2846,12", "sample": "11845 76 13880 11846 77 13880 minecraft:glass_pane", "result": "Successfully filled 4 block(s)"}
+{"done": 6000, "total": 24719, "region": 25, "regions": 1256, "label": "taiji_hall_s glass 2954,15", "sample": "11953 79 14050 11954 80 14050 minecraft:glass_pane", "result": "Successfully filled 4 block(s)"}
+{"done": 8000, "total": 24719, "region": 35, "regions": 1256, "label": "taiji_office_e glass 4950,19", "sample": "12700 83 13949 12700 84 13950 minecraft:glass_pane", "result": "Successfully filled 4 block(s)"}
+{"done": 10000, "total": 24719, "region": 46, "regions": 1256, "label": "mingde_n glass 2968,43", "sample": "11967 107 8965 11968 108 8965 minecraft:glass_pane", "result": "Successfully filled 4 block(s)"}
+{"done": 12000, "total": 24719, "region": 63, "regions": 1256, "label": "jinguang_w mullion 2992", "sample": "8972 92 11992 8972 117 11992 minecraft:dark_oak_planks", "result": "Successfully filled 26 block(s)"}
+{"done": 14000, "total": 24719, "region": 81, "regions": 1256, "label": "daxingshan_mahavira_s glass 1479,27", "sample": "10478 91 11445 10479 92 11445 minecraft:glass_pane", "result": "Successfully filled 4 block(s)"}
+{"done": 16000, "total": 24719, "region": 113, "regions": 1256, "label": "ditch z=4100 water n", "sample": "11136 65 13063 11263 65 13064 minecraft:water", "result": "Successfully filled 256 block(s)"}
+{"done": 18000, "total": 24719, "region": 233, "regions": 1256, "label": "stall 4440,2980 awning", "sample": "13436 69 11977 13439 70 11983 minecraft:green_wool", "result": "Successfully filled 56 block(s)"}
+{"done": 20000, "total": 24719, "region": 397, "regions": 1256, "label": "ditch x=900 water e", "sample": "9936 65 10368 9937 65 10495 minecraft:water", "result": "Successfully filled 256 block(s)"}
+{"done": 22000, "total": 24719, "region": 805, "regions": 1256, "label": "ditch z=2500 south", "sample": "14720 64 11535 14847 65 11536 minecraft:polished_andesite", "result": "Successfully filled 512 block(s)"}
+{"done": 24000, "total": 24719, "region": 1153, "regions": 1256, "label": "daming_peony cluster 2185,5485", "sample": "11185 66 14485 11187 66 14487 minecraft:red_wool", "result": "Successfully filled 9 block(s)"}
+{"done": 24719, "total": 24719, "region": 1256, "regions": 1256, "label": "ward millstone 5320,3820 1 axle", "sample": "14535 67 12865 14535 68 12865 minecraft:polished_andesite", "result": "Successfully filled 2 block(s)"}

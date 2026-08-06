@@ -1,0 +1,50 @@
+{
+  "phase": "tiling",
+  "total_fills": 34419,
+  "module_counts": {
+    "ward_block": 15345,
+    "market_block": 10752,
+    "suburb_farms": 4057,
+    "road_paving": 368,
+    "street_facilities": 3897
+  },
+  "execute": true,
+  "validation": {
+    "oversized": 0,
+    "invalid_height": 0
+  }
+}
+{
+  "phase": "selected",
+  "total_fills": 34419,
+  "selected_fills": 34419,
+  "start": 0
+}
+{"load_regions": 593, "execution_pieces": 45378}
+{"done": 5000, "total": 45378, "region": 37, "regions": 593, "label": "market cloth 1 roof ridge", "sample": "10088 83 11068 10090 84 11100 minecraft:gold_block", "result": "Successfully filled 198 block(s)"}
+{"done": 10000, "total": 45378, "region": 83, "regions": 593, "label": "ward mansion 3 tree trunk", "sample": "11240 66 10620 11240 73 10620 minecraft:oak_log", "result": "Successfully filled 8 block(s)"}
+{"done": 15000, "total": 45378, "region": 145, "regions": 593, "label": "ward mansion 3 roof ridge", "sample": "12619 80 12599 12621 81 12641 minecraft:gold_block", "result": "Successfully filled 258 block(s)"}
+{"done": 20000, "total": 45378, "region": 187, "regions": 593, "label": "market cloth 1 roof clear old roof", "sample": "13312 79 11424 13356 89 11464 minecraft:air", "result": "Successfully filled 96 block(s)"}
+{"done": 25000, "total": 45378, "region": 220, "regions": 593, "label": "ward lamps x post 3490", "sample": "14069 66 12489 14071 71 12491 minecraft:dark_oak_log", "result": "Successfully filled 54 block(s)"}
+{"done": 30000, "total": 45378, "region": 251, "regions": 593, "label": "market iron 3 sign", "sample": "10314 74 11773 10344 77 11773 minecraft:smooth_stone", "result": "Successfully filled 124 block(s)"}
+{"done": 35000, "total": 45378, "region": 271, "regions": 593, "label": "farm 700,-300 row 748", "sample": "9748 65 8704 9750 65 8850 minecraft:green_wool", "result": "Successfully filled 441 block(s)"}
+Traceback (most recent call last):
+  File "/home/ctyun/workspace/Minecraft-llm/scripts/changan/run_all_phases.py", line 337, in <module>
+    main()
+  File "/home/ctyun/workspace/Minecraft-llm/scripts/changan/run_all_phases.py", line 325, in main
+    execute_fills(
+  File "/home/ctyun/workspace/Minecraft-llm/scripts/changan/run_all_phases.py", line 233, in execute_fills
+    rcon(f"forceload add {region_x1} {region_z1} {region_x2} {region_z2}", timeout)
+  File "/home/ctyun/workspace/Minecraft-llm/scripts/changan/lib.py", line 546, in rcon
+    return _rcon_client.command(command).strip()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ctyun/workspace/Minecraft-llm/scripts/changan/lib.py", line 527, in command
+    response_id, packet_type, payload = self._read()
+                                        ^^^^^^^^^^^^
+  File "/home/ctyun/workspace/Minecraft-llm/scripts/changan/lib.py", line 497, in _read
+    raw_length = self._recv_exact(4)
+                 ^^^^^^^^^^^^^^^^^^^
+  File "/home/ctyun/workspace/Minecraft-llm/scripts/changan/lib.py", line 506, in _recv_exact
+    chunk = self.sock.recv(size - len(data))
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt

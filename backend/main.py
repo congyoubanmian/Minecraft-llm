@@ -62,6 +62,7 @@ app.add_middleware(
 
 _rate_limit_store: dict[str, list[float]] = defaultdict(list)
 _rate_limit_last_sweep: float = 0.0
+_LEGACY_ROOT_MARKER = "/Minecraft-llm/"
 
 
 @app.middleware("http")
@@ -96,6 +97,26 @@ def _require_api_key(request: Request) -> None:
     token = auth.removeprefix("Bearer ").strip()
     if token != settings.api_key:
         raise HTTPException(status_code=401, detail="invalid or missing API key")
+
+
+def _state_path(path_value: str | None) -> Path | None:
+    if not path_value:
+        return None
+    path = Path(path_value)
+    if path.exists():
+        return path
+    text = str(path_value)
+    if _LEGACY_ROOT_MARKER in text:
+        relative = text.split(_LEGACY_ROOT_MARKER, 1)[1]
+        candidate = ROOT_DIR / relative
+        if candidate.exists():
+            return candidate
+    return path
+
+
+def _state_path_str(path_value: str | None) -> str | None:
+    path = _state_path(path_value)
+    return str(path) if path and path.exists() else None
 
 
 TaskState = dict[str, Any]
@@ -508,7 +529,7 @@ def list_projects() -> dict[str, Any]:
         summary_preview_path = state.get("surface_preview_path") or state.get("preview_path")
         if summary_preview_path:
             try:
-                preview_path = Path(summary_preview_path)
+                preview_path = _state_path(summary_preview_path)
                 if preview_path.exists():
                     preview_data = json.loads(preview_path.read_text(encoding="utf-8"))
                     preview = {
@@ -698,7 +719,7 @@ def chat_project(project_id: str, request: ChatRequest, background_tasks: Backgr
 @app.post("/api/projects/{project_id}/paste", dependencies=[Depends(_require_api_key)])
 def paste_project(project_id: str) -> dict[str, Any]:
     state = _load_project(project_id)
-    schematic_path = state.get("schematic_path")
+    schematic_path = _state_path(state.get("schematic_path"))
     if not schematic_path:
         raise HTTPException(status_code=404, detail="schematic not found")
     controller = FaweController()
@@ -706,7 +727,7 @@ def paste_project(project_id: str) -> dict[str, Any]:
     _save_project(project_id, state)
     placement = _ensure_project_placement(project_id, state)
     state["rcon"] = controller.paste_schematic(
-        schematic_path=Path(schematic_path),
+        schematic_path=schematic_path,
         x=placement["paste"]["x"],
         y=placement["paste"]["y"],
         z=placement["paste"]["z"],
@@ -793,9 +814,10 @@ def delete_project(project_id: str) -> dict[str, Any]:
 @app.get("/api/projects/{project_id}/schematic")
 def download_project_schematic(project_id: str) -> FileResponse:
     state = _load_project(project_id)
-    if not state.get("schematic_path"):
+    schematic_path = _state_path(state.get("schematic_path"))
+    if not schematic_path:
         raise HTTPException(status_code=404, detail="schematic not found")
-    return FileResponse(state["schematic_path"], filename=Path(state["schematic_path"]).name)
+    return FileResponse(schematic_path, filename=schematic_path.name)
 
 
 @app.get("/api/projects/{project_id}/modules/{module_name}/schematic")
@@ -825,14 +847,12 @@ def _preview_path_for_mode(state: dict[str, Any], mode: str) -> str | None:
         raise HTTPException(status_code=400, detail="preview mode must be surface or full")
 
     if mode == "full":
-        path = state.get("preview_path")
-        return path if path and Path(path).exists() else None
+        return _state_path_str(state.get("preview_path"))
 
-    surface_path = state.get("surface_preview_path")
-    if surface_path and Path(surface_path).exists():
+    surface_path = _state_path_str(state.get("surface_preview_path"))
+    if surface_path:
         return surface_path
-    fallback_path = state.get("preview_path")
-    return fallback_path if fallback_path and Path(fallback_path).exists() else None
+    return _state_path_str(state.get("preview_path"))
 
 
 def _module_preview_payload(state: dict[str, Any], preview_path: str, module_name: str) -> dict[str, Any]:
@@ -985,9 +1005,9 @@ def _snapshot_module_schematic(
         except Exception as exc:
             error = str(exc)
 
-    source_path = state.get("schematic_path")
+    source_path = _state_path(state.get("schematic_path"))
     if source != "world":
-        if not source_path or not Path(source_path).exists():
+        if not source_path or not source_path.exists():
             if error:
                 return {
                     "id": uuid.uuid4().hex,
@@ -1269,17 +1289,19 @@ def _module_world_target(placement: dict[str, Any], module: dict[str, Any]) -> d
 @app.get("/api/projects/{project_id}/materials")
 def get_project_materials(project_id: str) -> FileResponse:
     state = _load_project(project_id)
-    if not state.get("materials_path"):
+    materials_path = _state_path(state.get("materials_path"))
+    if not materials_path:
         raise HTTPException(status_code=404, detail="materials not found")
-    return FileResponse(state["materials_path"], media_type="application/json")
+    return FileResponse(materials_path, media_type="application/json")
 
 
 @app.get("/api/projects/{project_id}/analysis-report")
 def get_project_analysis_report(project_id: str) -> FileResponse:
     state = _load_project(project_id)
-    if not state.get("analysis_report_path"):
+    analysis_report_path = _state_path(state.get("analysis_report_path"))
+    if not analysis_report_path:
         raise HTTPException(status_code=404, detail="analysis report not found")
-    return FileResponse(state["analysis_report_path"], media_type="application/json")
+    return FileResponse(analysis_report_path, media_type="application/json")
 
 
 def _run_build_task(task_id: str, image_path: Path) -> None:

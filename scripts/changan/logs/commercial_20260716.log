@@ -1,0 +1,28 @@
+{
+  "phase": "commercial",
+  "total_fills": 1408,
+  "module_counts": {
+    "tavern": 1408
+  },
+  "execute": true,
+  "validation": {
+    "oversized": 0,
+    "invalid_height": 0
+  }
+}
+{
+  "phase": "selected",
+  "total_fills": 1408,
+  "selected_fills": 1408,
+  "start": 0
+}
+{"load_regions": 27, "start_region": 0, "selected_regions": 27, "execution_pieces": 2013}
+{"done": 250, "total": 2013, "region": 4, "regions": 27, "label": "tavern 1020,2068 roof west slope 3", "sample": "10032 88 11062 10037 88 11102 minecraft:dark_prismarine_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]", "result": "Successfully filled 246 block(s)"}
+{"done": 500, "total": 2013, "region": 7, "regions": 27, "label": "tavern 1200,2068 pole", "sample": "10244 66 11081 10244 82 11083 minecraft:dark_oak_log", "result": "Successfully filled 51 block(s)"}
+{"done": 750, "total": 2013, "region": 9, "regions": 27, "label": "tavern 1440,3024 roof west eave", "sample": "10432 84 12032 10436 84 12061 minecraft:dark_prismarine_slab[type=bottom,waterlogged=false]", "result": "Successfully filled 150 block(s)"}
+{"done": 1000, "total": 2013, "region": 12, "regions": 27, "label": "tavern 1680,3024 pole", "sample": "10724 66 12037 10724 82 12039 minecraft:dark_oak_log", "result": "Successfully filled 51 block(s)"}
+{"done": 1250, "total": 2013, "region": 18, "regions": 27, "label": "tavern 4320,3024 roof east slope 3", "sample": "13339 88 12032 13344 88 12058 minecraft:dark_prismarine_stairs[facing=west,half=bottom,shape=straight,waterlogged=false]", "result": "Successfully filled 162 block(s)"}
+{"done": 1500, "total": 2013, "region": 20, "regions": 27, "label": "tavern 4800,3024 ground air", "sample": "13801 67 12025 13823 73 12031 minecraft:air", "result": "Successfully filled 1127 block(s)"}
+{"done": 1750, "total": 2013, "region": 23, "regions": 27, "label": "tavern 4920,3024 roof ridge finial 3022", "sample": "13936 91 12021 13940 94 12023 minecraft:gold_block", "result": "Successfully filled 60 block(s)"}
+{"done": 2000, "total": 2013, "region": 27, "regions": 27, "label": "tavern 5160,3024 roof west slope 1", "sample": "14160 86 12032 14165 86 12058 minecraft:dark_prismarine_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]", "result": "Successfully filled 162 block(s)"}
+{"done": 2013, "total": 2013, "region": 27, "regions": 27, "label": "tavern 5160,3024 banner", "sample": "14205 76 12034 14205 81 12042 minecraft:blue_wool", "result": "Successfully filled 54 block(s)"}

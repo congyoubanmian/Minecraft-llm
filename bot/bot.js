@@ -118,6 +118,33 @@ app.post("/save-region", async (req, res) => {
   }
 });
 
+app.post("/commands", async (req, res) => {
+  try {
+    await waitUntilReady();
+    const { commands = [], delay_ms: delayMs = 350 } = req.body || {};
+    if (!Array.isArray(commands)) {
+      res.status(400).json({ error: "commands must be an array" });
+      return;
+    }
+    if (commands.length > 5000) {
+      res.status(400).json({ error: "commands length must be <= 5000" });
+      return;
+    }
+
+    const executed = [];
+    for (const raw of commands) {
+      if (typeof raw !== "string" || !raw.trim()) {
+        res.status(400).json({ error: "each command must be a non-empty string" });
+        return;
+      }
+      executed.push(await chatCommand(raw.trim(), delayMs));
+    }
+    res.json({ ok: true, commands: executed });
+  } catch (error) {
+    res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
 const port = Number(process.env.BOT_HTTP_PORT || 3001);
 app.listen(port, () => {
   console.log(`[bot] http listening on ${port}`);

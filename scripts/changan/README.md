@@ -1,0 +1,142 @@
+# Tang Chang'an Fine-Grained Building Modules
+
+This directory contains per-building Python scripts that generate vanilla
+Minecraft `/fill` commands for a detailed Tang Chang'an reconstruction.
+
+All coordinates are **local** to the city origin `(9000, 64, 9000)` defined in
+`lib.py`.  Each script converts them to world coordinates and splits large
+volumes into safe 32768-block `/fill` chunks.
+
+## Quick start
+
+```bash
+# See how many commands a module generates (dry run)
+.venv/bin/python scripts/changan/palace_hanyuan_dian.py
+
+# Execute one module in small batches
+.venv/bin/python scripts/changan/palace_hanyuan_dian.py --execute --limit 300
+
+# Continue the next batch
+.venv/bin/python scripts/changan/palace_hanyuan_dian.py --execute --start 300 --limit 300
+```
+
+## Available modules
+
+| Script | What it builds | Dry-run fills |
+|--------|----------------|--------------:|
+| `palace_hanyuan_dian.py` | 大明宫含元殿：三层台基、龙尾道、柱廊、重檐屋顶、东西阙楼 | 1370 |
+| `palace_xuanzheng_dian.py` | 大明宫宣政殿：中朝殿堂、两侧中书/门下省 | 836 |
+| `palace_zichen_dian.py` | 大明宫紫宸殿：内朝、后花园池塘、侧亭 | 401 |
+| `palace_xingqing.py` | 兴庆宫：宫墙、龙庆池、沉香亭、花萼相辉楼 | 110 |
+| `imperial_taiji_palace.py` | 太极宫：承天门、太极殿、两仪殿、官署 | 439 |
+| `gate_zhuque_men.py` | 朱雀门：城楼、五门道、箭楼、瓮城 | 165 |
+| `gate_mingde_men.py` | 明德门：南正门、五门道、阙楼、瓮城 | 253 |
+| `wall_corner_tower.py` | 外郭城四角角楼 | 148 |
+| `pagoda_giant.py` | 大慈恩寺大雁塔：七层方形楼阁式塔、寺院 | 322 |
+| `pagoda_small.py` | 荐福寺小雁塔：十三层密檐式塔、寺院 | 347 |
+| `temple_qinglong.py` | 青龙寺：山门、大雄宝殿、佛塔、藏经阁 | 199 |
+| `temple_daxingshan.py` | 大兴善寺：山门、天王殿、大雄殿、译经阁 | 268 |
+| `market_block.py` | 东西市可平铺 120×120 商铺街区 | 10752 |
+| `ward_block.py` | 108坊可平铺 260×260 住宅坊区 | 15345 |
+| `tavern.py` | 市场沿街可平铺酒楼 | 1408 |
+| `street_facilities.py` | 朱雀大街中分带、路灯、行道树、牌坊 | 3897 |
+| `imperial_daming_palace.py` | 大明宫整体：宫墙、丹凤门、太液池、蓬莱阁 | 781 |
+| `bridge_stone_arch.py` | 石拱桥（朱雀桥、太液桥等） | 148 |
+| `canal_waterway.py` | 龙首渠、清明渠、永安渠及两岸柳树 | 230 |
+| `garden_rockery.py` | 御花园假山、池塘、山顶亭 | 78 |
+| `official_residence.py` | 王府/官邸大院（秦王府、齐王府等） | 336 |
+| `gates_all.py` | 其余 10 座外郭城门（安化、启夏、玄武、春明、金光等） | 968 |
+| `temple_dayan.py` | 大庄严寺（大严塔、大雄殿、译经阁） | 350 |
+| `temple_xuandu.py` | 玄都观（三清殿、桃花林、reflecting pond） | 114 |
+| `wall_battlement_moat.py` | 城墙垛口、敌楼、护城河石岸与荷叶 | 2772 |
+| `palace_interior.py` | 宫殿室内地板、龙椅、顶灯、壁灯 | 288 |
+| `night_market.py` | 东西市夜市灯笼串、红毯、门楼灯 | 156 |
+| `entertainment_venues.py` | 马球场、乐游园（清秋阁、亭台石凳） | 171 |
+| `roof_ornaments.py` | 屋脊兽、鸱吻、瓦当装饰 | 2726 |
+| `window_lattice.py` | 宫殿寺庙门窗木格栅 | 5539 |
+| `bell_drum_towers.py` | 钟楼、鼓楼（大明宫、太极宫各一组） | 156 |
+| `government_offices.py` | 尚书省、御史台、大理寺、鸿胪寺 | 352 |
+| `lantern_festival.py` | 上元节灯会：朱雀大街灯棚、城门灯、市场灯弧 | 497 |
+| `ancestral_temple_altar.py` | 太庙、社稷坛 | 162 |
+| `academy_guozijian.py` | 国子监、太学、辟雍、碑亭 | 192 |
+| `suburb_farms.py` | 城外农田、村落民居 | 4057 |
+| `road_paving.py` | 道路分级铺装：御道、主干道、坊巷 | 368 |
+| `drainage_ditches.py` | 主街排水沟、下水道井盖 | 96 |
+| `water_gates.py` | 城墙水关（龙首渠、清明渠、永安渠穿墙处） | 54 |
+| `foreign_temples.py` | 西市外籍宗教区：波斯寺、祆祠、景教寺 | 68 |
+| `temple_daci.py` | 大慈恩寺完整寺院（ complement 大雁塔） | 149 |
+| `temple_jianfu.py` | 荐福寺完整寺院（ complement 小雁塔） | 104 |
+| `street_props.py` | 马车、轿子、货摊、推车 | 1483 |
+| `city_guards.py` | 宫殿/城门卫兵、岗哨 | 267 |
+| `market_details.py` | 晾晒布匹、酒旗、幌子、招牌 | 56 |
+| `mountain_zhongnan.py` | 终南山远景山脉 | 952 |
+| `terrain_longshou.py` | 龙首原地形抬升（大明宫、太极宫高地） | 425 |
+| `flowers_gardens.py` | 牡丹、荷花、菊花、梅花等花园 | 4187 |
+| `build_all.py` | 组合以上所有模块 | 64542 |
+
+## Tiling / layering strategy
+
+The city is filled in layers:
+
+1. **Foundation** (`foundation_changan_city_v2.py`) — flat terrain plate.
+2. **Skeleton** (`generate_changan_city_v1.py`) — walls, gates, avenues, wards.
+3. **Detail pass** (`detail_changan_city_v2.py`) — palace roofs, market stalls, lamps.
+4. **Fine-grained modules** (this directory) — per-building refinements.
+
+You can run modules independently and repeatedly.  New blocks overwrite old
+ones in the same location, so each layer upgrades what is underneath.
+
+## Common CLI flags
+
+Every module accepts:
+
+```text
+--execute          Send commands to the server (default is dry-run)
+--start N          Skip the first N /fill commands
+--limit N          Process only N commands
+--delay-ms MS      Wait MS milliseconds between commands
+--report-every N   Print progress every N commands
+--timeout S        rcon timeout in seconds
+--no-forceload     Skip chunk forceload (use only if area is already loaded)
+```
+
+## Recommended execution order
+
+```bash
+# 1. Palaces and landmarks (visible from the spawn point)
+.venv/bin/python scripts/changan/palace_hanyuan_dian.py --execute --limit 300
+.venv/bin/python scripts/changan/palace_xuanzheng_dian.py --execute --limit 300
+.venv/bin/python scripts/changan/palace_zichen_dian.py --execute --limit 200
+
+# 2. City gates
+.venv/bin/python scripts/changan/gate_zhuque_men.py --execute --limit 100
+
+# 3. Religious landmarks
+.venv/bin/python scripts/changan/pagoda_giant.py --execute --limit 100
+.venv/bin/python scripts/changan/pagoda_small.py --execute --limit 100
+.venv/bin/python scripts/changan/temple_qinglong.py --execute --limit 100
+.venv/bin/python scripts/changan/palace_xingqing.py --execute --limit 100
+
+# 4. Detail layers (overwrites large blank walls/roofs)
+.venv/bin/python scripts/changan/window_lattice.py --execute --limit 500
+.venv/bin/python scripts/changan/roof_ornaments.py --execute --limit 100
+
+# 5. Atmosphere
+.venv/bin/python scripts/changan/lantern_festival.py --execute --limit 300
+.venv/bin/python scripts/changan/night_market.py --execute --limit 200
+
+# 6. Dense commercial/residential tiling (do in small batches!)
+.venv/bin/python scripts/changan/market_block.py --execute --limit 500
+.venv/bin/python scripts/changan/ward_block.py --execute --limit 500
+.venv/bin/python scripts/changan/tavern.py --execute --limit 300
+```
+
+## Adding a new module
+
+1. Create `scripts/changan/my_building.py`.
+2. Import `Fill` and helpers from `scripts.changan.lib`.
+3. Define `def build_my_building(fills: list[Fill]) -> None:`.
+4. Call `run_builder(build_my_building, "my_building")` in `main()`.
+5. Add the module to `build_all.py`'s `MODULES` dict.
+
+See `palace_hanyuan_dian.py` for a complete example.

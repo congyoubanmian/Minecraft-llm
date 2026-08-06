@@ -1,0 +1,16 @@
+{
+  "section": "seasonal_vegetation_summer",
+  "total_fills": 2216,
+  "selected_fills": 2216,
+  "start": 0,
+  "execute": true,
+  "validation": {
+    "oversized": 0,
+    "invalid_height": 0
+  }
+}
+{"done": 500, "total": 2216, "absolute_fill": 500, "label": "taiji_court lotus 2654,5642", "sample": "11654 66 14642 11656 66 14644 minecraft:pink_wool", "result": "Successfully filled 9 block(s)"}
+{"done": 1000, "total": 2216, "absolute_fill": 1000, "label": "leyou_garden lotus 5350,5138", "sample": "14350 66 14138 14352 66 14140 minecraft:pink_wool", "result": "Successfully filled 9 block(s)"}
+{"done": 1500, "total": 2216, "absolute_fill": 1500, "label": "leyou_garden lotus 5530,5198", "sample": "14530 66 14198 14532 66 14200 minecraft:pink_wool", "result": "Successfully filled 9 block(s)"}
+{"done": 2000, "total": 2216, "absolute_fill": 2000, "label": "ward_seasonal_3420_2220_lotus cluster 3565,2420", "sample": "12565 66 11420 12567 66 11422 minecraft:pink_wool", "result": "Successfully filled 9 block(s)"}
+{"done": 2216, "total": 2216, "absolute_fill": 2216, "label": "ward_seasonal_5320_3820_lotus cluster 5465,4035", "sample": "14465 66 13035 14467 66 13037 minecraft:pink_wool", "result": "Successfully filled 9 block(s)"}

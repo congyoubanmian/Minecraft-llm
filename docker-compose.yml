@@ -6,7 +6,7 @@ services:
       EULA: "TRUE"
       TYPE: "PAPER"
       VERSION: "1.21.4"
-      MEMORY: "2G"
+      MEMORY: "6G"
       ONLINE_MODE: "FALSE"
       ENABLE_RCON: "TRUE"
       RCON_PORT: "25575"
@@ -18,6 +18,7 @@ services:
     ports:
       - "25565:25565"
       - "25575:25575"
+      - "8100:8100"
       - "19132:19132/udp"
     volumes:
       - ./server:/data
@@ -28,7 +29,7 @@ services:
       context: ./bot
     container_name: mc-ai-bot
     environment:
-      MC_HOST: "minecraft"
+      MC_HOST: "mc-ai-paper"
       MC_PORT: "25565"
       BOT_USERNAME: "BuilderBot"
       BOT_HTTP_PORT: "3001"
@@ -46,7 +47,7 @@ services:
     environment:
       UPLOAD_DIR: "/app/backend/uploads"
       SCHEMATIC_DIR: "/app/server/plugins/FastAsyncWorldEdit/schematics"
-      RCON_HOST: "minecraft"
+      RCON_HOST: "mc-ai-paper"
       RCON_PORT: "25575"
       RCON_PASSWORD: "minecraft-ai-builder"
       BOT_URL: "http://bot:3001"
@@ -61,8 +62,11 @@ services:
     ports:
       - "8000:8000"
     volumes:
+      - ./backend:/app/backend
+      - ./frontend:/app/frontend
       - ./backend/uploads:/app/backend/uploads
       - ./backend/generated_plans:/app/backend/generated_plans
+      - ./backend/projects:/app/backend/projects
       - ./server:/app/server
       - /usr/bin/codex:/usr/bin/codex:ro
       - /usr/lib/node_modules/@openai/codex:/usr/lib/node_modules/@openai/codex:ro

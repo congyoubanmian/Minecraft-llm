@@ -1,0 +1,29 @@
+{
+  "phase": "landmarks",
+  "total_fills": 2147,
+  "module_counts": {
+    "palace_interior": 1157,
+    "rampart_horse_way": 576,
+    "entertainment_spectators": 93,
+    "moat_bridge_railings": 204,
+    "tomb_spirit_way": 73,
+    "leyouyuan_stele": 44
+  },
+  "execute": true,
+  "validation": {
+    "oversized": 0,
+    "invalid_height": 0
+  }
+}
+{
+  "phase": "selected",
+  "total_fills": 2147,
+  "selected_fills": 2147,
+  "start": 0
+}
+{"load_regions": 128, "start_region": 0, "selected_regions": 128, "execution_pieces": 2499}
+{"done": 500, "total": 2499, "region": 13, "regions": 128, "label": "hanyuan desk 2750,5380", "sample": "11747 74 14378 11753 76 14382 minecraft:dark_oak_planks", "result": "Successfully filled 105 block(s)"}
+{"done": 1000, "total": 2499, "region": 31, "regions": 128, "label": "xuanzheng desk 2870,4960", "sample": "11867 73 13958 11873 75 13962 minecraft:dark_oak_planks", "result": "Successfully filled 105 block(s)"}
+{"done": 1500, "total": 2499, "region": 49, "regions": 128, "label": "horseway 1500,6024 rail w 20", "sample": "10495 88 15003 10495 89 15004 minecraft:stone_bricks", "result": "Successfully filled 3 block(s)"}
+{"done": 2000, "total": 2499, "region": 68, "regions": 128, "label": "polo east stand tier 4", "sample": "11609 70 11648 11612 70 11775 minecraft:dark_oak_planks", "result": "Successfully filled 508 block(s)"}
+{"done": 2499, "total": 2499, "region": 128, "regions": 128, "label": "bench 5320,5280", "sample": "14317 66 14279 14323 66 14281 minecraft:smooth_stone", "result": "Successfully filled 21 block(s)"}

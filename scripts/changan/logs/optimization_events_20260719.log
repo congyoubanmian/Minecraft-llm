@@ -1,0 +1,24 @@
+{
+  "phase": "events",
+  "total_fills": 653,
+  "module_counts": {
+    "lantern_festival": 497,
+    "night_market": 156
+  },
+  "execute": true,
+  "validation": {
+    "oversized": 0,
+    "invalid_height": 0
+  }
+}
+{
+  "phase": "selected",
+  "total_fills": 653,
+  "selected_fills": 653,
+  "start": 0
+}
+{"load_regions": 150, "start_region": 0, "selected_regions": 150, "execution_pieces": 791}
+{"done": 250, "total": 791, "region": 51, "regions": 150, "label": "zhuque canopy 3320 30", "sample": "12027 74 12317 12031 76 12323 minecraft:red_wool", "result": "Successfully filled 105 block(s)"}
+{"done": 500, "total": 791, "region": 104, "regions": 150, "label": "market 0 arc lamps n post 1267", "sample": "10266 75 12059 10268 80 12061 minecraft:dark_oak_log", "result": "Successfully filled 54 block(s)"}
+{"done": 750, "total": 791, "region": 143, "regions": 150, "label": "market 1 carpet x", "sample": "13952 66 11554 14079 66 11566 minecraft:red_wool", "result": "Successfully filled 1664 block(s)"}
+{"done": 791, "total": 791, "region": 150, "regions": 150, "label": "market 1 north gate lamps lamp 3025", "sample": "13739 73 12024 13741 73 12026 minecraft:sea_lantern", "result": "Successfully filled 9 block(s)"}

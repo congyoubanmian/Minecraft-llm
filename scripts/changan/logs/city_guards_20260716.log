@@ -1,0 +1,24 @@
+{
+  "phase": "details",
+  "total_fills": 267,
+  "module_counts": {
+    "city_guards": 267
+  },
+  "execute": true,
+  "validation": {
+    "oversized": 0,
+    "invalid_height": 0
+  }
+}
+{
+  "phase": "selected",
+  "total_fills": 267,
+  "selected_fills": 267,
+  "start": 0
+}
+{"done": 50, "total": 267, "absolute_fill": 50, "label": "guard -60,3,1500 spear", "sample": "8942 67 10500 8942 73 10500 minecraft:iron_bars", "result": "Successfully filled 7 block(s)"}
+{"done": 100, "total": 267, "absolute_fill": 100, "label": "guard 2380,1,4110 body", "sample": "11379 65 13109 11381 68 13111 minecraft:red_terracotta", "result": "Successfully filled 36 block(s)"}
+{"done": 150, "total": 267, "absolute_fill": 150, "label": "guard 3340,1,4110 spear", "sample": "12342 65 13110 12342 71 13110 minecraft:iron_bars", "result": "Successfully filled 7 block(s)"}
+{"done": 200, "total": 267, "absolute_fill": 200, "label": "guard 4190,1,4320 head", "sample": "13189 69 13319 13191 70 13321 minecraft:gold_block", "result": "Successfully filled 18 block(s)"}
+{"done": 250, "total": 267, "absolute_fill": 250, "label": "guard 1810,1,5400 body", "sample": "10809 65 14399 10811 68 14401 minecraft:red_terracotta", "result": "Successfully filled 36 block(s)"}
+{"done": 267, "total": 267, "absolute_fill": 267, "label": "guard 4190,1,5640 spear", "sample": "13190 65 14642 13190 71 14642 minecraft:iron_bars", "result": "Successfully filled 7 block(s)"}

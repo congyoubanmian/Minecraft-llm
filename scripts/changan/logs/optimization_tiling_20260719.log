@@ -1,0 +1,40 @@
+{
+  "phase": "tiling",
+  "total_fills": 17420,
+  "module_counts": {
+    "suburb_farms": 17112,
+    "farm_irrigation": 308
+  },
+  "execute": true,
+  "validation": {
+    "oversized": 0,
+    "invalid_height": 0
+  }
+}
+{
+  "phase": "selected",
+  "total_fills": 17420,
+  "selected_fills": 17420,
+  "start": 0
+}
+{"load_regions": 1494, "start_region": 0, "selected_regions": 1494, "execution_pieces": 39775}
+{"done": 2000, "total": 39775, "region": 63, "regions": 1494, "label": "farm 320,-340 row 444", "sample": "9444 65 8660 9446 65 8703 minecraft:green_wool", "result": "No blocks were filled"}
+{"done": 4000, "total": 39775, "region": 127, "regions": 1494, "label": "farm 2000,-620 row 2000", "sample": "11000 65 8380 11002 65 8447 minecraft:yellow_wool", "result": "Successfully filled 204 block(s)"}
+{"done": 6000, "total": 39775, "region": 193, "regions": 1494, "label": "farm 3120,-620 soil", "sample": "12288 64 8380 12340 64 8447 minecraft:dirt", "result": "Successfully filled 3523 block(s)"}
+{"done": 8000, "total": 39775, "region": 257, "regions": 1494, "label": "farm 4520,-620 row 4664", "sample": "13664 65 8380 13666 65 8447 minecraft:yellow_wool", "result": "Successfully filled 204 block(s)"}
+{"done": 10000, "total": 39775, "region": 323, "regions": 1494, "label": "farm 5920,-620 row 6044", "sample": "15044 65 8380 15046 65 8447 minecraft:green_wool", "result": "Successfully filled 204 block(s)"}
+{"done": 12000, "total": 39775, "region": 381, "regions": 1494, "label": "farm -340,5960 row -304", "sample": "8696 65 14976 8698 65 15103 minecraft:yellow_wool", "result": "Successfully filled 312 block(s)"}
+{"done": 14000, "total": 39775, "region": 443, "regions": 1494, "label": "farm 600,6640 row 776", "sample": "9776 65 15640 9778 65 15743 minecraft:yellow_wool", "result": "Successfully filled 312 block(s)"}
+{"done": 16000, "total": 39775, "region": 507, "regions": 1494, "label": "farm 2000,6640 row 2036", "sample": "11036 65 15640 11038 65 15743 minecraft:green_wool", "result": "Successfully filled 312 block(s)"}
+{"done": 18000, "total": 39775, "region": 574, "regions": 1494, "label": "farm 3400,6640 soil", "sample": "12416 64 15744 12543 64 15787 minecraft:dirt", "result": "Successfully filled 5419 block(s)"}
+{"done": 20000, "total": 39775, "region": 639, "regions": 1494, "label": "farm 4800,6640 soil", "sample": "13824 64 15640 13951 64 15743 minecraft:dirt", "result": "Successfully filled 12379 block(s)"}
+{"done": 22000, "total": 39775, "region": 699, "regions": 1494, "label": "farm 6200,6080 row 6408", "sample": "15408 65 15080 15410 65 15103 minecraft:yellow_wool", "result": "Successfully filled 72 block(s)"}
+{"done": 24000, "total": 39775, "region": 763, "regions": 1494, "label": "farm 6080,1760 row 6088", "sample": "15088 65 10760 15090 65 10879 minecraft:yellow_wool", "result": "Successfully filled 120 block(s)"}
+{"done": 26000, "total": 39775, "region": 837, "regions": 1494, "label": "farm 6360,360 row 6400", "sample": "15400 65 9360 15402 65 9471 minecraft:yellow_wool", "result": "Successfully filled 336 block(s)"}
+{"done": 28000, "total": 39775, "region": 909, "regions": 1494, "label": "village roof 6600,4880 ridge finial 4882", "sample": "15606 79 13881 15610 82 13883 minecraft:gold_block", "result": "Successfully filled 60 block(s)"}
+{"done": 30000, "total": 39775, "region": 981, "regions": 1494, "label": "farm 6640,3440 row 6640", "sample": "15640 65 12440 15642 65 12543 minecraft:yellow_wool", "result": "Successfully filled 312 block(s)"}
+{"done": 32000, "total": 39775, "region": 1048, "regions": 1494, "label": "farm -900,1480 row -884", "sample": "8116 65 10496 8118 65 10623 minecraft:green_wool", "result": "Successfully filled 384 block(s)"}
+{"done": 34000, "total": 39775, "region": 1122, "regions": 1494, "label": "farm -620,-200 row -544", "sample": "8456 65 8832 8458 65 8959 minecraft:yellow_wool", "result": "No blocks were filled"}
+{"done": 36000, "total": 39775, "region": 1191, "regions": 1494, "label": "farm -620,4560 row -588", "sample": "8412 65 13560 8414 65 13567 minecraft:green_wool", "result": "Successfully filled 24 block(s)"}
+{"done": 38000, "total": 39775, "region": 1263, "regions": 1494, "label": "farm -340,2600 row -252", "sample": "8748 65 11776 8750 65 11820 minecraft:green_wool", "result": "No blocks were filled"}
+{"done": 39775, "total": 39775, "region": 1494, "regions": 1494, "label": "irrigation channel 27 water", "sample": "15232 65 14199 15359 65 14201 minecraft:water", "result": "Successfully filled 384 block(s)"}

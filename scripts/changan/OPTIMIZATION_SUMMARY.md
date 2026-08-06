@@ -1,0 +1,145 @@
+# Chang'an 模块优化汇总（2026-07 更新）
+
+本次优化已于 **2026-07-19** 完成审查、修复和当前世界增量施工：
+
+1. **大规模扩展现有模块**的覆盖密度
+2. **新增 10 个独立细节模块**
+3. **新增材质语义文档**（`MATERIALS.md`）
+4. **接入总编排脚本**（`build_all.py`、`run_all_phases.py`）
+
+> 所有脚本均已通过 `py_compile` 和全量 dry-run；当前世界的优化增量已执行并抽样验证。
+
+---
+
+## 一、扩展后的模块（密度提升）
+
+| 模块 | 改动前 | 改动后 | 变化 | 说明 |
+|---|---|---:|---:|---|
+| `suburb_farms.py` | 4,057 | **17,112** | +13,055 | 四郊农田延伸到约 1,000 格，水渠限制在城外，新增村落、风车、稻草堆 |
+| `market_details.py` | 56 | **940** | +884 | 东西市每个象限密集布置酒旗、布架、招牌、货郎担、灯笼串 |
+| `drainage_ditches.py` | 96 | **840** | +744 | 主干道排水沟 + 每个坊巷交叉口的雨水井/暗沟 |
+| `window_lattice.py` | 5,539 | **12,534** | +6,995 | 对齐丹凤门、蓬莱阁、太极宫、兴庆宫、所有城门、钟鼓楼、官署和六座寺庙真实墙面 |
+| `palace_interior.py` | 288 | **1,157** | +869 | 覆盖含元殿、宣政殿、紫宸殿、太极殿、两仪殿、花萼相辉楼，新增官员案几 |
+| `flowers_gardens.py` | 1,118 | **1,838** | +720 | 定点花园 + 每个住宅坊的安全空隙花圃，避开宅院和宫殿主体 |
+| `street_props.py` | 112 | **1,483** | +1,371 | 主干道交叉口、东西市、坊内街巷、宫城仪仗路全面加马车/轿子/货摊/水桶/石凳 |
+| `roof_ornaments.py` | 22 | **3,195** | +3,173 | 屋脊高度和中心线按主体屋顶重新计算，覆盖宫殿、城门、钟鼓楼、寺庙和塔刹 |
+
+---
+
+## 二、新增模块
+
+| 新模块 | fills | 用途 |
+|---|---:|---|
+| `rampart_horse_way.py` | 576 | 城墙登城马道（8 处逐级斜坡+随坡抬升护栏） |
+| `moat_bridge_railings.py` | 204 | 城门外护城河桥：栏杆、桥墩、桥头石狮 |
+| `temple_incense_banners.py` | 212 | 各大寺庙/道观香炉、幡旗、石碑、圣树 |
+| `palace_plaques_murals.py` | 52 | 宫殿匾额、墙面壁画；移除与主体重复或错位的城门匾额/屏风 |
+| `tomb_spirit_way.py` | 73 | 城郊皇陵：神道、石像生、献殿、封土 |
+| `farm_irrigation.py` | 308 | 郊区灌溉渠、水车、立体双柱水闸，衔接龙首渠/清明渠 |
+| `street_wells_millstones.py` | 1,275 | 坊巷/市场公共水井、石磨、柴堆 |
+| `entertainment_spectators.py` | 93 | 马球场、乐游园看台、入口、旗杆 |
+| `leyouyuan_stele.py` | 44 | 乐游园诗碑、亭台题字、石凳 |
+| `seasonal_vegetation.py` | 2,216 | 四季点状植被切换，不再整片覆盖地面（`--season spring/summer/autumn/winter`） |
+
+---
+
+## 三、新增文档
+
+| 文档 | 说明 |
+|---|---|
+| `MATERIALS.md` | `Materials` 调色板每个材质对应的唐代构件/使用场景/风格原则 |
+| `OPTIMIZATION_SUMMARY.md` | 本文件 |
+
+---
+
+## 四、当前总命令数
+
+截至本次优化，全模块独立 dry-run 汇总：
+
+- **总 fills：90,262**
+- `build_all.py` dry-run：90,262
+- validation：0 oversized / 0 invalid_height
+
+阶段总数：tiling 47,782 / commercial 2,348 / landmarks 15,142 / details 21,696 / events 2,869。
+新增模块均已按依赖关系接入 `run_all_phases.py`。
+
+---
+
+## 五、建议的使用方式
+
+当前世界禁止重跑基础层和完整地标层；应使用 `--include` 精确执行增量模块。下面的根目录基础命令仅适用于全新空白世界：
+
+```bash
+# 1. 先跑原有的基础/骨架/细节层（项目根目录脚本）
+.venv/bin/python scripts/foundation_changan_city_v2.py --execute --limit 500
+.venv/bin/python scripts/generate_changan_city_v1.py --execute --limit 500
+.venv/bin/python scripts/detail_changan_city_v2.py --execute --limit 500
+
+# 2. 平铺骨架
+.venv/bin/python scripts/changan/ward_block.py --execute --limit 500
+.venv/bin/python scripts/changan/market_block.py --execute --limit 500
+
+# 3. 扩展后的细节层（可按需选择）
+.venv/bin/python scripts/changan/suburb_farms.py --execute --limit 500
+.venv/bin/python scripts/changan/market_details.py --execute --limit 300
+.venv/bin/python scripts/changan/window_lattice.py --execute --limit 500
+.venv/bin/python scripts/changan/palace_interior.py --execute --limit 300
+.venv/bin/python scripts/changan/roof_ornaments.py --execute --limit 300
+.venv/bin/python scripts/changan/street_props.py --execute --limit 300
+.venv/bin/python scripts/changan/drainage_ditches.py --execute --limit 300
+
+# 4. 新增模块（可按需选择）
+.venv/bin/python scripts/changan/rampart_horse_way.py --execute --limit 200
+.venv/bin/python scripts/changan/moat_bridge_railings.py --execute --limit 200
+.venv/bin/python scripts/changan/temple_incense_banners.py --execute --limit 200
+.venv/bin/python scripts/changan/palace_plaques_murals.py --execute --limit 100
+.venv/bin/python scripts/changan/street_wells_millstones.py --execute --limit 300
+.venv/bin/python scripts/changan/farm_irrigation.py --execute --limit 200
+.venv/bin/python scripts/changan/entertainment_spectators.py --execute --limit 100
+.venv/bin/python scripts/changan/leyouyuan_stele.py --execute --limit 50
+.venv/bin/python scripts/changan/tomb_spirit_way.py --execute --limit 100
+
+# 5. 季节性植被（可反复切换）
+.venv/bin/python scripts/changan/seasonal_vegetation.py --season spring --execute --limit 500
+.venv/bin/python scripts/changan/seasonal_vegetation.py --season winter --execute --limit 500
+```
+
+---
+
+## 六、审查修复与施工记录
+
+审查中修复的高风险问题：
+
+- 北郊/东郊 `range` 方向错误导致零生成
+- 郊区水渠横穿 6000×6000 城区
+- 马道护栏为整块高墙，没有随坡抬升
+- 太极殿、两仪殿、紫宸殿及六座寺庙的室内/窗棂/匾额坐标错位
+- 多组屋脊兽沿用旧屋顶高度或错误中心点
+- 坊内花园和季节花圃覆盖宅院，宫苑花圃覆盖紫宸殿/国子监
+- 新增模块没有接入 `build_all.py` 和 `run_all_phases.py`
+- 强加载窗口过大导致 TPS 低于 10，现改为 128×128（最多 64 区块）
+
+当前世界增量施工日志：
+
+- `logs/optimization_tiling_20260719.log`
+- `logs/optimization_commercial_20260719.log`
+- `logs/optimization_landmarks_20260719.log`
+- `logs/optimization_details_20260719.log`
+- `logs/optimization_events_20260719.log`
+- `logs/optimization_seasonal_summer_20260719.log`
+
+施工前/后备份：
+
+- `backups/world_backup_20260719_pre_optimization`
+- `backups/world_backup_20260719_post_optimization`
+
+## 七、后续可选的优化（未实施）
+
+以下项因改动面较大，本次**未做**，如需可继续：
+
+- 城门/寺庙模块抽象复用（`add_city_gate_complex`、`build_temple_complex`）
+- 所有模块统一 `--single` 参数
+- 执行日志持久化（`--log PATH`）
+- 统一 dry-run 测试脚本（`tests/test_all_modules.py`）
+
+如需要这些，告诉我即可继续。

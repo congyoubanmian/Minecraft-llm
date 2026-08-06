@@ -1,0 +1,31 @@
+{
+  "phase": "tiling",
+  "total_fills": 34419,
+  "module_counts": {
+    "ward_block": 15345,
+    "market_block": 10752,
+    "suburb_farms": 4057,
+    "road_paving": 368,
+    "street_facilities": 3897
+  },
+  "execute": true,
+  "validation": {
+    "oversized": 0,
+    "invalid_height": 0
+  }
+}
+{
+  "phase": "selected",
+  "total_fills": 34419,
+  "selected_fills": 34419,
+  "start": 0
+}
+{"load_regions": 593, "start_region": 329, "selected_regions": 264, "execution_pieces": 7588}
+{"done": 1000, "total": 7588, "region": 351, "regions": 593, "label": "farm 4300,6080 row 4452", "sample": "13452 65 15104 13454 65 15230 minecraft:green_wool", "result": "Successfully filled 381 block(s)"}
+{"done": 2000, "total": 7588, "region": 375, "regions": 593, "label": "farm 6080,900 row 6132", "sample": "15132 65 9984 15134 65 10100 minecraft:green_wool", "result": "Successfully filled 351 block(s)"}
+{"done": 3000, "total": 7588, "region": 403, "regions": 593, "label": "farm 6080,4800 row 6108", "sample": "15108 65 13800 15110 65 13823 minecraft:green_wool", "result": "Successfully filled 72 block(s)"}
+{"done": 4000, "total": 7588, "region": 437, "regions": 593, "label": "farm -300,3000 row -276", "sample": "8724 65 12032 8726 65 12200 minecraft:green_wool", "result": "Successfully filled 507 block(s)"}
+{"done": 5000, "total": 7588, "region": 469, "regions": 593, "label": "avenue z=2500 tree s 2980 leaves", "sample": "11978 72 11543 11982 75 11547 minecraft:oak_leaves", "result": "Successfully filled 100 block(s)"}
+{"done": 6000, "total": 7588, "region": 512, "regions": 593, "label": "avenue x=5100 lamps post 180", "sample": "14099 67 9179 14101 72 9181 minecraft:dark_oak_log", "result": "Successfully filled 54 block(s)"}
+{"done": 7000, "total": 7588, "region": 562, "regions": 593, "label": "avenue z=5000 road", "sample": "9984 66 13997 10239 66 14001 minecraft:smooth_stone", "result": "Successfully filled 18 block(s)"}
+{"done": 7588, "total": 7588, "region": 593, "regions": 593, "label": "avenue z=4100 tree 5740 leaves", "sample": "14738 72 13053 14742 75 13055 minecraft:oak_leaves", "result": "Successfully filled 60 block(s)"}
