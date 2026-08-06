@@ -79,7 +79,11 @@ volumes into safe 32768-block `/fill` chunks.
 | `mingtang_altar_3d.py` | 圜丘天坛：三层圆形坛（扫描线圆盘）、四向登坛阶梯、双重壝墙棂星门、燔柴炉 | 1016 |
 | `observatory_3d.py` | 司天台：四收分高台、外挂螺旋梯、浑天仪三环、地下星图室 | 136 |
 | `polo_stadium_3d.py` | 马球场：六层阶梯看台、彩楼悬挑观礼台、台下地下马厩、球门灯柱 | 1231 |
-| `build_all.py` | 组合以上所有模块 | 95704 |
+| `fudao_jiacheng_3d.py` | 夹城复道：大明宫至曲江双层架空长廊（下层封闭、上层观景）、转角平台、登道楼 | 471 |
+| `grotto_buddha_3d.py` | 崖壁佛龛：三层十五窟、坐佛金背光、悬挑木栈道、石阶连通、供养庭院 | 248 |
+| `waterwheel_mill_3d.py` | 永安渠水磨坊：立式扫描线圆环水轮、轮叶轮辐、磨坊二层、引水渠码头 | 166 |
+| `wall_dilou_3d.py` | 城墙双层敌楼：悬楼挑台、射孔、内部阶梯、斗拱屋顶、烽火台 | 352 |
+| `build_all.py` | 组合以上所有模块 | 96941 |
 
 ## Tiling / layering strategy
 
