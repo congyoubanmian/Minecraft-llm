@@ -1,0 +1,40 @@
+{
+  "phase": "landmarks",
+  "total_fills": 3893,
+  "module_counts": {
+    "fuyong_yuan_3d": 1315,
+    "xingyuan_3d": 351,
+    "baliu_3d": 780,
+    "guangyun_dock_3d": 455,
+    "liyuan_3d": 494,
+    "tai_cang_3d": 498
+  },
+  "execute": true,
+  "validation": {
+    "oversized": 0,
+    "invalid_height": 0
+  }
+}
+{
+  "phase": "selected",
+  "total_fills": 3893,
+  "selected_fills": 3893,
+  "start": 0
+}
+{"load_regions": 143, "start_region": 0, "selected_regions": 143, "execution_pieces": 6225}
+{"done": 400, "total": 6225, "region": 8, "regions": 143, "label": "tent roof 1 north slope 12", "sample": "14197 87 15016 14205 87 15016 minecraft:dark_prismarine_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]", "result": "Successfully filled 9 block(s)"}
+{"done": 800, "total": 6225, "region": 9, "regions": 143, "label": "tent roof 5 eave slab n", "sample": "14303 74 15002 14335 74 15003 minecraft:dark_prismarine_slab[type=bottom,waterlogged=false]", "result": "Successfully filled 52 block(s)"}
+{"done": 1200, "total": 6225, "region": 10, "regions": 143, "label": "tent roof 10 south slope 8", "sample": "14463 83 15028 14463 83 15028 minecraft:dark_prismarine_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]", "result": "Successfully filled 1 block(s)"}
+{"done": 1600, "total": 6225, "region": 13, "regions": 143, "label": "ziyun pile 5792,6036", "sample": "14792 64 15036 14793 68 15037 minecraft:stone_bricks", "result": "Successfully filled 4 block(s)"}
+{"done": 2000, "total": 6225, "region": 23, "regions": 143, "label": "banquet tier2", "sample": "13655 69 14655 13695 69 14719 minecraft:smooth_stone", "result": "Successfully filled 2665 block(s)"}
+{"done": 2400, "total": 6225, "region": 40, "regions": 143, "label": "ba plain grass", "sample": "16512 66 10600 16620 67 10623 minecraft:grass_block", "result": "Successfully filled 5232 block(s)"}
+{"done": 2800, "total": 6225, "region": 49, "regions": 143, "label": "willow w 1760 droop e", "sample": "16250 72 10756 16250 72 10764 minecraft:oak_leaves", "result": "Successfully filled 7 block(s)"}
+{"done": 3200, "total": 6225, "region": 61, "regions": 143, "label": "ba plain base", "sample": "16128 64 11050 16255 65 11074 minecraft:stone_bricks", "result": "Successfully filled 6400 block(s)"}
+{"done": 3600, "total": 6225, "region": 74, "regions": 143, "label": "ba bank e top", "sample": "16301 67 11264 16308 67 11350 minecraft:smooth_stone", "result": "Successfully filled 696 block(s)"}
+{"done": 4000, "total": 6225, "region": 92, "regions": 143, "label": "guangyun wangchun balcony support 7500,3240", "sample": "16500 78 12240 16500 78 12240 minecraft:dark_oak_log", "result": "No blocks were filled"}
+{"done": 4400, "total": 6225, "region": 101, "regions": 143, "label": "guangyun plain grass", "sample": "16256 66 12416 16383 67 12431 minecraft:grass_block", "result": "Successfully filled 4096 block(s)"}
+{"done": 4800, "total": 6225, "region": 114, "regions": 143, "label": "liyuan plain grass", "sample": "11648 66 14931 11775 67 14957 minecraft:grass_block", "result": "Successfully filled 6748 block(s)"}
+{"done": 5200, "total": 6225, "region": 119, "regions": 143, "label": "liyuan store roof north eave", "sample": "11775 76 14986 11775 76 14990 minecraft:dark_prismarine_slab[type=bottom,waterlogged=false]", "result": "Successfully filled 5 block(s)"}
+{"done": 5600, "total": 6225, "region": 126, "regions": 143, "label": "taicang trestle rail s", "sample": "16000 67 12882 16019 67 12882 minecraft:dark_oak_fence", "result": "Successfully filled 20 block(s)"}
+{"done": 6000, "total": 6225, "region": 135, "regions": 143, "label": "taicang grade grass", "sample": "16128 66 13130 16255 67 13150 minecraft:grass_block", "result": "Successfully filled 5376 block(s)"}
+{"done": 6225, "total": 6225, "region": 143, "regions": 143, "label": "taicang spur bank e", "sample": "15883 65 12672 15884 67 12799 minecraft:stone_bricks", "result": "Successfully filled 768 block(s)"}

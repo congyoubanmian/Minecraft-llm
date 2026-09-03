@@ -90,6 +90,12 @@ from scripts.changan import (
     xingqing_palace_3d,
     xishi_qiting_3d,
     zhaigong_3d,
+    baliu_3d,
+    fuyong_yuan_3d,
+    guangyun_dock_3d,
+    liyuan_3d,
+    tai_cang_3d,
+    xingyuan_3d,
     seasonal_vegetation,
 )
 from scripts.changan.lib import (
@@ -199,6 +205,12 @@ PHASES: dict[str, list[tuple[str, Callable[[list[Fill]], None]]]] = {
         ("wanglou_network_3d", wanglou_network_3d.build_wanglou_network_3d),
         ("gates_south_3d", gates_south_3d.build_gates_south_3d),
         ("xingqing_palace_3d", xingqing_palace_3d.build_xingqing_palace_3d),
+        ("fuyong_yuan_3d", fuyong_yuan_3d.build_fuyong_yuan_3d),
+        ("xingyuan_3d", xingyuan_3d.build_xingyuan_3d),
+        ("baliu_3d", baliu_3d.build_baliu_3d),
+        ("guangyun_dock_3d", guangyun_dock_3d.build_guangyun_dock_3d),
+        ("liyuan_3d", liyuan_3d.build_liyuan_3d),
+        ("tai_cang_3d", tai_cang_3d.build_tai_cang_3d),
     ],
     "details": [
         ("window_lattice", window_lattice.build_window_lattices),
