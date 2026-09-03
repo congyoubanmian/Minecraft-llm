@@ -437,6 +437,114 @@ def add_pagoda_openings(
         add_fill(fills, f"{label} {suffix} lintel", (x, top + 1, cz - half_width - 1), (x, top + 2, cz + half_width + 1), "minecraft:dark_oak_log[axis=z]")
 
 
+_ROOF_VARIANTS = {
+    Materials.ROOF_GREEN: ("minecraft:dark_prismarine_stairs", "minecraft:dark_prismarine_slab"),
+    Materials.ROOF_BLUE: ("minecraft:prismarine_brick_stairs", "minecraft:prismarine_brick_slab"),
+    Materials.ROOF_DARK: ("minecraft:deepslate_tile_stairs", "minecraft:deepslate_tile_slab"),
+}
+
+
+def add_hip_roof(
+    fills: list[Fill],
+    label: str,
+    x1: int, z1: int,
+    x2: int, z2: int,
+    y: int,
+    layers: int,
+    ridge_axis: str = "z",
+    roof_block: str = Materials.ROOF_GREEN,
+    ridge_block: str = Materials.GOLD,
+) -> None:
+    """Add a hip roof (庑殿顶): four inward-rising stair slopes plus a ridge.
+
+    Each layer steps one block inward on all four sides, so the corners form
+    the diagonal hip lines naturally. `layers` should be about half the short
+    axis. ridge_axis: 'z' = ridge runs north-south, 'x' = east-west.
+    Stairs ascend toward the ridge, matching add_ridge_roof's convention.
+    """
+    if layers < 1:
+        return
+    stair_id, slab_id = _ROOF_VARIANTS.get(roof_block, _ROOF_VARIANTS[Materials.ROOF_GREEN])
+
+    def stair(facing: str) -> str:
+        return f"{stair_id}[facing={facing},half=bottom,shape=straight,waterlogged=false]"
+
+    slab = f"{slab_id}[type=bottom,waterlogged=false]"
+    top_y = y + layers
+    # Clearing is deliberate: this pass replaces any previous roof volume.
+    add_fill(fills, f"{label} clear old roof", (x1, y, z1), (x2, top_y + 6, z2), Materials.AIR)
+
+    for i in range(layers):
+        wy = y + i
+        ix1, ix2 = x1 + i, x2 - i
+        iz1, iz2 = z1 + i, z2 - i
+        if ix1 > ix2 or iz1 > iz2:
+            break
+        add_fill(fills, f"{label} north slope {i}", (ix1, wy, iz1), (ix2, wy, iz1), stair("south"))
+        add_fill(fills, f"{label} south slope {i}", (ix1, wy, iz2), (ix2, wy, iz2), stair("north"))
+        if iz1 + 1 <= iz2 - 1:
+            add_fill(fills, f"{label} west slope {i}", (ix1, wy, iz1 + 1), (ix1, wy, iz2 - 1), stair("east"))
+            add_fill(fills, f"{label} east slope {i}", (ix2, wy, iz1 + 1), (ix2, wy, iz2 - 1), stair("west"))
+
+    cx = (x1 + x2) // 2
+    cz = (z1 + z2) // 2
+    if ridge_axis == "z":
+        add_fill(fills, f"{label} ridge", (cx - 1, top_y, z1 + layers), (cx + 1, top_y + 1, z2 - layers), ridge_block)
+        for rz in (z1 + layers, z2 - layers):
+            add_fill(fills, f"{label} ridge finial {rz}", (cx - 2, top_y + 2, rz - 1), (cx + 2, top_y + 5, rz + 1), ridge_block)
+    else:
+        add_fill(fills, f"{label} ridge", (x1 + layers, top_y, cz - 1), (x2 - layers, top_y + 1, cz + 1), ridge_block)
+        for rx in (x1 + layers, x2 - layers):
+            add_fill(fills, f"{label} ridge finial {rx}", (rx - 1, top_y + 2, cz - 2), (rx + 1, top_y + 5, cz + 2), ridge_block)
+
+    # Overhanging eave slab ring and upturned corner accents.
+    add_outline(fills, f"{label} eave slab", x1 - 2, z1 - 2, x2 + 2, z2 + 2, y - 1, y - 1, slab, thickness=2)
+    for dx, dz in ((-1, -1), (1, -1), (-1, 1), (1, 1)):
+        ex = x1 - 2 if dx < 0 else x2 + 2
+        ez = z1 - 2 if dz < 0 else z2 + 2
+        add_fill(fills, f"{label} upturned corner {dx},{dz}", (ex, y, ez), (ex, y + 2, ez), Materials.GOLD_ACCENT)
+
+
+def add_pyramid_roof(
+    fills: list[Fill],
+    label: str,
+    cx: int,
+    cz: int,
+    radius: int,
+    y: int,
+    roof_block: str = Materials.ROOF_GREEN,
+    apex_block: str = Materials.GOLD,
+) -> None:
+    """Add a pyramidal pavilion roof (攒尖顶): four slopes meeting at an apex.
+
+    Square footprint of half-width `radius` at eave level y, shrinking one
+    block per layer until the slopes meet, then a small gilded finial.
+    """
+    if radius < 1:
+        return
+    stair_id, slab_id = _ROOF_VARIANTS.get(roof_block, _ROOF_VARIANTS[Materials.ROOF_GREEN])
+
+    def stair(facing: str) -> str:
+        return f"{stair_id}[facing={facing},half=bottom,shape=straight,waterlogged=false]"
+
+    slab = f"{slab_id}[type=bottom,waterlogged=false]"
+    for i in range(radius):
+        wy = y + i
+        r = radius - i
+        add_fill(fills, f"{label} north slope {i}", (cx - r, wy, cz - r), (cx + r, wy, cz - r), stair("south"))
+        add_fill(fills, f"{label} south slope {i}", (cx - r, wy, cz + r), (cx + r, wy, cz + r), stair("north"))
+        if r > 1:
+            add_fill(fills, f"{label} west slope {i}", (cx - r, wy, cz - r + 1), (cx - r, wy, cz + r - 1), stair("east"))
+            add_fill(fills, f"{label} east slope {i}", (cx + r, wy, cz - r + 1), (cx + r, wy, cz + r - 1), stair("west"))
+    add_fill(fills, f"{label} apex", (cx - 1, y + radius, cz - 1), (cx + 1, y + radius + 2, cz + 1), apex_block)
+
+    add_outline(fills, f"{label} eave slab", cx - radius - 2, cz - radius - 2, cx + radius + 2, cz + radius + 2, y - 1, y - 1, slab, thickness=2)
+    for dx, dz in ((-1, -1), (1, -1), (-1, 1), (1, 1)):
+        ex = cx + dx * (radius + 2)
+        ez = cz + dz * (radius + 2)
+        add_fill(fills, f"{label} upturned corner {dx},{dz}", (ex, y, ez), (ex, y + 2, ez), Materials.GOLD_ACCENT)
+
+
 def add_stair_run(
     fills: list[Fill],
     label: str,

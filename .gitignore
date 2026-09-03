@@ -15,3 +15,4 @@ backend/placement/registry.json
 server/*
 !server/.gitkeep
 McSTools/
+.claude/

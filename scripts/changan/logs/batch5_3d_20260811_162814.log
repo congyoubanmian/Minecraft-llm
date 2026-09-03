@@ -1,0 +1,39 @@
+{
+  "phase": "landmarks",
+  "total_fills": 2648,
+  "module_counts": {
+    "lingyan_ge_3d": 408,
+    "hanliang_ziyu_3d": 339,
+    "xishi_qiting_3d": 520,
+    "wanglou_network_3d": 600,
+    "gates_south_3d": 385,
+    "xingqing_palace_3d": 396
+  },
+  "execute": true,
+  "validation": {
+    "oversized": 0,
+    "invalid_height": 0
+  }
+}
+{
+  "phase": "selected",
+  "total_fills": 2648,
+  "selected_fills": 2648,
+  "start": 0
+}
+{"load_regions": 31, "start_region": 0, "selected_regions": 31, "execution_pieces": 2827}
+{"done": 200, "total": 2827, "region": 2, "regions": 31, "label": "lingyan mural s0 east 2 frame b", "sample": "12410 77 14368 12410 77 14381 minecraft:dark_oak_log", "result": "Successfully filled 14 block(s)"}
+{"done": 400, "total": 2827, "region": 2, "regions": 31, "label": "lingyan hip roof east slope 27", "sample": "12373 136 14368 12373 136 14382 minecraft:dark_prismarine_stairs[facing=west,half=bottom,shape=straight,waterlogged=false]", "result": "Successfully filled 15 block(s)"}
+{"done": 600, "total": 2827, "region": 6, "regions": 31, "label": "hanliang roof east slope 6", "sample": "11692 85 14592 11692 85 14613 minecraft:dark_prismarine_stairs[facing=west,half=bottom,shape=straight,waterlogged=false]", "result": "Successfully filled 22 block(s)"}
+{"done": 800, "total": 2827, "region": 6, "regions": 31, "label": "corridor roof west eave", "sample": "11689 73 14627 11693 73 14670 minecraft:dark_prismarine_slab[type=bottom,waterlogged=false]", "result": "Successfully filled 220 block(s)"}
+{"done": 1000, "total": 2827, "region": 9, "regions": 31, "label": "qiting flag pole 3", "sample": "10262 93 11562 10262 100 11562 minecraft:dark_oak_log", "result": "Successfully filled 8 block(s)"}
+{"done": 1200, "total": 2827, "region": 10, "regions": 31, "label": "tavern dome layer 7 w 0", "sample": "10318 81 11480 10320 81 11482 minecraft:white_terracotta", "result": "Successfully filled 9 block(s)"}
+{"done": 1400, "total": 2827, "region": 11, "regions": 31, "label": "wanglou w1 brace e2", "sample": "11867 78 10003 11867 78 10003 minecraft:dark_oak_fence", "result": "Successfully filled 1 block(s)"}
+{"done": 1600, "total": 2827, "region": 14, "regions": 31, "label": "wanglou w3 brace n2", "sample": "11858 78 11393 11858 78 11393 minecraft:dark_oak_fence", "result": "Successfully filled 1 block(s)"}
+{"done": 1800, "total": 2827, "region": 16, "regions": 31, "label": "wanglou w5 obs rail n", "sample": "11850 87 12790 11870 87 12790 minecraft:dark_oak_fence", "result": "Successfully filled 21 block(s)"}
+{"done": 2000, "total": 2827, "region": 19, "regions": 31, "label": "zhuque vault -41 step2 e", "sample": "12001 100 8959 12001 102 8959 minecraft:deepslate_bricks", "result": "Successfully filled 3 block(s)"}
+{"done": 2200, "total": 2827, "region": 20, "regions": 31, "label": "zhuque vault 25 step1 w", "sample": "11998 96 9025 11998 102 9026 minecraft:deepslate_bricks", "result": "Successfully filled 14 block(s)"}
+{"done": 2400, "total": 2827, "region": 27, "regions": 31, "label": "huae corridor rail n", "sample": "10086 72 10277 10101 72 10277 minecraft:dark_oak_fence", "result": "Successfully filled 16 block(s)"}
+{"done": 2600, "total": 2827, "region": 29, "regions": 31, "label": "chenxiang roof south slope 0", "sample": "10288 77 10042 10312 77 10042 minecraft:dark_prismarine_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]", "result": "Successfully filled 25 block(s)"}
+{"done": 2800, "total": 2827, "region": 31, "regions": 31, "label": "colonnade col s 1398", "sample": "10398 68 10049 10398 72 10049 minecraft:quartz_block", "result": "Successfully filled 5 block(s)"}
+{"done": 2827, "total": 2827, "region": 31, "regions": 31, "label": "colonnade cap", "sample": "10368 73 10046 10480 73 10049 minecraft:smooth_stone_slab[type=bottom,waterlogged=false]", "result": "Successfully filled 452 block(s)"}

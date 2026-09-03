@@ -87,7 +87,13 @@ volumes into safe 32768-block `/fill` chunks.
 | `underground_drain_3d.py` | 朱雀大街地下暗渠：砖拱主干渠、沉淀井室、检修井、支渠、下行台阶 | 285 |
 | `zhaigong_3d.py` | 圜丘斋宫：双层斋戒殿、铜人亭、侧殿连廊、井亭花园、参道灯柱 | 323 |
 | `bell_drum_3d.py` | 钟鼓楼重建：三层檐塔、吊钟木架撞木、十二面更鼓、内部转折梯 | 350 |
-| `build_all.py` | 组合以上所有模块 | 98392 |
+| `lingyan_ge_3d.py` | 凌烟阁：三层木阁、悬挑平座、二十四功臣壁画墙、庑殿顶、碑亭 | 408 |
+| `hanliang_ziyu_3d.py` | 含凉殿·自雨亭：屋顶水箱雨帘、提水轮、攒尖顶水亭、地下冰窖 | 339 |
+| `xishi_qiting_3d.py` | 西市旗亭+胡商酒肆：三层市楼庑殿顶、扫描线球壳穹顶酒肆、地下酒窖 | 520 |
+| `wanglou_network_3d.py` | 望楼系统：朱雀大街六座鼓号木塔、悬挑瞭望台、攒尖顶鼓台 | 600 |
+| `gates_south_3d.py` | 朱雀门/明德门 3D 深化：门洞拱顶、千斤闸、城楼内部、瓮城校场、吊桥 | 385 |
+| `xingqing_palace_3d.py` | 兴庆宫花萼相辉楼+沉香亭：双层楼阁跨水飞廊、攒尖顶水上亭、牡丹坛 | 396 |
+| `build_all.py` | 组合以上所有模块 | 101040 |
 
 ## Tiling / layering strategy
 
@@ -160,4 +166,6 @@ For 3D work, `lib.py` also provides vertical-space primitives:
 `add_staircase` (straight stair), `add_spiral_stair` (in-tower spiral),
 `add_cantilevered_floor` (overhanging gallery), `add_arch_bridge`,
 `add_underground_room` (crypt/basement), `add_dougong_cluster` (bracket
-sets). See `palace_hanyuan_3d.py` and `pagoda_giant_3d.py` for usage.
+sets), `add_hip_roof` (wudian hip roof) and `add_pyramid_roof`
+(cuanjian pavilion roof). See `palace_hanyuan_3d.py` and
+`pagoda_giant_3d.py` for usage.
