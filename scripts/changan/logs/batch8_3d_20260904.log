@@ -1,0 +1,32 @@
+{
+  "phase": "landmarks",
+  "total_fills": 2374,
+  "module_counts": {
+    "hanlin_academy_3d": 492,
+    "sanqing_temple_3d": 494,
+    "qinwu_tower_3d": 417,
+    "douting_post_3d": 491,
+    "tangchang_guan_3d": 480
+  },
+  "execute": true,
+  "validation": {
+    "oversized": 0,
+    "invalid_height": 0
+  }
+}
+{
+  "phase": "selected",
+  "total_fills": 2374,
+  "selected_fills": 2374,
+  "start": 0
+}
+{"load_regions": 53, "start_region": 0, "selected_regions": 53, "execution_pieces": 3368}
+{"done": 400, "total": 3368, "region": 3, "regions": 53, "label": "hanlin study n body wall", "sample": "11264 70 14046 11282 76 14062 minecraft:red_terracotta", "result": "Successfully filled 2261 block(s)"}
+{"done": 800, "total": 3368, "region": 8, "regions": 53, "label": "sanqing gourd string 0", "sample": "12712 72 13413 12712 73 13413 minecraft:dark_oak_fence", "result": "Successfully filled 2 block(s)"}
+{"done": 1200, "total": 3368, "region": 12, "regions": 53, "label": "sanqing hall main roof clear old roof", "sample": "12802 90 13440 12927 104 13442 minecraft:air", "result": "No blocks were filled"}
+{"done": 1600, "total": 3368, "region": 19, "regions": 53, "label": "qinwu storey1 wall", "sample": "10496 73 10580 10520 81 10601 minecraft:red_terracotta", "result": "Successfully filled 4950 block(s)"}
+{"done": 2000, "total": 3368, "region": 29, "regions": 53, "label": "douting guest w1 shell air", "sample": "12474 69 10567 12487 71 10583 minecraft:air", "result": "Successfully filled 714 block(s)"}
+{"done": 2400, "total": 3368, "region": 33, "regions": 53, "label": "douting well curb w", "sample": "12553 68 10641 12553 69 10647 minecraft:stone_bricks", "result": "Successfully filled 10 block(s)"}
+{"done": 2800, "total": 3368, "region": 41, "regions": 53, "label": "tangchang cypress w3 trunk", "sample": "10298 68 12386 10298 75 12386 minecraft:oak_log", "result": "Successfully filled 8 block(s)"}
+{"done": 3200, "total": 3368, "region": 49, "regions": 53, "label": "tangchang poem gallery e poem 2 cap", "sample": "10496 73 12452 10496 73 12453 minecraft:deepslate_tiles", "result": "Successfully filled 2 block(s)"}
+{"done": 3368, "total": 3368, "region": 53, "regions": 53, "label": "tangchang poem gallery e roof east eave", "sample": "10496 75 12544 10500 75 12567 minecraft:dark_prismarine_slab[type=bottom,waterlogged=false]", "result": "Successfully filled 120 block(s)"}

@@ -1,0 +1,29 @@
+{
+  "phase": "landmarks",
+  "total_fills": 1882,
+  "module_counts": {
+    "sanqing_temple_3d": 494,
+    "qinwu_tower_3d": 417,
+    "douting_post_3d": 491,
+    "tangchang_guan_3d": 480
+  },
+  "execute": true,
+  "validation": {
+    "oversized": 0,
+    "invalid_height": 0
+  }
+}
+{
+  "phase": "selected",
+  "total_fills": 1882,
+  "selected_fills": 1882,
+  "start": 0
+}
+{"load_regions": 49, "start_region": 0, "selected_regions": 49, "execution_pieces": 2746}
+{"done": 400, "total": 2746, "region": 6, "regions": 49, "label": "sanqing hall terrace2", "sample": "12928 70 13396 12986 70 13439 minecraft:smooth_stone", "result": "No blocks were filled"}
+{"done": 800, "total": 2746, "region": 13, "regions": 49, "label": "qinwu hip roof upturned corner -1,-1", "sample": "10354 91 10574 10354 93 10574 minecraft:gilded_blackstone", "result": "No blocks were filled"}
+{"done": 1200, "total": 2746, "region": 18, "regions": 49, "label": "qinwu shed e 1 post 3", "sample": "10490 69 10685 10490 74 10685 minecraft:dark_oak_log", "result": "No blocks were filled"}
+{"done": 1600, "total": 2746, "region": 27, "regions": 49, "label": "douting guest e3 shell air", "sample": "12713 69 10619 12726 71 10623 minecraft:air", "result": "Successfully filled 210 block(s)"}
+{"done": 2000, "total": 2746, "region": 33, "regions": 49, "label": "douting pigeon lamp door", "sample": "12708 83 10759 12708 84 10759 minecraft:air", "result": "Successfully filled 2 block(s)"}
+{"done": 2400, "total": 2746, "region": 43, "regions": 49, "label": "tangchang hall body wall", "sample": "10262 71 12388 10367 80 12412 minecraft:red_terracotta", "result": "Successfully filled 26500 block(s)"}
+{"done": 2746, "total": 2746, "region": 49, "regions": 49, "label": "tangchang poem gallery e roof east eave", "sample": "10496 75 12416 10500 75 12437 minecraft:dark_prismarine_slab[type=bottom,waterlogged=false]", "result": "Successfully filled 66 block(s)"}
