@@ -796,6 +796,146 @@ def add_dougong_cluster(
 
 
 # ---------------------------------------------------------------------------
+# Detail-enrichment primitives (overlay passes on existing buildings).
+# ---------------------------------------------------------------------------
+def add_roof_beasts(
+    fills: list[Fill],
+    label: str,
+    x1: int, z1: int,
+    x2: int, z2: int,
+    y: int,
+    ridge_axis: str = "z",
+    count: int = 5,
+) -> None:
+    """Walking-beast statues along a main ridge (正脊走兽).
+
+    Places `count` statues evenly between the ridge ends (4-block inset),
+    alternating gold / gilded blackstone / white terracotta. Each statue
+    is a dark base with a two-block body and a head, standing on `y`
+    (callers pass the first free block above the ridge).
+    """
+    if count < 1:
+        return
+    cx, cz = (x1 + x2) // 2, (z1 + z2) // 2
+    palettes = [Materials.GOLD, Materials.GOLD_ACCENT, Materials.WHITE_TERRACOTTA]
+    spots = []
+    if ridge_axis == "z":
+        for i in range(count):
+            z = z1 + 4 + int(i * max(1, (z2 - z1 - 8)) / max(1, count - 1))
+            spots.append((cx, min(z, z2 - 4)))
+    else:
+        for i in range(count):
+            x = x1 + 4 + int(i * max(1, (x2 - x1 - 8)) / max(1, count - 1))
+            spots.append((min(x, x2 - 4), cz))
+    for i, (x, z) in enumerate(spots):
+        body = palettes[i % len(palettes)]
+        add_fill(fills, f"{label} beast {i} base", (x, y, z), (x, y, z), Materials.DARK)
+        add_fill(fills, f"{label} beast {i} body", (x, y + 1, z), (x, y + 2, z), body)
+        add_fill(fills, f"{label} beast {i} head", (x, y + 3, z), (x, y + 3, z), body)
+
+
+def add_eave_bells(
+    fills: list[Fill],
+    label: str,
+    corners: list[tuple[int, int, int]],
+) -> None:
+    """Wind bells under eave corners (檐角风铃).
+
+    `corners` lists (x, y, z) bell positions; each bell is a gold block
+    with a two-block iron chain rising above it toward the eave.
+    """
+    for i, (x, y, z) in enumerate(corners):
+        add_fill(fills, f"{label} bell {i}", (x, y, z), (x, y, z), Materials.GOLD)
+        add_fill(fills, f"{label} chain {i}", (x, y + 1, z), (x, y + 2, z), Materials.IRON_BARS)
+
+
+def add_balustrade(
+    fills: list[Fill],
+    label: str,
+    x1: int, z1: int,
+    x2: int, z2: int,
+    y: int,
+    post_block: str = Materials.RED_WALL,
+    head_block: str = Materials.WHITE_TERRACOTTA,
+    post_every: int = 6,
+) -> None:
+    """Balustrade with ornamental posts (望柱栏板).
+
+    Fence rail along the rectangle outline at `y`, with posts every
+    `post_every` blocks and at the four corners, each topped by a head
+    block (lotus white / lion smooth).
+    """
+    add_outline(fills, f"{label} rail", x1, z1, x2, z2, y, y, Materials.FENCE, thickness=1)
+    xs = sorted(set(list(range(x1, x2 + 1, post_every)) + [x1, x2]))
+    zs = sorted(set(list(range(z1, z2 + 1, post_every)) + [z1, z2]))
+    for x in xs:
+        for z in (z1, z2):
+            add_fill(fills, f"{label} post {x},{z}", (x, y + 1, z), (x, y + 1, z), post_block)
+            add_fill(fills, f"{label} head {x},{z}", (x, y + 2, z), (x, y + 2, z), head_block)
+    for z in zs:
+        for x in (x1, x2):
+            add_fill(fills, f"{label} post {x},{z}", (x, y + 1, z), (x, y + 1, z), post_block)
+            add_fill(fills, f"{label} head {x},{z}", (x, y + 2, z), (x, y + 2, z), head_block)
+
+
+def add_door_studs(
+    fills: list[Fill],
+    label: str,
+    plane_axis: str,
+    plane_pos: int,
+    u1: int, u2: int,
+    y1: int, y2: int,
+    stud_block: str = Materials.GOLD,
+    step: int = 2,
+) -> None:
+    """Door-stud array on a vertical wall/door face (门钉).
+
+    plane_axis 'x': the face lies in the plane x=plane_pos (door faces
+    east/west) and u runs along z; plane_axis 'z': face at z=plane_pos
+    (door faces north/south) and u runs along x. Studs are single blocks
+    spaced by `step` between (u1..u2, y1..y2).
+    """
+    for u in range(u1, u2 + 1, step):
+        for y in range(y1, y2 + 1, step):
+            if plane_axis == "x":
+                add_fill(fills, f"{label} stud {u},{y}", (plane_pos, y, u), (plane_pos, y, u), stud_block)
+            else:
+                add_fill(fills, f"{label} stud {u},{y}", (u, y, plane_pos), (u, y, plane_pos), stud_block)
+
+
+def add_pixel_mural(
+    fills: list[Fill],
+    label: str,
+    art: list[str],
+    palette: dict[str, str],
+    x: int, y: int, z: int,
+    axis: str = "x",
+    flip: bool = False,
+) -> None:
+    """Pixel-art mural painted on a vertical plane (像素壁画).
+
+    `art` is a list of equal-length strings, top row first; `palette`
+    maps each character to a block id, '.' skips (leaves the wall behind).
+    axis='x': the mural hangs in the plane z=z and runs along +x
+    (left-to-right unless flip); axis='z': plane x=x running along +z.
+    `y` is the top row's height.
+    """
+    width = max((len(row) for row in art), default=0)
+    for r, row in enumerate(art):
+        for c, ch in enumerate(row):
+            block = palette.get(ch)
+            if not block:
+                continue
+            yy = y - r
+            if axis == "x":
+                xx = x + (width - 1 - c if flip else c)
+                add_fill(fills, f"{label} px {r},{c}", (xx, yy, z), (xx, yy, z), block)
+            else:
+                zz = z + (width - 1 - c if flip else c)
+                add_fill(fills, f"{label} px {r},{c}", (x, yy, zz), (x, yy, zz), block)
+
+
+# ---------------------------------------------------------------------------
 # Execution helpers.
 # ---------------------------------------------------------------------------
 class _RconClient:

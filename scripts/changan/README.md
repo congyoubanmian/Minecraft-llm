@@ -118,7 +118,10 @@ volumes into safe 32768-block `/fill` chunks.
 | `zhijinfang_3d.py` | 织锦署：六台织机大坊、八口染缸阵、晾布长架、蚕箔房、锦缎展示堂 | 492 |
 | `bingjiao_3d.py` | 官冰窖：三座覆土地下冰窖存冰、运冰坡道、采冰码头、赐冰亭 | 386 |
 | `jinzouyuan_3d.py` | 进奏院群：六道藩镇院落道旗、四方朝贡照壁、驿传马厩、文牍房、谯楼 | 497 |
-| `build_all.py` | 组合以上所有模块 | 113530 |
+| `palace_roof_detail_3d.py` | 宫殿屋顶深化：四殿正脊走兽队、垂兽、檐口瓦当、翼角套兽风铃、鸱吻加高 | 440 |
+| `palace_facade_detail_3d.py` | 宫殿门面深化：斗拱带转角簇、门钉金阵铺首、抱鼓石、龙纹御路、匾额楹联、望柱栏板 | 448 |
+| `pagoda_body_detail_3d.py` | 双塔塔身深化：每层佛龛坐佛金背光、壶门、瓦当、刹链、圣教序像素碑刻 | 419 |
+| `build_all.py` | 组合以上所有模块 | 114837 |
 
 ## Tiling / layering strategy
 

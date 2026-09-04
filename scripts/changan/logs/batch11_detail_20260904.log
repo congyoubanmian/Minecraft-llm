@@ -1,0 +1,25 @@
+{
+  "phase": "landmarks",
+  "total_fills": 1307,
+  "module_counts": {
+    "palace_roof_detail_3d": 440,
+    "palace_facade_detail_3d": 448,
+    "pagoda_body_detail_3d": 419
+  },
+  "execute": true,
+  "validation": {
+    "oversized": 0,
+    "invalid_height": 0
+  }
+}
+{
+  "phase": "selected",
+  "total_fills": 1307,
+  "selected_fills": 1307,
+  "start": 0
+}
+{"load_regions": 37, "start_region": 0, "selected_regions": 37, "execution_pieces": 1309}
+{"done": 400, "total": 1309, "region": 11, "regions": 37, "label": "palaceface linde door studs stud 2302,11", "sample": "11302 75 14348 11302 75 14348 minecraft:gold_block", "result": "Successfully filled 1 block(s)"}
+{"done": 800, "total": 1309, "region": 26, "regions": 37, "label": "palaceface zichen yuetai balustrade post 2470,5194", "sample": "11470 71 14194 11470 71 14194 minecraft:quartz_block", "result": "Successfully filled 1 block(s)"}
+{"done": 1200, "total": 1309, "region": 37, "regions": 37, "label": "pagodadetail small yaomen lintel t8 east", "sample": "10338 117 12705 10338 117 12707 minecraft:deepslate_tiles", "result": "Successfully filled 3 block(s)"}
+{"done": 1309, "total": 1309, "region": 37, "regions": 37, "label": "pagodadetail small chain -1,-1 drape 13", "sample": "10307 145 12687 10307 145 12687 minecraft:iron_bars", "result": "Successfully filled 1 block(s)"}
