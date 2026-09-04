@@ -68,6 +68,7 @@ services:
       - ./backend/generated_plans:/app/backend/generated_plans
       - ./backend/projects:/app/backend/projects
       - ./server:/app/server
+      - ./backups:/app/backups
       - /usr/bin/codex:/usr/bin/codex:ro
       - /usr/lib/node_modules/@openai/codex:/usr/lib/node_modules/@openai/codex:ro
       - /root/.codex:/root/.codex

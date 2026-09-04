@@ -936,6 +936,55 @@ def add_pixel_mural(
 
 
 # ---------------------------------------------------------------------------
+# Schematic pipeline (fast execution via FAWE paste).
+# ---------------------------------------------------------------------------
+def write_module_schematic(
+    fills: list[Fill],
+    name: str,
+    output_dir: str,
+) -> dict:
+    """Write a module's solid+liquid fills as a FAWE-loadable schematic.
+
+    AIR fills are excluded — they are carve-outs and must be applied via
+    the RCON pass, because `//paste -a` skips air blocks. Returns a dict
+    with the schematic name, block count, world-space min corner (the
+    paste anchor for the bot's /paste endpoint) and the air fills so the
+    caller can run the carve pass.
+    """
+    import mcschematic
+
+    solid = [f for f in fills if f.block != Materials.AIR]
+    air = [f for f in fills if f.block == Materials.AIR]
+    if not solid:
+        raise ValueError(f"{name}: no solid fills to write")
+
+    # Module fills already carry world coordinates (modules apply w()
+    # themselves when calling add_fill), so the paste anchor is simply the
+    # min corner of that bbox — do NOT add BASE_X/Y/Z here.
+    wx1 = min(f.x1 for f in solid)
+    wy1 = min(f.y1 for f in solid)
+    wz1 = min(f.z1 for f in solid)
+
+    schem = mcschematic.MCSchematic()
+    for f in solid:
+        bx1, bx2 = sorted((f.x1 - wx1, f.x2 - wx1))
+        by1, by2 = sorted((f.y1 - wy1, f.y2 - wy1))
+        bz1, bz2 = sorted((f.z1 - wz1, f.z2 - wz1))
+        for x in range(bx1, bx2 + 1):
+            for y in range(by1, by2 + 1):
+                for z in range(bz1, bz2 + 1):
+                    schem.setBlock((x, y, z), f.block)
+    schem.save(output_dir, name, mcschematic.Version.JE_1_21_4, fastSaving=True)
+
+    return {
+        "schematic": name,
+        "blocks": sum((f.x2 - f.x1 + 1) * (f.y2 - f.y1 + 1) * (f.z2 - f.z1 + 1) for f in solid),
+        "world_min": [wx1, wy1, wz1],
+        "air_fills": air,
+    }
+
+
+# ---------------------------------------------------------------------------
 # Execution helpers.
 # ---------------------------------------------------------------------------
 class _RconClient:

@@ -136,6 +136,7 @@ from scripts.changan.lib import (
     group_fills_by_load_region,
     rcon,
     validate_fills,
+    write_module_schematic,
 )
 
 
@@ -411,6 +412,70 @@ def execute_fills(
                 rcon(f"forceload remove {load_x1} {load_z1} {load_x2} {load_z2}", timeout)
 
 
+def execute_via_schematics(
+    modules: list[tuple[str, Callable[[list[Fill]], None]]],
+    schem_dir: Path,
+    bot_url: str,
+    delay_ms: int,
+    timeout: int,
+    report_every: int,
+) -> None:
+    """Fast path: one FAWE schematic paste per module + RCON air-carve pass.
+
+    Solid/liquid blocks are baked into a single .schem per module and pasted
+    by the BuilderBot at the module's world min corner; AIR fills (carve-outs)
+    cannot survive `//paste -a`, so they are applied afterwards via /fill.
+    """
+    import time
+    import urllib.request
+
+    schem_dir.mkdir(parents=True, exist_ok=True)
+    started = time.time()
+    for idx, (name, builder) in enumerate(modules, 1):
+        fills: list[Fill] = []
+        builder(fills)
+        info = write_module_schematic(fills, f"changan_{name}", str(schem_dir))
+        payload = json.dumps(
+            {
+                "schematic": info["schematic"],
+                "x": info["world_min"][0],
+                "y": info["world_min"][1],
+                "z": info["world_min"][2],
+            }
+        ).encode()
+        req = urllib.request.Request(
+            f"{bot_url.rstrip('/')}/paste",
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            paste_result = json.load(resp)
+
+        carved = 0
+        for air_fill in info["air_fills"]:
+            execute_fill(air_fill, timeout, use_forceload=True)
+            carved += 1
+
+        print(
+            json.dumps(
+                {
+                    "module": name,
+                    "done": idx,
+                    "total": len(modules),
+                    "schematic_blocks": info["blocks"],
+                    "world_min": info["world_min"],
+                    "paste_ok": bool(paste_result.get("ok")),
+                    "air_carves": carved,
+                    "elapsed_s": round(time.time() - started, 1),
+                },
+                ensure_ascii=False,
+            ),
+            flush=True,
+        )
+        time.sleep(max(0.0, delay_ms / 1000))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Phased builder for Tang Chang'an fine-grained modules.",
@@ -425,6 +490,9 @@ def main() -> None:
     parser.add_argument("--include", default=None, help="Comma-separated module names to include from the selected phase.")
     parser.add_argument("--exclude", default=None, help="Comma-separated module names to exclude from the selected phase.")
     parser.add_argument("--execute", action="store_true", help="Actually send commands to the server.")
+    parser.add_argument("--schem", action="store_true", help="Fast mode: one FAWE schematic paste per module (solid blocks) plus an RCON air-carve pass.")
+    parser.add_argument("--schem-dir", default=str(ROOT / "server/plugins/FastAsyncWorldEdit/schematics"), help="FAWE schematics directory.")
+    parser.add_argument("--bot-url", default="http://localhost:3001", help="BuilderBot HTTP endpoint.")
     parser.add_argument("--start", type=int, default=0, help="0-based fill offset.")
     parser.add_argument("--start-region", type=int, default=0, help="0-based load-region offset for an interrupted run.")
     parser.add_argument("--limit", type=int, default=None, help="Only process N fills.")
@@ -474,6 +542,18 @@ def main() -> None:
         return
     if any(validation.values()):
         raise SystemExit("fill validation failed")
+
+    if args.schem:
+        modules = selected_modules(args.phase, include, exclude)
+        execute_via_schematics(
+            modules,
+            Path(args.schem_dir),
+            args.bot_url,
+            args.delay_ms,
+            args.timeout,
+            args.report_every,
+        )
+        return
 
     execute_fills(
         fills,
