@@ -95,6 +95,11 @@ from scripts.changan import (
     guangyun_dock_3d,
     liyuan_3d,
     tai_cang_3d,
+    beilin_3d,
+    huaqing_palace_3d,
+    kunming_pool_3d,
+    silk_caravan_3d,
+    weishui_ferry_3d,
     xingyuan_3d,
     seasonal_vegetation,
 )
@@ -211,6 +216,11 @@ PHASES: dict[str, list[tuple[str, Callable[[list[Fill]], None]]]] = {
         ("guangyun_dock_3d", guangyun_dock_3d.build_guangyun_dock_3d),
         ("liyuan_3d", liyuan_3d.build_liyuan_3d),
         ("tai_cang_3d", tai_cang_3d.build_tai_cang_3d),
+        ("weishui_ferry_3d", weishui_ferry_3d.build_weishui_ferry_3d),
+        ("kunming_pool_3d", kunming_pool_3d.build_kunming_pool_3d),
+        ("huaqing_palace_3d", huaqing_palace_3d.build_huaqing_palace_3d),
+        ("beilin_3d", beilin_3d.build_beilin_3d),
+        ("silk_caravan_3d", silk_caravan_3d.build_silk_caravan_3d),
     ],
     "details": [
         ("window_lattice", window_lattice.build_window_lattices),

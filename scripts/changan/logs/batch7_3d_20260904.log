@@ -1,0 +1,56 @@
+{
+  "phase": "landmarks",
+  "total_fills": 2707,
+  "module_counts": {
+    "weishui_ferry_3d": 546,
+    "kunming_pool_3d": 525,
+    "huaqing_palace_3d": 549,
+    "beilin_3d": 538,
+    "silk_caravan_3d": 549
+  },
+  "execute": true,
+  "validation": {
+    "oversized": 0,
+    "invalid_height": 0
+  }
+}
+{
+  "phase": "selected",
+  "total_fills": 2707,
+  "selected_fills": 2707,
+  "start": 0
+}
+{"load_regions": 226, "start_region": 0, "selected_regions": 226, "execution_pieces": 12975}
+{"done": 400, "total": 12975, "region": 7, "regions": 226, "label": "weishui plain base", "sample": "10752 64 16060 10879 65 16063 minecraft:stone_bricks", "result": "Successfully filled 1024 block(s)"}
+{"done": 800, "total": 12975, "region": 13, "regions": 226, "label": "weishui plain base", "sample": "11520 64 16112 11647 65 16115 minecraft:stone_bricks", "result": "Successfully filled 1024 block(s)"}
+{"done": 1200, "total": 12975, "region": 19, "regions": 226, "label": "weishui plain grass", "sample": "12288 66 16048 12415 67 16051 minecraft:grass_block", "result": "Successfully filled 1024 block(s)"}
+{"done": 1600, "total": 12975, "region": 25, "regions": 226, "label": "weishui plain grass", "sample": "13056 66 16100 13183 67 16103 minecraft:grass_block", "result": "Successfully filled 1024 block(s)"}
+{"done": 2000, "total": 12975, "region": 32, "regions": 226, "label": "weishui plain base", "sample": "13952 64 16036 14000 65 16039 minecraft:stone_bricks", "result": "Successfully filled 392 block(s)"}
+{"done": 2400, "total": 12975, "region": 35, "regions": 226, "label": "weishui plain grass", "sample": "10240 66 16244 10367 67 16247 minecraft:grass_block", "result": "Successfully filled 1024 block(s)"}
+{"done": 2800, "total": 12975, "region": 38, "regions": 226, "label": "weishui plain base", "sample": "10624 64 16236 10751 65 16239 minecraft:stone_bricks", "result": "Successfully filled 1024 block(s)"}
+{"done": 3200, "total": 12975, "region": 41, "regions": 226, "label": "weishui plain base", "sample": "11008 64 16128 11135 65 16131 minecraft:stone_bricks", "result": "Successfully filled 1024 block(s)"}
+{"done": 3600, "total": 12975, "region": 43, "regions": 226, "label": "weishui river bed", "sample": "11264 64 16174 11391 64 16181 minecraft:sand", "result": "Successfully filled 1024 block(s)"}
+{"done": 4000, "total": 12975, "region": 46, "regions": 226, "label": "weishui river carve", "sample": "11648 61 16169 11775 68 16169 minecraft:air", "result": "Successfully filled 769 block(s)"}
+{"done": 4400, "total": 12975, "region": 48, "regions": 226, "label": "weishui pier pile 2964,7192", "sample": "11964 64 16192 11964 68 16192 minecraft:dark_oak_log", "result": "Successfully filled 5 block(s)"}
+{"done": 4800, "total": 12975, "region": 50, "regions": 226, "label": "weishui shrine roof east slope 1", "sample": "12161 78 16240 12161 78 16255 minecraft:dark_prismarine_stairs[facing=west,half=bottom,shape=straight,waterlogged=false]", "result": "Successfully filled 16 block(s)"}
+{"done": 5200, "total": 12975, "region": 53, "regions": 226, "label": "weishui river carve", "sample": "12544 61 16168 12671 68 16168 minecraft:air", "result": "Successfully filled 769 block(s)"}
+{"done": 5600, "total": 12975, "region": 56, "regions": 226, "label": "weishui plain grass", "sample": "12928 66 16220 13055 67 16223 minecraft:grass_block", "result": "Successfully filled 1024 block(s)"}
+{"done": 6000, "total": 12975, "region": 59, "regions": 226, "label": "weishui plain base", "sample": "13312 64 16224 13439 65 16227 minecraft:stone_bricks", "result": "Successfully filled 1024 block(s)"}
+{"done": 6400, "total": 12975, "region": 61, "regions": 226, "label": "weishui towpath", "sample": "13568 67 16141 13695 67 16145 minecraft:polished_andesite", "result": "Successfully filled 640 block(s)"}
+{"done": 6800, "total": 12975, "region": 64, "regions": 226, "label": "weishui river water", "sample": "13952 65 16158 14000 66 16161 minecraft:water", "result": "Successfully filled 392 block(s)"}
+{"done": 7200, "total": 12975, "region": 70, "regions": 226, "label": "weishui plain grass", "sample": "10624 66 16340 10751 67 16343 minecraft:grass_block", "result": "Successfully filled 1024 block(s)"}
+{"done": 7600, "total": 12975, "region": 77, "regions": 226, "label": "weishui plain base", "sample": "11520 64 16276 11647 65 16279 minecraft:stone_bricks", "result": "Successfully filled 1024 block(s)"}
+{"done": 8000, "total": 12975, "region": 82, "regions": 226, "label": "weishui plain grass", "sample": "12160 66 16260 12287 67 16263 minecraft:grass_block", "result": "Successfully filled 1024 block(s)"}
+{"done": 8400, "total": 12975, "region": 88, "regions": 226, "label": "weishui plain grass", "sample": "12928 66 16264 13055 67 16267 minecraft:grass_block", "result": "Successfully filled 1024 block(s)"}
+{"done": 8800, "total": 12975, "region": 94, "regions": 226, "label": "weishui plain grass", "sample": "13696 66 16328 13823 67 16331 minecraft:grass_block", "result": "Successfully filled 1024 block(s)"}
+{"done": 9200, "total": 12975, "region": 122, "regions": 226, "label": "weishui plain grass", "sample": "13184 66 16396 13311 67 16399 minecraft:grass_block", "result": "Successfully filled 1024 block(s)"}
+{"done": 9600, "total": 12975, "region": 143, "regions": 226, "label": "kunming plain base", "sample": "7552 64 9344 7679 65 9365 minecraft:stone_bricks", "result": "Successfully filled 5632 block(s)"}
+{"done": 10000, "total": 12975, "region": 150, "regions": 226, "label": "kunming ship 1 cabin1 win n", "sample": "7694 70 9495 7706 71 9495 minecraft:glass_pane", "result": "Successfully filled 26 block(s)"}
+{"done": 10400, "total": 12975, "region": 168, "regions": 226, "label": "huaqing hall upper walls wall", "sample": "10368 89 7546 10410 96 7551 minecraft:red_terracotta", "result": "Successfully filled 2064 block(s)"}
+{"done": 10800, "total": 12975, "region": 180, "regions": 226, "label": "huaqing site grass cover", "sample": "10368 66 7750 10495 67 7774 minecraft:grass_block", "result": "Successfully filled 6400 block(s)"}
+{"done": 11200, "total": 12975, "region": 186, "regions": 226, "label": "huaqing palace wall s", "sample": "10368 68 7924 10495 74 7925 minecraft:white_terracotta", "result": "Successfully filled 1792 block(s)"}
+{"done": 11600, "total": 12975, "region": 202, "regions": 226, "label": "beilin classic n 1904,4856 base", "sample": "10903 69 13855 10905 69 13857 minecraft:deepslate_tiles", "result": "Successfully filled 9 block(s)"}
+{"done": 12000, "total": 12975, "region": 207, "regions": 226, "label": "beilin pavilion roof south slope 0", "sample": "10885 90 13965 10915 90 13965 minecraft:dark_prismarine_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]", "result": "Successfully filled 31 block(s)"}
+{"done": 12400, "total": 12975, "region": 216, "regions": 226, "label": "silk wh parapet n", "sample": "8634 86 11452 8703 86 11452 minecraft:red_terracotta", "result": "Successfully filled 70 block(s)"}
+{"done": 12800, "total": 12975, "region": 220, "regions": 226, "label": "silk shed 1 hay ridge", "sample": "8602 75 11620 8616 75 11620 minecraft:hay_block", "result": "Successfully filled 15 block(s)"}
+{"done": 12975, "total": 12975, "region": 226, "regions": 226, "label": "silk terrace grass", "sample": "8832 66 11666 8900 67 11700 minecraft:grass_block", "result": "Successfully filled 4712 block(s)"}
