@@ -1,0 +1,24 @@
+{
+  "phase": "landmarks",
+  "total_fills": 1100,
+  "module_counts": {
+    "gate_wall_detail_3d": 429,
+    "mural_detail_3d": 418,
+    "courtyard_life_detail_3d": 253
+  },
+  "execute": true,
+  "validation": {
+    "oversized": 0,
+    "invalid_height": 0
+  }
+}
+{
+  "phase": "selected",
+  "total_fills": 1100,
+  "selected_fills": 1100,
+  "start": 0
+}
+{"load_regions": 58, "start_region": 0, "selected_regions": 58, "execution_pieces": 1110}
+{"done": 400, "total": 1110, "region": 28, "regions": 58, "label": "gatewall corner bells 5920,5920 chain 0", "sample": "14885 121 14885 14885 122 14885 minecraft:iron_bars", "result": "Successfully filled 2 block(s)"}
+{"done": 800, "total": 1110, "region": 34, "regions": 58, "label": "mural gongfu px 5,15", "sample": "10855 72 14152 10855 72 14152 minecraft:gold_block", "result": "Successfully filled 1 block(s)"}
+{"done": 1110, "total": 1110, "region": 58, "regions": 58, "label": "courtlife well taiji bucket", "sample": "11598 66 14201 11598 66 14201 minecraft:quartz_block", "result": "Successfully filled 1 block(s)"}

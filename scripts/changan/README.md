@@ -121,7 +121,10 @@ volumes into safe 32768-block `/fill` chunks.
 | `palace_roof_detail_3d.py` | 宫殿屋顶深化：四殿正脊走兽队、垂兽、檐口瓦当、翼角套兽风铃、鸱吻加高 | 440 |
 | `palace_facade_detail_3d.py` | 宫殿门面深化：斗拱带转角簇、门钉金阵铺首、抱鼓石、龙纹御路、匾额楹联、望柱栏板 | 448 |
 | `pagoda_body_detail_3d.py` | 双塔塔身深化：每层佛龛坐佛金背光、壶门、瓦当、刹链、圣教序像素碑刻 | 419 |
-| `build_all.py` | 组合以上所有模块 | 114837 |
+| `gate_wall_detail_3d.py` | 城墙城门深化：朱雀/明德门像素石匾、长安堡铭、马面礌石孔灯、垛口旗台、角楼风铃 | 429 |
+| `mural_detail_3d.py` | 四大像素壁画：敦煌飞天、青绿山水、说法图、长安贡赋图（各配碑记） | 418 |
+| `courtyard_life_detail_3d.py` | 院落生活小品：日晷、香炉、华表、灯笼串、太平缸、影壁鹤纹、上马石、水井 | 253 |
+| `build_all.py` | 组合以上所有模块 | 115937 |
 
 ## Tiling / layering strategy
 
