@@ -109,6 +109,11 @@ from scripts.changan import (
     jingjiao_bei_3d,
     taiyiyuan_3d,
     xiaoyanta_3d,
+    bangyuan_3d,
+    bingjiao_3d,
+    jinzouyuan_3d,
+    wenyuan_3d,
+    zhijinfang_3d,
     xingyuan_3d,
     seasonal_vegetation,
 )
@@ -239,6 +244,11 @@ PHASES: dict[str, list[tuple[str, Callable[[list[Fill]], None]]]] = {
         ("taiyiyuan_3d", taiyiyuan_3d.build_taiyiyuan_3d),
         ("jingjiao_bei_3d", jingjiao_bei_3d.build_jingjiao_bei_3d),
         ("beacon_tower_3d", beacon_tower_3d.build_beacon_tower_3d),
+        ("bangyuan_3d", bangyuan_3d.build_bangyuan_3d),
+        ("wenyuan_3d", wenyuan_3d.build_wenyuan_3d),
+        ("zhijinfang_3d", zhijinfang_3d.build_zhijinfang_3d),
+        ("bingjiao_3d", bingjiao_3d.build_bingjiao_3d),
+        ("jinzouyuan_3d", jinzouyuan_3d.build_jinzouyuan_3d),
     ],
     "details": [
         ("window_lattice", window_lattice.build_window_lattices),

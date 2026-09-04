@@ -1,0 +1,31 @@
+{
+  "phase": "landmarks",
+  "total_fills": 2181,
+  "module_counts": {
+    "bangyuan_3d": 483,
+    "wenyuan_3d": 323,
+    "zhijinfang_3d": 492,
+    "bingjiao_3d": 386,
+    "jinzouyuan_3d": 497
+  },
+  "execute": true,
+  "validation": {
+    "oversized": 0,
+    "invalid_height": 0
+  }
+}
+{
+  "phase": "selected",
+  "total_fills": 2181,
+  "selected_fills": 2181,
+  "start": 0
+}
+{"load_regions": 61, "start_region": 0, "selected_regions": 61, "execution_pieces": 2918}
+{"done": 400, "total": 2918, "region": 6, "regions": 61, "label": "bangyuan tower stair2 spiral 6", "sample": "12511 86 9759 12519 86 9759 minecraft:smooth_stone", "result": "Successfully filled 9 block(s)"}
+{"done": 800, "total": 2918, "region": 18, "regions": 61, "label": "wenyuan lake floor", "sample": "11264 63 10350 11320 64 10367 minecraft:smooth_stone", "result": "Successfully filled 2052 block(s)"}
+{"done": 1200, "total": 2918, "region": 32, "regions": 61, "label": "zhijin gate roof north slope 3", "sample": "13984 87 10121 14036 87 10122 minecraft:deepslate_tile_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]", "result": "Successfully filled 106 block(s)"}
+{"done": 1600, "total": 2918, "region": 37, "regions": 61, "label": "zhijin bamboo court pave", "sample": "14104 67 10304 14130 67 10346 minecraft:polished_andesite", "result": "Successfully filled 1161 block(s)"}
+{"done": 2000, "total": 2918, "region": 45, "regions": 61, "label": "bingjiao grade stone", "sample": "13568 64 13417 13695 65 13439 minecraft:stone_bricks", "result": "Successfully filled 5888 block(s)"}
+{"done": 2400, "total": 2918, "region": 52, "regions": 61, "label": "jinzou terrace grass", "sample": "11520 66 10750 11647 67 10751 minecraft:grass_block", "result": "Successfully filled 494 block(s)"}
+{"done": 2800, "total": 2918, "region": 58, "regions": 61, "label": "jinzou lane lamp post 2662", "sample": "11661 68 10883 11663 73 10885 minecraft:dark_oak_log", "result": "Successfully filled 54 block(s)"}
+{"done": 2918, "total": 2918, "region": 61, "regions": 61, "label": "jinzou tower roof upturned corner 1,1", "sample": "11745 78 11047 11745 80 11047 minecraft:gilded_blackstone", "result": "Successfully filled 3 block(s)"}
