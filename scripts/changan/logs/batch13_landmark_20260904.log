@@ -1,0 +1,28 @@
+{
+  "phase": "landmarks",
+  "total_fills": 1628,
+  "module_counts": {
+    "taiye_boat_3d": 294,
+    "jieshi_pailou_3d": 256,
+    "qujiang_night_3d": 278,
+    "tangsancai_kiln_3d": 398,
+    "baixi_chang_3d": 402
+  },
+  "execute": true,
+  "validation": {
+    "oversized": 0,
+    "invalid_height": 0
+  }
+}
+{
+  "phase": "selected",
+  "total_fills": 1628,
+  "selected_fills": 1628,
+  "start": 0
+}
+{"load_regions": 41, "start_region": 0, "selected_regions": 41, "execution_pieces": 1983}
+{"done": 400, "total": 1983, "region": 6, "regions": 41, "label": "pailou dongshi col 0 lower", "sample": "13770 67 11608 13771 71 11609 minecraft:dark_oak_log", "result": "Successfully filled 20 block(s)"}
+{"done": 800, "total": 1983, "region": 12, "regions": 41, "label": "qjnight guide 1 cap", "sample": "14844 75 14308 14845 75 14309 minecraft:red_wool", "result": "Successfully filled 4 block(s)"}
+{"done": 1200, "total": 1983, "region": 20, "regions": 41, "label": "kiln vat plain ring w", "sample": "9127 69 13065 9127 70 13067 minecraft:cobblestone", "result": "Successfully filled 2 block(s)"}
+{"done": 1600, "total": 1983, "region": 33, "regions": 41, "label": "baixi ground stone", "sample": "13568 64 12160 13600 65 12203 minecraft:stone_bricks", "result": "Successfully filled 2904 block(s)"}
+{"done": 1983, "total": 1983, "region": 41, "regions": 41, "label": "baixi ground turf", "sample": "13568 68 12416 13600 68 12450 minecraft:grass_block", "result": "Successfully filled 1155 block(s)"}
