@@ -1,0 +1,27 @@
+{
+  "phase": "landmarks",
+  "total_fills": 1335,
+  "module_counts": {
+    "xiaoyanta_3d": 380,
+    "taiyiyuan_3d": 471,
+    "jingjiao_bei_3d": 328,
+    "beacon_tower_3d": 156
+  },
+  "execute": true,
+  "validation": {
+    "oversized": 0,
+    "invalid_height": 0
+  }
+}
+{
+  "phase": "selected",
+  "total_fills": 1335,
+  "selected_fills": 1335,
+  "start": 0
+}
+{"load_regions": 33, "start_region": 0, "selected_regions": 33, "execution_pieces": 1777}
+{"done": 400, "total": 1777, "region": 4, "regions": 33, "label": "taiyi gate hall air", "sample": "12667 79 9914 12671 82 9931 minecraft:air", "result": "Successfully filled 360 block(s)"}
+{"done": 800, "total": 1777, "region": 8, "regions": 33, "label": "taiyi bed 23 sign post", "sample": "12780 68 9994 12780 69 9994 minecraft:dark_oak_fence", "result": "Successfully filled 2 block(s)"}
+{"done": 1200, "total": 1777, "region": 19, "regions": 33, "label": "jingjiao chapel door post 836", "sample": "9836 69 12222 9836 73 12222 minecraft:dark_oak_log", "result": "Successfully filled 5 block(s)"}
+{"done": 1600, "total": 1777, "region": 32, "regions": 33, "label": "beacon plinth crack band e", "sample": "12206 234 8314 12206 234 8319 minecraft:cracked_stone_bricks", "result": "Successfully filled 5 block(s)"}
+{"done": 1777, "total": 1777, "region": 33, "regions": 33, "label": "beacon stele cap", "sample": "12203 248 8327 12203 248 8327 minecraft:gold_block", "result": "Successfully filled 1 block(s)"}
