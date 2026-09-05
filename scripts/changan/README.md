@@ -133,7 +133,10 @@ volumes into safe 32768-block `/fill` chunks.
 | `ward_gates_3d.py` | 51 座坊门：真实唐坊名 5x5 像素字匾、两柱一门悬山顶、抱鼓石挂灯 | 2360 |
 | `roof_color_zoning_3d.py` | 屋顶色彩规划：宫金/署黄/市灰/坊灰/寺青脊线+朱雀街口五行色图例壁 | 274 |
 | `mountain_smooth_3d.py` | 终南山柔化：五段鞍部填谷坡链、碎石裙、山脊小径、山涧芦苇（峰顶避让） | 324 |
-| `build_all.py` | 组合以上所有模块 | 118163 |
+| `danfeng_plaza_3d.py` | 丹凤门广场：东西阙台+廊庑凹字、御道拼花、下马碑像素字、仪仗旗阵、百官待朝廊 | 391 |
+| `street_traffic_3d.py` | 市井车马：货运牛车、青帷官轿+轿夫、驮货驴队、独轮车、挑夫行人、歇脚亭 | 289 |
+| `hanshi_qingming_3d.py` | 寒食清明坟园：七座坟丘碑铭供桌、纸钱铺纸马、插柳、秋千架、禁火冷灶 | 323 |
+| `build_all.py` | 组合以上所有模块 | 121051 |
 
 ## Tiling / layering strategy
 
