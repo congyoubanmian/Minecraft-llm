@@ -955,9 +955,17 @@ def write_module_schematics(
     for the bot's /paste endpoint.
     """
     solid = [f for f in fills if f.block != Materials.AIR]
-    air = [f for f in fills if f.block == Materials.AIR]
     if not solid:
         raise ValueError(f"{name}: no solid fills to write")
+
+    # AIR fills split by original order: airs written BEFORE the first solid
+    # are site-clearing (replay them before the paste); everything else is a
+    # carve-out (replay after the paste). This preserves the module's own
+    # ordering semantics across the solid/air split.
+    first_solid = min(i for i, f in enumerate(fills) if f.block != Materials.AIR)
+    air_before = [f for i, f in enumerate(fills) if f.block == Materials.AIR and i < first_solid]
+    air_after = [f for i, f in enumerate(fills) if f.block == Materials.AIR and i > first_solid]
+    solid = [f for i, f in enumerate(fills) if f.block != Materials.AIR]
 
     def band_bbox(group: list[Fill]) -> tuple[int, int, int, int, int, int]:
         return (
@@ -1021,7 +1029,8 @@ def write_module_schematics(
                     (f.x2 - f.x1 + 1) * (f.y2 - f.y1 + 1) * (f.z2 - f.z1 + 1) for f in band
                 ),
                 "world_min": [wx1, wy1, wz1],
-                "air_fills": air if bi == 0 else [],
+                "air_fills_before": air_before if bi == 0 else [],
+                "air_fills_after": air_after if bi == 0 else [],
                 "probe_samples": samples,
             }
         )

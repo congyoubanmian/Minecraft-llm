@@ -483,6 +483,9 @@ def execute_via_schematics(
         fills: list[Fill] = []
         builder(fills)
         paste_infos = write_module_schematics(fills, f"changan_{name}", str(schem_dir))
+        # replay site-clearing AIR fills (module order: clear -> build)
+        for air_fill in paste_infos[0]["air_fills_before"]:
+            execute_fill(air_fill, timeout, use_forceload=True)
         attempts_used = []
         for pi in paste_infos:
             landed = False
@@ -513,7 +516,7 @@ def execute_via_schematics(
                 )
 
         carved = 0
-        for air_fill in paste_infos[0]["air_fills"]:
+        for air_fill in paste_infos[0]["air_fills_after"]:
             execute_fill(air_fill, timeout, use_forceload=True)
             carved += 1
 
