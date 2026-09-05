@@ -348,8 +348,14 @@ def _build_lotus_patches(fills: list[Fill]) -> None:
 
 
 def _verify_placement(fills: list[Fill]) -> None:
-    """Hard checks: every fill inside the shore band and clear of Penglai."""
+    """Hard checks: every OWN fill inside the shore band and clear of Penglai.
+
+    build_all.py accumulates one shared fill list across modules, so only
+    fills labelled with this module's prefix are checked.
+    """
     for fill in fills:
+        if not fill.label.startswith("taiyeboat"):
+            continue
         lx1, lx2 = sorted((fill.x1 - BASE_X, fill.x2 - BASE_X))
         lz1, lz2 = sorted((fill.z1 - BASE_Z, fill.z2 - BASE_Z))
         if lx1 < ALLOWED[0] or lx2 > ALLOWED[2] or lz1 < ALLOWED[1] or lz2 > ALLOWED[3]:

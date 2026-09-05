@@ -122,6 +122,10 @@ from scripts.changan import (
     qujiang_night_3d,
     tangsancai_kiln_3d,
     baixi_chang_3d,
+    night_lighting_3d,
+    ward_gates_3d,
+    roof_color_zoning_3d,
+    mountain_smooth_3d,
     jinzouyuan_3d,
     wenyuan_3d,
     zhijinfang_3d,
@@ -136,7 +140,7 @@ from scripts.changan.lib import (
     group_fills_by_load_region,
     rcon,
     validate_fills,
-    write_module_schematic,
+    write_module_schematics,
 )
 
 
@@ -272,6 +276,10 @@ PHASES: dict[str, list[tuple[str, Callable[[list[Fill]], None]]]] = {
         ("qujiang_night_3d", qujiang_night_3d.build_qujiang_night_3d),
         ("tangsancai_kiln_3d", tangsancai_kiln_3d.build_tangsancai_kiln_3d),
         ("baixi_chang_3d", baixi_chang_3d.build_baixi_chang_3d),
+        ("night_lighting_3d", night_lighting_3d.build_night_lighting_3d),
+        ("ward_gates_3d", ward_gates_3d.build_ward_gates_3d),
+        ("roof_color_zoning_3d", roof_color_zoning_3d.build_roof_color_zoning_3d),
+        ("mountain_smooth_3d", mountain_smooth_3d.build_mountain_smooth_3d),
     ],
     "details": [
         ("window_lattice", window_lattice.build_window_lattices),
@@ -422,38 +430,82 @@ def execute_via_schematics(
 ) -> None:
     """Fast path: one FAWE schematic paste per module + RCON air-carve pass.
 
-    Solid/liquid blocks are baked into a single .schem per module and pasted
-    by the BuilderBot at the module's world min corner; AIR fills (carve-outs)
-    cannot survive `//paste -a`, so they are applied afterwards via /fill.
+    Solid/liquid blocks are baked into a .schem per module (split into
+    x-bands when the bbox would be huge) and pasted by the BuilderBot at the
+    module's world min corner with `//paste -a`. AIR carve-outs are skipped
+    by `-a`, so they run afterwards via /fill. BlueMap rendering is paused
+    for the duration and each module settles 30s before the next, because a
+    bot disconnect cancels FAWE's queued async edits ("Manual cancellation").
     """
     import time
     import urllib.request
 
     schem_dir.mkdir(parents=True, exist_ok=True)
     started = time.time()
-    for idx, (name, builder) in enumerate(modules, 1):
-        fills: list[Fill] = []
-        builder(fills)
-        info = write_module_schematic(fills, f"changan_{name}", str(schem_dir))
-        payload = json.dumps(
-            {
-                "schematic": info["schematic"],
-                "x": info["world_min"][0],
-                "y": info["world_min"][1],
-                "z": info["world_min"][2],
-            }
-        ).encode()
+
+    def bot_post(path: str, payload: dict, req_timeout: int) -> dict:
         req = urllib.request.Request(
-            f"{bot_url.rstrip('/')}/paste",
-            data=payload,
+            f"{bot_url.rstrip('/')}{path}",
+            data=json.dumps(payload).encode(),
             headers={"Content-Type": "application/json"},
             method="POST",
         )
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            paste_result = json.load(resp)
+        with urllib.request.urlopen(req, timeout=req_timeout) as resp:
+            return json.load(resp)
+
+    # Free memory / TPS head-room: BlueMap rendering competes with FAWE's
+    # async paste and has cancelled edits via bot disconnects before.
+    try:
+        rcon("bluemap pause", timeout=20)
+        paused = True
+    except Exception:
+        paused = False
+
+    def probe_block(x: int, y: int, z: int, block: str) -> bool:
+        # NOTE: never forceload-remove here — unloading chunks mid-run can
+        # drop FAWE async edits that are still being written. Regions are
+        # released in one batch at the end of the run.
+        rcon(f"forceload add {x - 8} {z - 8} {x + 8} {z + 8}")
+        time.sleep(1.5)
+        return "Test passed" in rcon(f"execute if block {x} {y} {z} {block}", timeout=30)
+
+    forced_regions: list[str] = []
+
+    for idx, (name, builder) in enumerate(modules, 1):
+        fills: list[Fill] = []
+        builder(fills)
+        paste_infos = write_module_schematics(fills, f"changan_{name}", str(schem_dir))
+        attempts_used = []
+        for pi in paste_infos:
+            landed = False
+            for attempt in range(1, 4):
+                bot_post(
+                    "/paste",
+                    {
+                        "schematic": pi["schematic"],
+                        "x": pi["world_min"][0],
+                        "y": pi["world_min"][1],
+                        "z": pi["world_min"][2],
+                    },
+                    timeout,
+                )
+                # FAWE edits flush asynchronously; settle, then verify sample
+                # blocks from this band actually landed before moving on.
+                time.sleep(30)
+                checks = [probe_block(s[0], s[1], s[2], s[3]) for s in pi["probe_samples"]]
+                attempts_used.append(attempt)
+                if any(checks):
+                    landed = True
+                    break
+                time.sleep(10)
+            if not landed:
+                rcon("forceload remove all")
+                raise SystemExit(
+                    f"schematic {pi['schematic']} failed to land after 3 attempts"
+                )
 
         carved = 0
-        for air_fill in info["air_fills"]:
+        for air_fill in paste_infos[0]["air_fills"]:
             execute_fill(air_fill, timeout, use_forceload=True)
             carved += 1
 
@@ -463,10 +515,10 @@ def execute_via_schematics(
                     "module": name,
                     "done": idx,
                     "total": len(modules),
-                    "schematic_blocks": info["blocks"],
-                    "world_min": info["world_min"],
-                    "paste_ok": bool(paste_result.get("ok")),
+                    "schematics": [pi["schematic"] for pi in paste_infos],
+                    "schematic_blocks": sum(pi["blocks"] for pi in paste_infos),
                     "air_carves": carved,
+                    "paste_attempts": attempts_used,
                     "elapsed_s": round(time.time() - started, 1),
                 },
                 ensure_ascii=False,
@@ -474,6 +526,14 @@ def execute_via_schematics(
             flush=True,
         )
         time.sleep(max(0.0, delay_ms / 1000))
+
+    rcon("forceload remove all")
+
+    if paused:
+        try:
+            rcon("bluemap resume", timeout=20)
+        except Exception:
+            pass
 
 
 def main() -> None:

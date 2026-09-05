@@ -129,7 +129,11 @@ volumes into safe 32768-block `/fill` chunks.
 | `qujiang_night_3d.py` | 曲江夜宴灯船：主宴灯船灯楼、红黄副船、24 盏河灯、夜宴帐、灯谜墙 | 278 |
 | `tangsancai_kiln_3d.py` | 唐三彩窑场：三座馒头窑火膛烟囱、晾坯场、釉料缸阵、三彩骆驼马成品棚 | 398 |
 | `baixi_chang_3d.py` | 百戏场：条纹大棚、十五格顶竿人偶、角抵擂台缠斗像、幻术帐、货郎担糖葫芦 | 402 |
-| `build_all.py` | 组合以上所有模块 | 117565 |
+| `night_lighting_3d.py` | 全城夜景照明：朱雀街地灯 66 对、八地标轮廓灯、两湖岸灯、市街悬灯、桥索灯 | 495 |
+| `ward_gates_3d.py` | 51 座坊门：真实唐坊名 5x5 像素字匾、两柱一门悬山顶、抱鼓石挂灯 | 2360 |
+| `roof_color_zoning_3d.py` | 屋顶色彩规划：宫金/署黄/市灰/坊灰/寺青脊线+朱雀街口五行色图例壁 | 274 |
+| `mountain_smooth_3d.py` | 终南山柔化：五段鞍部填谷坡链、碎石裙、山脊小径、山涧芦苇（峰顶避让） | 324 |
+| `build_all.py` | 组合以上所有模块 | 118163 |
 
 ## Tiling / layering strategy
 
