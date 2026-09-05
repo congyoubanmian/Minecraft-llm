@@ -141,7 +141,10 @@ volumes into safe 32768-block `/fill` chunks.
 | `temple_buddha_3d.py` | 三寺造像群：三世佛金背光、十八罗汉持物、胁侍菩萨、千手观音像素壁、蒲团 | 477 |
 | `ximingsi_3d.py` | 西明寺：大雄殿三世佛、翻经院译场、两层藏经阁、密檐塔、钟碑亭、双僧房院 | 531 |
 | `neiyuan_3d.py` | 太极宫内苑：十二间御马厩驯马场、射圃箭靶弓道、水景亭、玻璃花房、鹿苑 | 470 |
-| `build_all.py` | 组合以上所有模块 | 124911 |
+| `lantern_wheel_3d.py` | 安福门灯轮：21 格竖直真圆灯轮、五色灯组 20 盏、放射地灯阵 52 盏、彩楼看棚 | 415 |
+| `official_interior_3d.py` | 四官署内部：公案官员坐像、舆图壁画、獬豸像、卷宗架、贡品陈列、登闻鼓 | 315 |
+| `city_roof_beasts_3d.py` | 全城脊兽扩展：寺/署/市/宅四类 47 条正脊 117 只走兽 188 枚翼角套兽 | 422 |
+| `build_all.py` | 组合以上所有模块 | 126063 |
 
 ## Tiling / layering strategy
 
