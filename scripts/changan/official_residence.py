@@ -30,7 +30,7 @@ important wards near the palace.
 RESIDENCES = [
     ("qin_wang_fu", 2200, 3600),   # 秦王府
     ("qi_wang_fu", 3800, 3600),    # 齐王府
-    ("wei_guo_gong", 2600, 3200),  # 卫国公府
+    ("wei_guo_gong", 3350, 3350),  # 卫国公府
 ]
 
 
